@@ -48,77 +48,14 @@ The try-finally block is a good practice to ensure that the lock is always relea
 that the lock is protecting.
 
 #### Overcoming restrictions of Intrinsic lock
-Let's now have a look on how the class Reentrant lock helps us overcome the restrictions that intrinsic locks have. 
+We will now have a look on how the class Reentrant lock helps us overcome the restrictions that intrinsic locks have. 
+
 Because the execution of a `Thread` that is blocked on an intrinsic lock cannot be interrupted, we have no way to recover 
-from a deadlock. We can see this in the following example that produces a deadlock situation and then tries to interrupt
-the threads. 
+from a deadlock. We can see an example of this in the class `Uninterruptable` that produces a deadlock situation and then tries to interrupt
+the threads. When ran, the class is going to deadlock forever. The only way to exit it will be to kill the program. 
 
-```
-public class Uninterruptable {
-    public static void main(String[] args) throws InterruptedException {
-
-        // Two objects
-        final Object o1 = new Object();
-        final Object o2 = new Object();
-
-        // First thread
-        Thread t1 = new Thread() {
-            public void run() {
-                try {
-                    // Aqquire the intrinsic lock of first object
-                    synchronized (o1) {
-
-                        // Put thread to sleep for 1 sec
-                        Thread.sleep(1000)
-
-                        // Aqquire the intrinsic lock of second object
-                        synchronized(o2) {
-                            // Do nothing
-                        }
-                    }
-                }
-                catch(InterruptedException e) {
-                    System.out.println("Thread 1 interrupted.")
-                }
-            }
-        }
-
-        // Second thread
-        Thread t2 = new Thread() {
-            public void run() {
-                try {
-                    // Aqquire the intrinsic lock of second object
-                    synchronized(o2) {
-
-                        // Put thread to sleep for 1 sec
-                        Thread.sleep(1000)
-
-                        // Aqquire the intrinsic lock of first object
-                        synchronized(o1) {
-                            // Do nothing
-                        }
-                    }
-                }
-                catch(InterruptedException e) {
-                    System.out.println("Thread 2 interrupted.")
-                }
-            }
-        }
-
-        t1.start();
-        t2.start();
-        Thread.sleep(2000);
-        t1.interrupt();
-        t2.interrupt();
-        t1.join();
-        t2.join();
-    }
-}
-```
-
-When ran, this program is going to deadlock forever. The only way to exit it will be to kill the Java virtual machine 
-that ran it. The solution to this problem is to implement this with reentrant locks instead of with intrinsic locks. 
-In the code below, both treads are interruptable, and when running the code, both threads indeed gets interrupted. 
+The solution to this problem is to implement this with reentrant locks instead of with intrinsic locks. 
+In the code below, both treads are interruptible, and when running the code, both threads indeed gets interrupted. 
 ```
 public class Main {
     public static void main(String[] args) throws InterruptedException {
