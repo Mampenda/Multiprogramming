@@ -50,11 +50,31 @@ that the lock is protecting.
 #### Overcoming restrictions of Intrinsic lock
 We will now have a look on how the class Reentrant lock helps us overcome the restrictions that intrinsic locks have. 
 
-Because the execution of a `Thread` that is blocked on an intrinsic lock cannot be interrupted, we have no way to recover 
-from a deadlock. We can see an example of this in the class `Uninterruptable` that produces a deadlock situation and then tries to interrupt
-the threads. When ran, the class is going to deadlock forever. The only way to exit it will be to kill the program. 
+Because the execution of a `Thread` that is blocked on an intrinsic lock cannot be interrupted, we have no way to 
+recover from a deadlock. We can see an example of this in the class `Uninterruptable` that produces a deadlock situation 
+and then tries to interrupt the threads. When ran, the class is going to deadlock forever. The only way to exit it will 
+be to kill the program. 
 
 The solution to this problem is to implement the code with reentrant locks instead of with intrinsic locks. 
-In the class `Interruptible`, both treads are interruptible, and when running the code, both threads indeed gets interrupted. 
+In the class `Interruptible`, both treads are interruptible, and when running the code, both threads indeed gets 
+interrupted. 
 
-Reentrant Locks allows to overcome yet another limitation 
+### The Dining Philosophers 
+
+#### The Problem
+
+> In computer science, the dining philosophers problem is an example problem often used in concurrent algorithm design 
+> to illustrate synchronization issues and techniques for resolving them. 
+    - [Wikipedia](https://en.wikipedia.org/wiki/Dining_philosophers_problem)
+
+In short, five philosophers are seated around a table with five plates and five utensils available. For simplicity, 
+we'll use chopsticks. Each philosopher needs two chopsticks to be able to eat, so there's at most two philosophers that 
+can eat at the same time. After a philosopher has finished eating, she'll put down both chopsticks, making them 
+available for the other philosophers. 
+
+The problem is to design a solution ( a concurrent algorithm) such that any philosopher will not starve, i.e., each one 
+will alternate between thinking and eating without having to wait to eat forever. 
+
+#### Solutions 
+
+Reentrant Locks allows to overcome another limitation 
