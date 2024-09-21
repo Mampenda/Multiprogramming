@@ -47,7 +47,7 @@ public class Main {
 The try-finally block is a good practice to ensure that the lock is always released no matter what happens in the code 
 that the lock is protecting.
 
-#### Overcoming restrictions of Intrinsic lock
+## Overcoming restrictions of Intrinsic lock
 We will now have a look on how the class Reentrant lock helps us overcome the restrictions that intrinsic locks have. 
 
 Because the execution of a `Thread` that is blocked on an intrinsic lock cannot be interrupted, we have no way to 
@@ -73,8 +73,8 @@ we'll use chopsticks. Each philosopher needs two chopsticks to be able to eat, s
 can eat at the same time. After a philosopher has finished eating, she'll put down both chopsticks, making them 
 available for the other philosophers. 
 
-The problem is to design a solution ( a concurrent algorithm) such that any philosopher will not starve, i.e., each one 
-will alternate between thinking and eating without having to wait to eat forever. 
+The problem is to design a solution (a concurrent algorithm) so that no philosopher will starve, i.e., each will 
+alternate between thinking and eating without anyone having to wait to eat forever. 
 
 #### Solutions 
 
