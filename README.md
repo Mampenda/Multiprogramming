@@ -1,4 +1,4 @@
-# Multiprogramming
+# Reentrant Locks
 
 For a long time, intrinsic locks is all the support that Java provided for concurrent programming. However, now we can 
 use the library in the package `Java.util.concurrent` which provides enhanced locking mechanisms. Intrinsic locks are 
