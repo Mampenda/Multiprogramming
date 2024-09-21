@@ -65,7 +65,8 @@ interrupted.
 
 > In computer science, the dining philosophers problem is an example problem often used in concurrent algorithm design 
 > to illustrate synchronization issues and techniques for resolving them. 
-    - [Wikipedia](https://en.wikipedia.org/wiki/Dining_philosophers_problem)
+> 
+>   -- [Wikipedia](https://en.wikipedia.org/wiki/Dining_philosophers_problem)
 
 In short, five philosophers are seated around a table with five plates and five utensils available. For simplicity, 
 we'll use chopsticks. Each philosopher needs two chopsticks to be able to eat, so there's at most two philosophers that 
