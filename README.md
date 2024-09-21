@@ -1,17 +1,15 @@
 # Beyond Intrinsic Locks
 
-So far, we have used intrinsic locks that are build into every Java object. For a long time, this is all the support 
-that Java provided for concurrent programming. However, now we can use the library in the package Java.util.concurrent 
-which provides enhanced locking mechanisms.
-
-Intrinsic locks are convenient, but limited. Problems with it are 
+For a long time, intrinsic locks is all the support that Java provided for concurrent programming. However, now we can 
+use the library in the package `Java.util.concurrent` which provides enhanced locking mechanisms. Intrinsic locks are 
+convenient, but limited. Problems with them are 
 - There's no way to interrupt a thread that's blocked as a result of trying to acquire an intrinsic lock. 
 - There's no way to time-out while trying to acquire an intrinsic lock. 
-- There's exactly one way to acquire an intrinsic lock, by using the `synchronized` key-word. Which means that the lock 
-acquisition- and release method have to take place in the same method and have to be very strictly nested. 
+- There's exactly one way to acquire an intrinsic lock, by using the `synchronized` key-word. 
 
-Also, that declaring a method as `synchronized` is just a syntactic sugar for surrounding the methods body with a 
-`synchronized (this){}` block. 
+Which means that the lock acquisition- and release method have to take place in the same method and have to be very 
+strictly nested. Also, that declaring a method as `synchronized` is just a syntactic sugar for surrounding the methods 
+body with a `synchronized (this){}` block. 
 
 So instead of declaring a method as synchronized like this `public synchronized void someMethod() {}`, we could write 
 it like this
@@ -52,7 +50,7 @@ We will now have a look on how the class Reentrant lock helps us overcome the re
 
 Because the execution of a `Thread` that is blocked on an intrinsic lock cannot be interrupted, we have no way to 
 recover from a deadlock. We can see an example of this in the class `Uninterruptable` that produces a deadlock situation 
-and then tries to interrupt the threads. When ran, the class is going to deadlock forever. The only way to exit it will 
+and then tries to interrupt the threads. When ran, the class is going to deadlock forever so the only way to exit it will 
 be to kill the program. 
 
 The solution to this problem is to implement the code with reentrant locks instead of with intrinsic locks. 
