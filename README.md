@@ -1,6 +1,27 @@
 # Multiprogramming
 In short, multiprogramming is when multiple programs execute simultaneously (or concurrently). In this repo, we will 
-touch on how multiple java `Threads` shares resources.
+touch on how multiple java `Threads` shares resources. 
+
+---
+
+## The Dining Philosophers
+
+### The Problem
+
+> In computer science, the dining philosophers problem is an example problem often used in concurrent algorithm design
+> to illustrate synchronization issues and techniques for resolving them.
+>
+>   -- [Wikipedia](https://en.wikipedia.org/wiki/Dining_philosophers_problem)
+
+In short, five philosophers are seated around a table with five plates and five utensils available. For simplicity,
+we'll use chopsticks. Each philosopher needs two chopsticks to be able to eat, so there's at most two philosophers that
+can eat at the same time. After a philosopher has finished eating, she'll put down both chopsticks, making them
+available for the other philosophers.
+
+The problem is to design a solution (a concurrent algorithm) so that no philosopher will starve, i.e., each will
+alternate between thinking and eating without anyone having to wait to eat forever.
+
+---
 
 ## Intrinsic Locks
 For a long time, intrinsic locks is all the support that Java provided for concurrent programming. However, now we can 
@@ -65,22 +86,7 @@ interrupted.
 
 ## The Dining Philosophers 
 
-### The Problem
-
-> In computer science, the dining philosophers problem is an example problem often used in concurrent algorithm design 
-> to illustrate synchronization issues and techniques for resolving them. 
-> 
->   -- [Wikipedia](https://en.wikipedia.org/wiki/Dining_philosophers_problem)
-
-In short, five philosophers are seated around a table with five plates and five utensils available. For simplicity, 
-we'll use chopsticks. Each philosopher needs two chopsticks to be able to eat, so there's at most two philosophers that 
-can eat at the same time. After a philosopher has finished eating, she'll put down both chopsticks, making them 
-available for the other philosophers. 
-
-The problem is to design a solution (a concurrent algorithm) so that no philosopher will starve, i.e., each will 
-alternate between thinking and eating without anyone having to wait to eat forever. 
-
-### Solutions 
+### Solution 1
 **Reentrant Locks**
 
 Reentrant Locks allows to overcome another limitation of intrinsic locks. The class allows us the limit the waiting 
@@ -145,5 +151,6 @@ again and wait for it to become true once more.
 
 ## The Dining Philosophers
 
+### Solution 2
 Let's now get back to the Dining Philosophers Problem for another potential solution. Instead of having a separate class
 for chopsticks, but use the fact that a philosopher can eat only if the neighbour to the left and right are thinking.
