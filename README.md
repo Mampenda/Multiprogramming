@@ -1,5 +1,8 @@
-# Reentrant Locks
+# Multiprogramming
+In short, multiprogramming is when multiple programs execute simultaneously (or concurrently). In this repo, we will 
+touch on how multiple java `Threads` shares resources.
 
+## Intrinsic Locks
 For a long time, intrinsic locks is all the support that Java provided for concurrent programming. However, now we can 
 use the library in the package `Java.util.concurrent` which provides enhanced locking mechanisms. Intrinsic locks are 
 convenient, but limited. Problems with them are 
@@ -45,7 +48,7 @@ public class Main {
 The try-finally block is a good practice to ensure that the lock is always released no matter what happens in the code 
 that the lock is protecting.
 
-## Overcoming restrictions of Intrinsic lock
+### Overcoming restrictions of Intrinsic lock
 We will now have a look on how the class Reentrant lock helps us overcome the restrictions that intrinsic locks have. 
 
 Because the execution of a `Thread` that is blocked on an intrinsic lock cannot be interrupted, we have no way to 
