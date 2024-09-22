@@ -1,30 +1,61 @@
 package org.example;
 
+import java.util.Random;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class ConditionedPhilosopher {
 
-    // Define an reentrant lock object
-    ReentrantLock reentrantLock = new ReentrantLock();
+    private boolean eating;
+    private ConditionedPhilosopher philosopherToTheLeft;
+    private ConditionedPhilosopher philosopherToTheRight;
+    private ReentrantLock table;
+    private Condition condition;
+    private Random random;
 
-    // Define condition that we initialize with the method, 'new Condition()', of the lock that we have defined
-    Condition condition = reentrantLock.newCondition();
+    public ConditionedPhilosopher(ReentrantLock table) {
+        this.table = table;
 
-    // Lock the reentrant lock
-    reentrantLock.lock();
+        eating = false;
+        condition = table.newCondition();
+        random = new Random();
+    }
 
-    // try-finally block
-    try {
-        // While the condition is not true, we wait for the condition to be true
-        while(){
+    public void setLeft(ConditionedPhilosopher left) { this.philosopherToTheLeft = left; }
+    public void setRight(ConditionedPhilosopher right) { this.philosopherToTheRight = right; }
 
-            // await() automatically releases the lock and blocks the thread on the condition variable.
-            condition.await();
+
+
+    private void eat() throws InterruptedException {
+        // A philosopher first locks the table so the other philosophers cannot change the state
+        table.lock();
+
+        // Check if the neighbours to the left and right are eating
+        try {
+            // Wait while they're eating
+            while(philosopherToTheLeft.eating || philosopherToTheRight.eating ){
+                condition.await();
+            }
+            // Eat when they're not eating
+            eating = true;
         }
-        // Use shared resources after condition has become true
+        finally { table.unlock(); }
+    }
+
+    private void think(){
+        table.lock();
+
+        // Change eating to false, because at this table, the philosophers are only thinking when they're not eating
 
     }
-    // Unlock the lock after using the shared resources
-    finally { reentrantLock.unlock(); }
+
+    private void run() {
+        try {
+            while(true){
+                think();
+                eat();
+            }
+        }
+        catch (InterruptedException e) { e.printStackTrace(); }
+    }
 }
