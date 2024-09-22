@@ -45,6 +45,7 @@ public class Main {
     }
 }
 ```
+
 The try-finally block is a good practice to ensure that the lock is always released no matter what happens in the code 
 that the lock is protecting.
 
@@ -58,8 +59,10 @@ will be to kill the program.
 
 The solution to this problem is to implement the code with reentrant locks instead of with intrinsic locks. 
 In the class `Interruptible`, both treads are interruptible, and when running the code, both threads indeed gets 
-interrupted. 
+interrupted.
+
 ---
+
 ## The Dining Philosophers 
 
 ### The Problem
@@ -95,6 +98,7 @@ that they will all timeout simultaneously. All in all, using timeouts provides a
 deadlocks all together.
 
 ---
+
 ## Condition variables
 Quite often in concurrent programming, there's a need to wait until a certain event happens. For example, one might need
 to wait for a moment when a queue becomes non-empty before removing an element from it , or we need to wait before some 
@@ -136,7 +140,9 @@ suspended halfway to give the control to other threads.
 When the method `await()` returns, it only means that the condition _might_ be true, this is why `await()` is invoked in
 a loop. Indeed, the thread should go back to check whether the condition is true and potentially block on `await()` 
 again and wait for it to become true once more.
+
 ---
+
 ## The Dining Philosophers
 
 Let's now get back to the Dining Philosophers Problem for another potential solution. Instead of having a separate class
