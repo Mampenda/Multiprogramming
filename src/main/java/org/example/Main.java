@@ -5,27 +5,34 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Main {
     public static void main(String[] args) throws InterruptedException {
 
+        // Reentrant Lock
+        ReentrantLock table = new ReentrantLock();
+
         // List of five philosophers
-        ReentrantPhilosopher[] philosophers = new ReentrantPhilosopher[5];
-
-        // List of five chopsticks
-        ReentrantLock[] chopsticks = new ReentrantLock[5];
-
-        // For each chopstick, we initialize them before starting the corresponding thread
-        for (int i = 0; i < 5; i++){
-            chopsticks[i] = new ReentrantLock();
-        }
+        ConditionedPhilosopher[] philosophers = new ConditionedPhilosopher[5];
 
         // For each philosopher, we initialize them before starting the corresponding thread
         for (int i = 0; i < 5; i++) {
-            philosophers[i] = new ReentrantPhilosopher(chopsticks[i], chopsticks[(i+1) % 5]);
-            philosophers[i].start();
+            philosophers[i] = new ConditionedPhilosopher(table);
         }
 
-        // Use the join()-method to wait until each of the corresponding threads finishes execution
-        for (int i = 0; i < 5; i++) {
+        // Seat them around the table
+        for (int i = 0; i < philosophers.length; i++) {
+            for (int j = 0; j < philosophers.length; j++) {
+
+                // Seat a philosopher on the left side
+                philosophers[i].setLeft(philosophers[j]);
+
+                //TODO: Seat a philosopher at the right
+                philosophers[i].setRight(philosophers[j-2]);
+            }
+
+        }
+
+        // Use the run()-method to execute all the philosophers
+        for (int i = 0; i < philosophers.length; i++) {
+            philosophers[i].run();
             philosophers[i].join();
         }
-
     }
 }

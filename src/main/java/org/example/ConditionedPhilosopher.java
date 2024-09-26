@@ -4,7 +4,7 @@ import java.util.Random;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class ConditionedPhilosopher {
+public class ConditionedPhilosopher extends Thread{
 
     private boolean eating;
     private ConditionedPhilosopher philosopherToTheLeft;
@@ -24,8 +24,6 @@ public class ConditionedPhilosopher {
     public void setLeft(ConditionedPhilosopher left) { this.philosopherToTheLeft = left; }
     public void setRight(ConditionedPhilosopher right) { this.philosopherToTheRight = right; }
 
-
-
     private void eat() throws InterruptedException {
         // A philosopher first locks the table so the other philosophers cannot change the state
         table.lock();
@@ -40,16 +38,30 @@ public class ConditionedPhilosopher {
             eating = true;
         }
         finally { table.unlock(); }
+
+        // Takes 1 sec to eat
+        Thread.sleep(1000);
     }
 
-    private void think(){
+    private void think() throws InterruptedException{
+        // If a philosopher wants to think, she should first acquire the lock
         table.lock();
 
         // Change eating to false, because at this table, the philosophers are only thinking when they're not eating
+        try {
+            eating = false;
 
+            // Inform neighbours that they can start eating
+            philosopherToTheLeft.condition.signal();
+            philosopherToTheRight.condition.signal();
+        }
+        finally { table.unlock(); }
+
+        // Takes 1 sec to think
+        Thread.sleep(1000);
     }
 
-    private void run() {
+    public void run() {
         try {
             while(true){
                 think();

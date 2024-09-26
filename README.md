@@ -46,6 +46,8 @@ public void someMethod(){
 ```
 So a `synchronized` method is the same as putting the method body into a `synchronized (this){}` block. 
 
+---
+
 ## Reentrant Locks
 Reentrant locks allows us to go beyond the restrictions of Intrinsic locks by providing explicit `lock()` and `unlock()` 
 methods. 
@@ -81,6 +83,39 @@ will be to kill the program.
 The solution to this problem is to implement the code with reentrant locks instead of with intrinsic locks. 
 In the class `Interruptible`, both treads are interruptible, and when running the code, both threads indeed gets 
 interrupted.
+
+Here is the code for the `Main()`-method for the `ReentrantPhilosopher`-class: 
+
+```
+import java.util.concurrent.locks.ReentrantLock;
+
+public class Main {
+    public static void main(String[] args) throws InterruptedException {
+
+        // List of five philosophers
+        ReentrantPhilosopher[] philosophers = new ReentrantPhilosopher[5];
+
+        // List of five chopsticks
+        ReentrantLock[] chopsticks = new ReentrantLock[5];
+
+        // For each chopstick, we initialize them before starting the corresponding thread
+        for (int i = 0; i < 5; i++){
+            chopsticks[i] = new ReentrantLock();
+        }
+
+        // For each philosopher, we initialize them before starting the corresponding thread
+        for (int i = 0; i < 5; i++) {
+            philosophers[i] = new ReentrantPhilosopher(chopsticks[i], chopsticks[(i+1) % 5]);
+            philosophers[i].start();
+        }
+
+        // Use the join()-method to wait until each of the corresponding threads finishes execution
+        for (int i = 0; i < 5; i++) {
+            philosophers[i].join();
+        }
+    }
+}
+```
 
 ---
 
@@ -139,9 +174,9 @@ which uses the method `await()`.
 To indicate that the condition variable is true, another thread would use the method `signal()` or `signalAll()`, to 
 signal that the condition has become true. The method `await()` will then unblock and re-acquire the lock.
 
-When a thread is doing operations in a try-finally block using `await()`, it looks as if this operation done _atomically_ 
-for other threads, i.e. it looks like a single operation that is either performed or not. An _atomic_ operation cannot be 
-suspended halfway to give the control to other threads. 
+When a thread is doing operations in a try-finally block using `await()`, it looks as if this operation done 
+_atomically_ for other threads, i.e. it looks like a single operation that is either performed or not. An _atomic_ 
+operation cannot be suspended halfway to give the control to other threads. 
 
 When the method `await()` returns, it only means that the condition _might_ be true, this is why `await()` is invoked in
 a loop. Indeed, the thread should go back to check whether the condition is true and potentially block on `await()` 
@@ -154,3 +189,9 @@ again and wait for it to become true once more.
 ### Solution 2
 Let's now get back to the Dining Philosophers Problem for another potential solution. Instead of having a separate class
 for chopsticks, but use the fact that a philosopher can eat only if the neighbour to the left and right are thinking.
+
+The main class for this solution is 
+
+```
+
+```
