@@ -1,9 +1,7 @@
 # Multiprogramming
 In short, multiprogramming is when multiple programs execute simultaneously (or concurrently). In this repo, we will 
-touch on how multiple java `Threads` shares resources. 
-
+touch on how multiple java `Threads` shares resources.
 ---
-
 ## The Dining Philosophers
 
 ### The Problem
@@ -20,9 +18,7 @@ available for the other philosophers.
 
 The problem is to design a solution (a concurrent algorithm) so that no philosopher will starve, i.e., each will
 alternate between thinking and eating without anyone having to wait to eat forever.
-
 ---
-
 ## Intrinsic Locks
 For a long time, intrinsic locks is all the support that Java provided for concurrent programming. However, now we can 
 use the library in the package `Java.util.concurrent` which provides enhanced locking mechanisms. Intrinsic locks are 
@@ -44,10 +40,9 @@ public void someMethod(){
     }
 }
 ```
-So a `synchronized` method is the same as putting the method body into a `synchronized (this){}` block. 
+So a `synchronized` method is the same as putting the method body into a `synchronized (this){}` block.
 
 ---
-
 ## Reentrant Locks
 Reentrant locks allows us to go beyond the restrictions of Intrinsic locks by providing explicit `lock()` and `unlock()` 
 methods. 
@@ -116,9 +111,7 @@ public class Main {
     }
 }
 ```
-
 ---
-
 ## The Dining Philosophers 
 
 ### Solution 1
@@ -137,9 +130,7 @@ can be made either, i.e. nothing gets executed in the program.
 This situation can be mitigated by giving each thread a different time-out value, this will f.ex. minimize the chances 
 that they will all timeout simultaneously. All in all, using timeouts provides a solution, but it is far better to avoid
 deadlocks all together.
-
 ---
-
 ## Condition variables
 Quite often in concurrent programming, there's a need to wait until a certain event happens. For example, one might need
 to wait for a moment when a queue becomes non-empty before removing an element from it , or we need to wait before some 
@@ -181,9 +172,7 @@ operation cannot be suspended halfway to give the control to other threads.
 When the method `await()` returns, it only means that the condition _might_ be true, this is why `await()` is invoked in
 a loop. Indeed, the thread should go back to check whether the condition is true and potentially block on `await()` 
 again and wait for it to become true once more.
-
 ---
-
 ## The Dining Philosophers
 
 ### Solution 2
@@ -195,3 +184,63 @@ The main class for this solution is
 ```
 
 ```
+
+---
+## Atomic Variables
+This method of the class AtomicInteger is functionally equivalent to the class count++, but it performs atomically. The 
+use of atomic variables instead of locks gives many advantages:
+ 1. We cannot anymore forget to acquire the lock before we perform some operation
+ 2. We avoid deadlocks
+Atomic variables are the basis of the non-blocking, lock-free algorithms, which achieve synchronization without locks 
+and blocking.
+
+### Volatile variables
+In Java, you can mark a variable as 'volatile'. Doing so, guarantees that the reads and writes to that variable will not
+be rewarded by the compiler or Java Virtual Machine. However, volatile is a very weak form of synchronization. It would
+not help fix the `AtomicCounter`-class because making `count` volatile would not ensure that `count++` is atomic. 
+
+---
+## Recap 
+
+So far, we've discussed _sequential_ programs, which has one Thread of execution, and _concurrent_ programs, which has 
+multiple Threads of execution. 
+
+We will study two different approaches to concurrent programs:
+- Shared Memory concurrency
+  - Threads communicate via variables in shared memory
+  - Access to those variables must be synchronized
+- Message Passing concurrency
+  - Threads communicate by sending/receiving messages
+  - All memory is local to threads/processes.
+  - Distributed programs:
+    - They execute on different machines
+    - They communicate over a network
+---
+### Why Concurrent Programs? Why do we study this topic?
+1. Performance - Time gets saved if work can be subdivided into concurrent tasks.
+2. To model concurrent phenomena such as: 
+   - Graphical User Interface (GUI) events 
+   - Access to the same information/resources by many
+---
+## Shared Memory Concurrency
+Shared memory concurrency is important because 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

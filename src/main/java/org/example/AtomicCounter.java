@@ -9,19 +9,18 @@ public class AtomicCounter {
         class CountingThread extends Thread {
             public void run(){
                 for (int i = 0; i < 10000; i++){
-
-                    /** This method of the class AtomicInteger is functionally equivalent to the class count++,
-                     *  but it performs atomically. The use of atomic variables instead of locks gives many advantages:
-                     *  1. We cannot anymore forget to acquire the lock before we perform some operation
-                     *  2. We avoid deadlocks
-                     *
-                     *  Atomic variables are the basis of the non-blocking, lock-free algorithms, which achieve
-                     *  synchronization without blocks and locking
-                    */
                     counter.incrementAndGet();
                 }
             }
         }
+
+        CountingThread thread1 = new CountingThread();
+        CountingThread thread2 = new CountingThread();
+
+        thread1.start();
+        thread2.start();
+        thread1.join();
+        thread2.join();
     }
 
 //    class Counter {
