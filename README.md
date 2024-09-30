@@ -116,6 +116,7 @@ public class Main {
     }
 }
 ```
+
 ---
 
 ## The Dining Philosophers 
@@ -363,7 +364,9 @@ operations on local variables can be considered atomic. This is referred to as t
 #### Mutual exclusion
 Atomic operations on a variable cannot happen simultaneously. In a way, one "happens" before the other, in that case we 
 have mutual exclusion. 
+
 ---
+
 Let's go back to the example:
 ```
 co x = x+1; || x = x-1 oc
@@ -400,6 +403,7 @@ W2    W2    W1    W2    W1    W1
 
 Only two of the interleavings are optional/viable, and those are the ones which gives the result 0. But the four others 
 yields a result which gives the wrong answer. 
+
 ---
 
 We can view the execution of a concurrent program as an interleaving of the atomic actions executed by individual 
