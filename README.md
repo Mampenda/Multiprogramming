@@ -223,15 +223,97 @@ We will study two different approaches to concurrent programs:
    - Access to the same information/resources by many
 ---
 ## Shared Memory Concurrency
-Shared memory concurrency is important because 
+Shared memory concurrency is important because:
+- It matches common hardware (many CPUs, each have many cores)
+- It is supported by mainstream languages (Java, C++, ect... )
+- Even on one-core machines, it is a natural model for capturing real life concurrency
 
+Basic properties for shared memory concurrency: 
+- Each thread executes its own sequence of operations
+- The operating system decides 
+  - which thread gets a turn to execute
+  - for how long a thread gets to execute
+  - on which core a thread executes 
+    - The programmer may block threads, but _not_ force them to execute
 
+## Simple Programming Language Await
 
+In what follows in this course we'll use a special version of a imperative programming language called Simple 
+Programming Language Await. It has a normal C-style syntax and Hoare-style pre-/post-conditions that may surround every
+instruction in the language. 
+---
+Example: 
+```
+// First statement takes variable x and increases it by value z
+x = x+z;
 
+// Second statement takes a variable y and increases it by value z
+y = y+z;
+```
+Now we want to analyse what the state of the program is before these two statements gets executed
+> Pre-condition:   x == a && y == b (what is assumend to be true before a program runs)
 
+> Run the two statements
 
+> Post-condition:  x = a+z && y = b+z (what will be true after the program runs, if it terminates) 
 
+NOTE: pre-/post-conditions are not executed, they're only for the programmer to analyse the code. 
 
+---
+
+In addition to pre-/post-conditions that we can add to every statement, we also have the parallel execution operators: 
+`co` ... `oc`. The dots between the two operators will be a list of processes, separated by the double vertical bars 
+`co S_1 || S_2 || S_3 || ... || S_N oc` where the programs `S_1, ..., S_N` are executed concurrently, and the whole 
+statement terminates after all the processes has all finished terminating. So for the example code above would run 
+concurrently if it was written like this: 
+```
+co 
+x = x+z; || y = y+z;
+oc
+```
+The pre- and post-conditions would still be valid because processes are independent, i.e. they do not write to the same
+variables. Neither writes to a variable that the other reads, so there's no interference. In general, parallelizing 
+statements invalidates the post-conditions, that is, in the sequential version, the post-conditions hold, but in the 
+concurrent version, the post-condition it might not hold. 
+
+In our conditions, the post-condition holds because of their independence, but in the following example, the post 
+condition changes: 
+```
+// pre-condition: {x == 0}
+co x = x+1; || x = x-1 oc
+// post-condition: {x == -1 OR x == 0 OR x == 1}
+```
+If this code had been run sequentially, the post-condition `{x==0}`, would be true, but since it's ran concurrently
+the post-condition changes. This is because with sequential programs the scheduler assumes that the operations of all 
+individual processes are executed in a sequential order, where each process's operations are in program order. 
+```
+// P1 and P2 consists of the following operations 
+P1: OP1, OP2, ..., OP4
+P2: OP1, OP2, ..., OP5
+
+//Then the program executes them f.ex. like
+P1_OP1
+P1_OP2
+P2_OP1
+P1_OP3
+P2_OP2
+P1_OP4
+P2_OP3
+P2_OP4
+P2_OP5
+```
+So the two programs are executed in order, even though they're interchanging. So, the result of an execution is the same
+as the order they're written, and the execution if sequentially consistent. If the operations were executed like this 
+```
+P1_OP1
+P1_OP2
+P2_OP1
+P1_OP4
+P2_OP2
+P1_OP3
+...
+```
+Then this would not be true, `P1_OP4` is executed before `P1_OP3`, so they are not executed in program order. 
 
 
 
