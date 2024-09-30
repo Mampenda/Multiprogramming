@@ -238,7 +238,7 @@ Basic properties for shared memory concurrency:
 
 ## Simple Programming Language Await
 
-In what follows in this course we'll use a special version of a imperative programming language called Simple 
+In what follows in this course we'll use a special version of an imperative programming language called Simple 
 Programming Language Await. It has a normal C-style syntax and Hoare-style pre-/post-conditions that may surround every
 instruction in the language. 
 ---
@@ -251,7 +251,7 @@ x = x+z;
 y = y+z;
 ```
 Now we want to analyse what the state of the program is before these two statements gets executed
-> Pre-condition:   x == a && y == b (what is assumend to be true before a program runs)
+> Pre-condition:   x == a && y == b (what is assumed to be true before a program runs)
 
 > Run the two statements
 
@@ -313,16 +313,73 @@ P2_OP2
 P1_OP3
 ...
 ```
-Then this would not be true, `P1_OP4` is executed before `P1_OP3`, so they are not executed in program order. 
+Then this would not be true, `P1_OP4` is executed before `P1_OP3`, so they are not executed in program order.
 
+Sequential consistency is _wishful thinking_ because compilers and hardware re-order operations, so in reality we cannot
+ensure that the operations are executed in the order they're written. In reality, the operations are executed with 
+relaxed memory models, so the sequential consistency is preserved for data-race free programs. Data-race means that two
+processes concurrently access the same memory locations and at least one access of this is a `write` and the accesses 
+are not synchronized.
 
+---
 
+## Atomic Operations
+An atomic operation is an operation that cannot be subdivided, that is, in the middle of an atomic operation we have no
+observable, or intermediate, state. They are language-dependant. Only reading or only writing a variable is usually 
+atomic, but reading AND writing to a variable is not. 
 
+So ```x=y``` is not atomic because we first read the variable `y` before writing it to the variable `x`, and `++x` is
+not atomic either because we first have to `read` the variable `x` before we `write` to it (by adding 1 to it).
 
+There are special atomic operations/atomic variable types in programming languages, f.ex. in Java it was `AtomicInteger`
+and in C++ we might use `atomic<int> x;` and then `x += 1` would be atomic. 
 
+Some language constructs may allow creating large atomic blocks. A statement with at most one atomic operation plus
+operations on local variables can be considered atomic. This is referred to as the _**AT MOST ONCE**_ rule.
 
+> At most once
+> 
+> When a code statement has at most one atomic operation and the rest of the operations are performed on the local 
+> variables, then the whole statement can be considered atomic.
 
+#### Mutual exclusion
+Atomic operations on a variable cannot happen simultaneously. In a way, one "happens" before the other, in that case we 
+have mutual exclusion. 
+---
+Let's go back to the example:
+```
+co x = x+1; || x = x-1 oc
+```
+What are the atomic operations here? 
 
+We first `read` the value `x`, then we increase it before we `write` the increased value to `x`
+```
+Process 1: 
+READ x    == x.getValue();  (R1)
+INCREASE
+WRITE x   == x.setValue();  (W1)
 
+==> x.setValue( x.getValue() + 1);
 
+Process 2: 
+READ x    == x.getValue();  (R2)
+DECREASE
+WRITE x   == x.setValue();  (W2)
+
+All in all we have 4 atomic operations: R1, W1, R2, W2
+```
+
+The program order is as follows: R1 happens before W1 and R2 happens before W2. 
+When we have interleaving, we get six possible options for the result: 
+
+``` 
+0     -1    1     -1    1     0
+R1    R1    R1    R2    R2    R2
+W1    R2    R2    R1    R1    W2
+R2    W1    W2    W1    W2    R1
+W2    W2    W1    W2    W1    W1
+```
+
+Only two of the interleavings are optional/viable, and those are the ones which gives the result 0. But the four others 
+yields a result which gives the wrong answer. 
 
