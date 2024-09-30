@@ -416,5 +416,54 @@ _coarse-grained_ atomic actions.
 > Coarse-grained atomic actions are compositions of several fine-grained atomic actions.
 
 Using synchronization as a way to prevent undesired interleavings, is also possible by delaying the execution of a 
-process until the program state satisfies some predicate (some _boolean_ condition). The first form of synchronization, 
-which combines fined-grained atomic actions into composite coarse-grained atomic actions 
+process until the program state satisfies some predicate (some _boolean_ condition). 
+
+> Mutual exclusion is when we combine fined-grained atomic actions into composite coarse-grained atomic actions.
+
+> Conditioned synchronization is when we delay the execution of a process until the program state satisfies some 
+> predicate.
+
+_**An atomic action makes an indivisible state transformation.**_ This means that any intermediate state that might 
+exist in the implementation of the action, must not be visible to other processes. In a sequential program, assignment 
+statements appear to be atomic because no intermediate state is visible to the program. However, this is not generally 
+the case in concurrent programs because an assignment statement might be implemented by a sequence of fine-grained 
+machine instructions. 
+
+---
+
+### Summary of Assumptions
+
+In what follows, we'll assume that the machines on which we execute our concurrent programs have the following realistic 
+characteristics:
+
+1. Read and write values that fit into a word are atomic. The values of the basic types, such as integers, are stored in 
+memory elements. They're read and written as atomic actions.
+2. Values are manipulated in registers. Values are manipulated by loading them into registers, operating on them there, 
+and then storing the results back into memory.
+3. Registers are local to processes. Each process has its own set of registers. If the same processes changes from one 
+process to another, we have so-called _context switch_. This is realized either by having distinct sets of registers, or 
+by saving and restoring register values whenever a different process is executed. 
+
+Then, any intermediate results that occur when a complex expression is evaluated are stored in registers or in memory 
+which private to the execution process, i.e. intermediate results, "temporaries", are local.
+
+With this machine model, if an expression in one process does not reference a variable which is modified by another 
+process, then the expression evaluation will appear to be atomic (by the 'at-most-once' property) even if it requires 
+executing several fine-grained atomic actions. 
+
+There are two reasons for this: 
+1. None of the values on which our expression depends, could possibly change while this expression is being evaluated. 
+2. No other process can see any temporary values that might be created while the expression is being evaluated. 
+
+Similarly, if an assignment statement in one process, does not reference any variable that is modified by another 
+process, then the execution of the assignment will appear to be atomic. This happens, f.ex. when the value that we try 
+to assign to a variable only references local variables. 
+
+Unfortunately, most statements in concurrent programs that references shared variables do not meet the both of the 
+requirements above. However, a weaker requirement (at-most-property) is often met. 
+
+---
+
+### At-Most-Once Property
+
+
