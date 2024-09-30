@@ -1,7 +1,9 @@
 # Multiprogramming
 In short, multiprogramming is when multiple programs execute simultaneously (or concurrently). In this repo, we will 
 touch on how multiple java `Threads` shares resources.
+
 ---
+
 ## The Dining Philosophers
 
 ### The Problem
@@ -18,7 +20,9 @@ available for the other philosophers.
 
 The problem is to design a solution (a concurrent algorithm) so that no philosopher will starve, i.e., each will
 alternate between thinking and eating without anyone having to wait to eat forever.
+
 ---
+
 ## Intrinsic Locks
 For a long time, intrinsic locks is all the support that Java provided for concurrent programming. However, now we can 
 use the library in the package `Java.util.concurrent` which provides enhanced locking mechanisms. Intrinsic locks are 
@@ -43,6 +47,7 @@ public void someMethod(){
 So a `synchronized` method is the same as putting the method body into a `synchronized (this){}` block.
 
 ---
+
 ## Reentrant Locks
 Reentrant locks allows us to go beyond the restrictions of Intrinsic locks by providing explicit `lock()` and `unlock()` 
 methods. 
@@ -112,6 +117,7 @@ public class Main {
 }
 ```
 ---
+
 ## The Dining Philosophers 
 
 ### Solution 1
@@ -130,7 +136,9 @@ can be made either, i.e. nothing gets executed in the program.
 This situation can be mitigated by giving each thread a different time-out value, this will f.ex. minimize the chances 
 that they will all timeout simultaneously. All in all, using timeouts provides a solution, but it is far better to avoid
 deadlocks all together.
+
 ---
+
 ## Condition variables
 Quite often in concurrent programming, there's a need to wait until a certain event happens. For example, one might need
 to wait for a moment when a queue becomes non-empty before removing an element from it , or we need to wait before some 
@@ -172,7 +180,9 @@ operation cannot be suspended halfway to give the control to other threads.
 When the method `await()` returns, it only means that the condition _might_ be true, this is why `await()` is invoked in
 a loop. Indeed, the thread should go back to check whether the condition is true and potentially block on `await()` 
 again and wait for it to become true once more.
+
 ---
+
 ## The Dining Philosophers
 
 ### Solution 2
@@ -186,6 +196,7 @@ The main class for this solution is
 ```
 
 ---
+
 ## Atomic Variables
 This method of the class AtomicInteger is functionally equivalent to the class count++, but it performs atomically. The 
 use of atomic variables instead of locks gives many advantages:
@@ -200,6 +211,7 @@ be rewarded by the compiler or Java Virtual Machine. However, volatile is a very
 not help fix the `AtomicCounter`-class because making `count` volatile would not ensure that `count++` is atomic. 
 
 ---
+
 ## Recap 
 
 So far, we've discussed _sequential_ programs, which has one Thread of execution, and _concurrent_ programs, which has 
@@ -215,13 +227,17 @@ We will study two different approaches to concurrent programs:
   - Distributed programs:
     - They execute on different machines
     - They communicate over a network
+
 ---
+
 ### Why Concurrent Programs? Why do we study this topic?
 1. Performance - Time gets saved if work can be subdivided into concurrent tasks.
 2. To model concurrent phenomena such as: 
    - Graphical User Interface (GUI) events 
    - Access to the same information/resources by many
+
 ---
+
 ## Shared Memory Concurrency
 Shared memory concurrency is important because:
 - It matches common hardware (many CPUs, each have many cores)
@@ -241,7 +257,9 @@ Basic properties for shared memory concurrency:
 In what follows in this course we'll use a special version of an imperative programming language called Simple 
 Programming Language Await. It has a normal C-style syntax and Hoare-style pre-/post-conditions that may surround every
 instruction in the language. 
+
 ---
+
 Example: 
 ```
 // First statement takes variable x and increases it by value z
@@ -382,4 +400,17 @@ W2    W2    W1    W2    W1    W1
 
 Only two of the interleavings are optional/viable, and those are the ones which gives the result 0. But the four others 
 yields a result which gives the wrong answer. 
+---
 
+We can view the execution of a concurrent program as an interleaving of the atomic actions executed by individual 
+processes / threads. When processes interact, not all interleavings are likely to be acceptable. The role of 
+synchronization is to prevent undesirable interleavings and this is done by combining _fine-grained_ atomic actions into 
+_coarse-grained_ atomic actions.
+
+> Fine-grained atomic actions are implemented directly by the hardware on which a concurrent program executes. 
+
+> Coarse-grained atomic actions are compositions of several fine-grained atomic actions.
+
+Using synchronization as a way to prevent undesired interleavings, is also possible by delaying the execution of a 
+process until the program state satisfies some predicate (some _boolean_ condition). The first form of synchronization, 
+which combines fined-grained atomic actions into composite coarse-grained atomic actions 
