@@ -448,7 +448,7 @@ Then, any intermediate results that occur when a complex expression is evaluated
 which private to the execution process, i.e. intermediate results, "temporaries", are local.
 
 With this machine model, if an expression in one process does not reference a variable which is modified by another 
-process, then the expression evaluation will appear to be atomic (by the 'at-most-once' property) even if it requires 
+process, then the expression evaluation will appear to be atomic (by the _at-most-once_ property) even if it requires 
 executing several fine-grained atomic actions. 
 
 There are two reasons for this: 
@@ -460,10 +460,98 @@ process, then the execution of the assignment will appear to be atomic. This hap
 to assign to a variable only references local variables. 
 
 Unfortunately, most statements in concurrent programs that references shared variables do not meet the both of the 
-requirements above. However, a weaker requirement (at-most-property) is often met. 
+requirements above. However, a weaker requirement (_at-most-once_ property) is often met. 
 
 ---
 
 ### At-Most-Once Property
+Consider the assignment statement `x = e`, where we assign the value `e` to the variable `x`. 
 
+Let us introduce the notion of a _critical reference_. A _critical reference_ is a reference to a variable written to by
+another process.
+
+If an expression `e` has no critical references, then `e` appears to be atomic. So, `x = e` satisfies the at-most-once 
+property, if `e` contains at-most-one critical reference, and `x` is not read by another process. `x = e` will also 
+satisfy the at-most-once property if `e` contains NO critical references. 
+
+It is called the at-most-once property because there can be at most one shared variable, and it can be referenced at 
+most one time. 
+
+Examples: 
+```
+int x = 0;
+int y = 0;
+
+1. co x = x+1 || y = y+1 oc 
+2. co x = y+1 || y = y+1 oc
+3. co x = y+1 || y = x+1 oc
+```
+1. In the first example, there are no critical references because `x` is only being read and written by the first process, 
+and `y` is only being read and written by the second process. So both processes satisfy the at-most-once property. 
+
+2. In the second example, `y` is being read and written to `x` by the first process, while `y`is being read and written 
+to`y` by the second process. So `y` is the critical reference because it's being written to by the second process and 
+read by the first, but there's only that one critical reference. Thus, both processes satisfies the at-most-once 
+property, since they both contain at most one critical reference. 
+
+3. In the third example, the first process is reading the variable `y` and writing it to the variable `x`, and the 
+second process is reading the variable `x` and writing it to the variable `y`. Neither processes satisfy the at-most-
+once property because we refer to `y` in the first process `x=y+1` and `y` is assigned a value in the second process.
+And we refer to `x` in the second process `y=x+1` and `x` is assigned a value in the first process. 
+
+If an expression or assignment does not satisfy the at-most-once property, it often must be arranged to be executed 
+atomically. So we can use synchronization to create a coarse-grained atomic action.
+
+---
+
+## Simple Programming Language Await (continuing)
+Let's now have a look at the constructions that our `await` language has. 
+
+```
+for [i=0 to n-1] { a[i] = 0; }
+co [i=0 to n] { a[i] = 0; }
+process foo { ... }
+process bar { [i=1 to n] { write(i); }
+<await(B) S;>
+<S>
+<await(B)>
+```
+In the first line,
+
+`for [i=0 to n-1] { a[i] = 0; }`
+
+we have a `for` statement with one several quantifier `i=0 to n-1`, which introduces a new index 
+variable, gives its initial value, and specifies the range of value in the index variable. The brackets are used around 
+the quantifiers to indicate that there is a range of values as in an array declaration.
+
+Apart, from the `co` `oc` statements, there is a second form of the `co`-statement that uses one or more quantifiers as 
+a shorthand way to express that a set of statements is to be executed in parallel for every combination of values for 
+the quantifier variables.
+
+The second line, 
+
+`co [i=0 to n] { a[i] = 0; }`
+
+creates n+1 processes, one for each value of i. The scope of the quantifier variable is the process declaration and each 
+process has a unique value of i.
+
+
+The third line, 
+
+`process foo{ ... }`
+
+is the process declaration, which essentially is an abbreviation of the co-statement, with one arm and/or one 
+quantifier.
+
+
+The fourth line, 
+
+`process bar[i=1 to n]{ write(i); }`
+
+is declaring an array of processes by appending the quantifier `[i=1 to n]` to the name of the process `bar`. The order 
+in which th process writes values, is non-deterministic. 
+
+This means that the path of execution isn't fully determined by the specification of the computation, so the same input 
+can produce different outputs. This is because `bar` is an array of n distinct processes and processes execute in an 
+arbitrary order.  
 
