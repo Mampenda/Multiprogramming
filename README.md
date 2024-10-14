@@ -710,4 +710,71 @@ y = isprime(x);
 {y==0 || y==1} (isprime() is a boolean function)
 ```
 
-### How to ensure the desired properties?
+### Safety and Liveness Properties (of concurrent programs)
+Every interesting property can be formulated as safety or liveness. The key-safety property is that the final state is 
+correct, and the key-liveness property is that the program will terminate. These properties are equally important for 
+concurrent programs. 
+
+Important safety-properties: 
+- Mutual exclusion 
+- Absence of deadlock
+
+It's bad for mutual exclusion to have more than one process to execute critical sections of statements at the 
+same time. It's bad for deadlock to have all processes wait for conditions that might never occur, recall the case with 
+the dining philosophers. 
+
+Important liveness-properties:
+
+- The process will eventually get to enter a critical section, i.e. a place where we access shared variables. 
+- A request for service will eventually be honored,
+- A message will eventually reach its destination.
+
+Liveness properties are affected by scheduling policies which determine which eligible atomic actions are next to 
+execute.
+
+**Scheduling Policies and Fairness**
+- Fairness is concerned with the guarantee that processes get the chance to proceed
+
+Regardless of what the other processes do, each process executes a sequence of atomic actions. An atomic action is 
+eligible if it is the next atomic action in the process that could be executed. When there are several processes, 
+there are several eligible atomic actions. A scheduling policy determines which one will be executed next. 
+
+Three degrees of fairness that a scheduling policy might provide is unconditional, weak, and strong fairness. 
+
+Recall that an unconditional atomic action is one that doesn't have a delay condition and consider the following 
+program: 
+```
+bool continue = true; 
+co while(continue); || continue=false; oc
+```
+The two statements between `co` and `oc` execute concurrently. Suppose now a scheduling policy assigns a processor to a 
+process until that process either terminates or delays. If there's only one processor, this program will not terminate 
+when the first process executes first, but when the second process eventually gets a chance to execute. We capture this 
+in the definition of unconditional fairness.
+
+- **Unconditional fairness**: a scheduling policy is unconditionally fair if every unconditional atomic action (the one that
+does not have the boolean condition) that is eligible will be executed. 
+
+Round-Robin, where time slices are assigned to each process in equal portions in a circular order, would be an 
+unconditionally fair scheduling policy when we have a single processor. And if we have multiple processors, the parallel
+execution would be the unconditionally fair policy. 
+
+Now, suppose that the program contains conditional atomic actions, that is await-statements with boolean conditions
+`<await (B) S;>`, then we need to make stronger assumptions to guarantee that processes will make progress. This is
+because a conditional atomic actions cannot be executed until the condition `(B)` becomes true. 
+
+- **Weak fairness**: A scheduling policy is weakly fair if it's unconditionally fair and if every conditional, eligible 
+atomic action will be executed eventually, assuming that its condition becomes true and then remains true until it is 
+seen by the process that executes the conditional atomic action. 
+
+In other words, if `<await (B) S;>` is eligible and `(B)` becomes true, then `(B)` remains true at least until after the
+conditional atomic action is executed. 
+
+Round-Robin and Time-Slicing is _weakly_ fair scheduling policies if every process gets a chance to execute. This is 
+because any delayed process will eventually see that the "is-delayed"-condition becomes true. 
+
+However, weak fairness is not sufficient to ensure that any eligible await statement eventually executes. This is 
+because the condition might change from 'false' to 'true' and back to 'false' when a process is delayed. 
+
+- **Strong fairness**: A scheduling policy is strongly fair if it's unconditionally fair and every conditional, eligible
+atomic action will eventually be executed assuming that its condition is 'always' (infinitely often) "true".
