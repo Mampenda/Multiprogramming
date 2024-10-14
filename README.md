@@ -147,6 +147,7 @@ space becomes available in a buffer before we can add something to it. This is w
 
 Let's see how we can use condition variables effectively in code. We shall follow a simple example in this sudo code 
 which uses the method `await()`.
+
 ```
     // Define an reentrant lock object
     ReentrantLock reentrantLock = new ReentrantLock();
@@ -171,6 +172,7 @@ which uses the method `await()`.
     // Unlock the lock after using the shared resources
     finally { reentrantLock.unlock(); }
 ```
+
 To indicate that the condition variable is true, another thread would use the method `signal()` or `signalAll()`, to 
 signal that the condition has become true. The method `await()` will then unblock and re-acquire the lock.
 
@@ -659,4 +661,53 @@ We can consider two types of the atomic actions: The conditional and the uncondi
 and if B is false, it can only become true as a result of an actions taken by other processes. Thus, a process that is 
 waiting to execute a conditional atomic action could wait for an arbitrarily long time. 
 2. The unconditional atomic action is the one that does not contain a delay-condition (B), such an action can execute 
-immediately, with the requirement that it executes atomically. 
+immediately, with the requirement that it executes atomically.
+
+--- 
+
+## Properties of concurrent programs 
+**Definitions:** 
+- State - a snapshot of values of all the shared variables
+- History - a sequence of states or a sequence of memory operations
+- Property - a predicate over program history
+- True property - a predicate that is true for all possible histories
+
+**Some properties of interest:** 
+- Safety - programs cannot reach a bad state
+- Liveness - programs will eventually reach a desired state
+- Partial correctness - if a program terminates, it does so in a desirable final state
+- Termination - all histories are finite
+- Total correctness - partial correctness and termination
+
+### How to ensure the desired properties?
+- Testing 
+  - Increases confidence, but is not a proof
+  - Impractical to cover all states 
+- Operational reasoning 
+  - Analyse all possible histories of programs
+- Formal analysis
+  - Produce a proof
+  - Hoare-triples (pre-condition, statement, post-condition)
+
+**Hoare triples**
+```
+int x = get_number(); 
+if (x==0) throw "value is too small!";
+y = isprime(x);
+```
+One could write pre- and post-conditions for each of the three statements in this program: 
+```
+{no pre-condition}
+int x = get_number(); 
+{x>=0}
+
+{x>=0}
+if (x==0) throw "value is too small!";
+{x>=1} (after this statement, we either get an exception thrown, or x is gte 0)
+
+{x>=1}
+y = isprime(x);
+{y==0 || y==1} (isprime() is a boolean function)
+```
+
+### How to ensure the desired properties?
