@@ -636,10 +636,27 @@ The general form of the `await` statement specifies mutual exclusion and conditi
 > is true.
 
 
-If you want to _only_ specify _mutual exclusion_ you can abbreviate the await statement as follows: `<S;>`. 
+If you want to _**only**_ specify _**mutual exclusion**_ you can abbreviate the await statement as follows: `<S;>`. 
 
 For example, the statement `<x=x+1; y=y+1>` is atomically incrementing `x` and `y`. The internal state in which `x` has 
 been incremented and `y` is yet to be incremented, is by definition not visible by other processes that reference `x`or 
-`y`! 
+`y`! This is the whole point of executing the statements atomically, which we do by enclosing them in angle brackets. 
 
-This is the whole point of executing the statements atomically, which we do by enclosing them in angle brackets. 
+In the general form `<await (B) S;>`, `S` is a single assignment statement and if it has the `at-most-once`-property, or
+`S` is implemented by a single machine instruction, then `S` will be executed atomically. This means that `<S;>` and 
+`S;`are the same, i.e. they have the same effect. So we don't have to use the angle brackets. 
+
+If you want to _**only**_ specify _**conditioned synchronization**_, you can abbreviate the await statement as 
+`<await (B);>`. 
+
+For example, if you want to delay the execution of a process until some variable count is greater than zero, you write 
+`<await (count>0);>`. Also, if `B` meets the requirements for the `at-most-once`-property, then `<await (B);>` can be 
+implemented as `while (not B);`. The previous while-loop is an example of a `spin-loop` i.e. the while loop has an empty
+body, so it just spins until `B` becomes true. 
+
+We can consider two types of the atomic actions: The conditional and the unconditional atomic actions.
+1. The conditional atomic action is an await statement with a guard (B), such an action cannot execute until B is true, 
+and if B is false, it can only become true as a result of an actions taken by other processes. Thus, a process that is 
+waiting to execute a conditional atomic action could wait for an arbitrarily long time. 
+2. The unconditional atomic action is the one that does not contain a delay-condition (B), such an action can execute 
+immediately, with the requirement that it executes atomically. 
