@@ -555,3 +555,91 @@ This means that the path of execution isn't fully determined by the specificatio
 can produce different outputs. This is because `bar` is an array of n distinct processes and processes execute in an 
 arbitrary order.  
 
+--- 
+### Disjoint processes and read/write variables
+
+```
+V = a set of global variables in a statement or an expression
+W = a set of global write-variables
+```
+_**For the global variables in V**_
+
+For an assignment _statement_ `V(x=e)`, the set of global variables will be a union `V(e) ∪ V(x)`. 
+
+For a _sequence of statements_ `S_1, S_2, ..., S_n`, the set of global variables, will also be a union of the global 
+variables over the sequences:
+
+`V(S_1, S_2, ..., S_n) = V(S_1) ∪ V(S_2) ∪ ... ∪ V(S_n)`
+
+For the `if ... then ... else` statement, the set of global variables, is again, a union of all the global variables in
+the boolean expression, and the set of global variables in the statement S: 
+
+`V(if b then S) = V(b) ∪ V(S)`. 
+
+_**For the global write-variables in W**_
+
+For an _assignment_ statement `x=e`, the set of write variables will be `{x}`, for the _sequence of statements_ 
+`S_1, S_2, ..., S_n`, the set of global write-variables will be a union of global write-variables of the sequences: 
+`W(S_1, S_2, ..., S_n) = W(S_1) ∪ W(S_2) ∪ ... W(S_n)`. 
+
+**How can one express different properties using `V` and `W`?** 
+
+1. No common variables for `S_1, S_2, ..., S_n` : `V(S_1) ∩ W(S_2) = ∅` => No interference
+
+2. Another possible condition is that the set of global variables in `S_1` intercepted with the set of global write
+variables in `S_2`, is the same as the set of global write-variables in `S_1` intersected with the global variables in 
+`S_2` and is also the same as the empty set :  `V(S_1) ∩ W(S_2) = V(S_2) ∩ W(S_1) = ∅`. This means that read-only 
+variables cause _no interference_. This means that no matter what value the read-only variables has, it will not affect
+the other global variables. 
+
+--- 
+
+### Coarse-grained atomic actions
+When non-interference does not hold, we must restrict interleavings. Interleavings is a way to run multiple programs in 
+a single thread, or on a single cpu core. We do this either by synchronization, atomic blocks, etc. 
+
+`co <x=x+1> || <x=x-1> oc`
+
+Since the assignments are written within angel brackets `<>`, they are atomic actions, i.e. intermediate states are not 
+visible for other processes, and variable changes from other processes are not observed. 
+
+--- 
+
+## Simple Programming Language Await (continuing)
+
+We will specify synchronization by means of the `await` statement: 
+
+`<await (B) S;>` 
+
+the await-statement is enclosed within angle brackets to indicate that it is an _atomic_ statement. Here, the 
+await-statements ensures that the boolean expression `B` is guaranteed to be true when the execution of `S` begins, 
+and no internal state in `S` is visible for other processes. 
+
+So, for example the in the statement 
+
+`<await (s>0) s = s-1;` 
+
+the assignment/update of the variable `s`, will only decrement the value of `s` after the value of `s` is greater than 0. 
+
+The `await` statement is a powerful statement because it can be used to specify arbitrary coarse-grained atomic actions, 
+which also makes it convenient for expression synchronization. The expressive power also makes the `await` statement
+very expensive to implement in its most general form. However, there are many special cases of the `await`-statement 
+that can be implemented efficiently, like for example `<await (s>0) s = s-1;` above, which is an example of a 
+"_**P operation on semaphore s**_". 
+
+The general form of the `await` statement specifies mutual exclusion and conditioned synchronization. 
+
+> _Mutual exclusion_ is a type of synchronization that ensures that statements in different processes cannot execute at 
+> the same time. 
+> 
+> _Conditioned synchronization_ is a type of synchronization that involves delaying a process until some Boolean condition 
+> is true.
+
+
+If you want to _only_ specify _mutual exclusion_ you can abbreviate the await statement as follows: `<S;>`. 
+
+For example, the statement `<x=x+1; y=y+1>` is atomically incrementing `x` and `y`. The internal state in which `x` has 
+been incremented and `y` is yet to be incremented, is by definition not visible by other processes that reference `x`or 
+`y`! 
+
+This is the whole point of executing the statements atomically, which we do by enclosing them in angle brackets. 
