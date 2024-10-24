@@ -782,7 +782,7 @@ Important liveness-properties:
 Liveness properties are affected by scheduling policies which determine which eligible atomic actions are next to
 execute.
 
-**Scheduling Policies and Fairness**
+### Scheduling Policies and Fairness
 
 - Fairness is concerned with the guarantee that processes get the chance to proceed
 
@@ -831,6 +831,32 @@ because the condition might change from 'false' to 'true' and back to 'false' wh
 
 - **Strong fairness**: A scheduling policy is strongly fair if it's unconditionally fair and every conditional, eligible
   atomic action will eventually be executed assuming that its condition is 'always' (infinitely often) "true".
+
+### Critical Section Problem
+
+Concurrent programs employ two basic kinds of synchronization; Mutual exclusion (ensuring that statements in different
+processes cannot execute at the same time) and condutioned synchronization (involves delaying a process until some Boolean
+condition is true).
+
+We will illustrate how to program sulotions for two important problems; critical sections (concerned with implementing
+atomic actions in software) and barriers (synchronization points that all processes must reach before any process is
+allowed to proceed). Mutual exclusion is typically implemented by means of locks that protects critical sections of code.
+
+The critical section problem, which we will solve by using coarse grained solution, will use the `await`statement to
+implement a lock. Then we'll also consider fine-grained solutions that will use `spin`-locks. Finally, we'll have a look
+at fair solutions: the tie-breaker algorithm, the ticket algorithm, and the bakery algorithm. We will illustrate different
+ways to approach the problem that has different performance and different fairness attributes. The solutions to the
+critical section problem are also important because they can be usedto implement `await`-statements, and hence arbitrary atomic actions.
+
+The critical section problem is one of the classic concurrent programming problems. It was the first problem to be studied extensively, 
+and remains of interest since most concurrent programs have critical sections of code. Now we will define the problem and develop a 
+coarse grained solution. 
+
+In the critical secition problem we have `N` processes, and they repeatedly executes a critical and then a non-critical section of code. 
+The critical is proceeded by an entry protocol and followed by an exit protocol, thus we can write it as 
+```
+
+``` 
 
 ---
 
