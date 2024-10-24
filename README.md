@@ -855,8 +855,17 @@ coarse grained solution.
 In the critical secition problem we have `N` processes, and they repeatedly executes a critical and then a non-critical section of code. 
 The critical is proceeded by an entry protocol and followed by an exit protocol, thus we can write it as 
 ```
-
+Process P[i=1 to n]{
+  while(true){
+    entry protocol;
+    _**critical section;**_
+    exit protocol;
+    non-critical section;
+  }
+}
 ``` 
+Each critical section is a sequence of statements that access some shared object. Each non-critical section is another sequence of statements that doesn't access the shared objects. We assume that a process that enters its critical section will eventually exit, that means that a process may terminate only outside its critical section. 
+
 
 ---
 
