@@ -152,7 +152,8 @@ deadlocks all together.
 
 Quite often in concurrent programming, there's a need to wait until a certain event happens. For example, one might need
 to wait for a moment when a queue becomes non-empty before removing an element from it , or we need to wait before some
-space becomes available in a buffer before we can add something to it. This is where _condition variables_ come into play.
+space becomes available in a buffer before we can add something to it. This is where _condition variables_ come into 
+play.
 
 Let's see how we can use condition variables effectively in code. We shall follow a simple example in this sudo code
 which uses the method `await()`.
@@ -217,8 +218,8 @@ use of atomic variables instead of locks gives many advantages:
 
 1.  We cannot anymore forget to acquire the lock before we perform some operation
 2.  We avoid deadlocks
-    Atomic variables are the basis of the non-blocking, lock-free algorithms, which achieve synchronization without locks
-    and blocking.
+    Atomic variables are the basis of the non-blocking, lock-free algorithms, which achieve synchronization without 
+    locks and blocking.
 
 ### Volatile variables
 
@@ -477,8 +478,8 @@ characteristics:
 2. Values are manipulated in registers. Values are manipulated by loading them into registers, operating on them there,
    and then storing the results back into memory.
 3. Registers are local to processes. Each process has its own set of registers. If the same processes changes from one
-   process to another, we have so-called _context switch_. This is realized either by having distinct sets of registers, or
-   by saving and restoring register values whenever a different process is executed.
+   process to another, we have so-called _context switch_. This is realized either by having distinct sets of registers, 
+   or by saving and restoring register values whenever a different process is executed.
 
 Then, any intermediate results that occur when a complex expression is evaluated are stored in registers or in memory
 which private to the execution process, i.e. intermediate results, "temporaries", are local.
@@ -526,8 +527,9 @@ int y = 0;
 3. co x = y+1 || y = x+1 oc
 ```
 
-1. In the first example, there are no critical references because `x` is only being read and written by the first process,
-   and `y` is only being read and written by the second process. So both processes satisfy the at-most-once property.
+1. In the first example, there are no critical references because `x` is only being read and written by the first 
+   process, and `y` is only being read and written by the second process. So both processes satisfy the at-most-once 
+   property.
 
 2. In the second example, `y` is being read and written to `x` by the first process, while `y`is being read and written
    to`y` by the second process. So `y` is the critical reference because it's being written to by the second process and
@@ -629,10 +631,10 @@ For an _assignment_ statement `x=e`, the set of write variables will be `{x}`, f
 1. No common variables for `S_1, S_2, ..., S_n` : `V(S_1) ∩ W(S_2) = ∅` => No interference
 
 2. Another possible condition is that the set of global variables in `S_1` intercepted with the set of global write
-   variables in `S_2`, is the same as the set of global write-variables in `S_1` intersected with the global variables in
-   `S_2` and is also the same as the empty set : `V(S_1) ∩ W(S_2) = V(S_2) ∩ W(S_1) = ∅`. This means that read-only
-   variables cause _no interference_. This means that no matter what value the read-only variables has, it will not affect
-   the other global variables.
+   variables in `S_2`, is the same as the set of global write-variables in `S_1` intersected with the global variables 
+   in `S_2` and is also the same as the empty set : `V(S_1) ∩ W(S_2) = V(S_2) ∩ W(S_1) = ∅`. This means that read-only
+   variables cause _no interference_. This means that no matter what value the read-only variables has, it will not 
+   affect the other global variables.
 
 ---
 
@@ -675,8 +677,8 @@ The general form of the `await` statement specifies mutual exclusion and conditi
 > _Mutual exclusion_ is a type of synchronization that ensures that statements in different processes cannot execute at
 > the same time.
 >
-> _Conditioned synchronization_ is a type of synchronization that involves delaying a process until some Boolean condition
-> is true.
+> _Conditioned synchronization_ is a type of synchronization that involves delaying a process until some Boolean 
+> condition is true.
 
 If you want to _**only**_ specify _**mutual exclusion**_ you can abbreviate the await statement as follows: `<S;>`.
 
@@ -699,8 +701,8 @@ body, so it just spins until `B` becomes true.
 We can consider two types of the atomic actions: The conditional and the unconditional atomic actions.
 
 1. The conditional atomic action is an await statement with a guard (B), such an action cannot execute until B is true,
-   and if B is false, it can only become true as a result of an actions taken by other processes. Thus, a process that is
-   waiting to execute a conditional atomic action could wait for an arbitrarily long time.
+   and if B is false, it can only become true as a result of an actions taken by other processes. Thus, a process that 
+   is waiting to execute a conditional atomic action could wait for an arbitrarily long time.
 2. The unconditional atomic action is the one that does not contain a delay-condition (B), such an action can execute
    immediately, with the requirement that it executes atomically.
 
@@ -805,8 +807,8 @@ process until that process either terminates or delays. If there's only one proc
 when the first process executes first, but when the second process eventually gets a chance to execute. We capture this
 in the definition of unconditional fairness.
 
-- **Unconditional fairness**: a scheduling policy is unconditionally fair if every unconditional atomic action (the one that
-  does not have the boolean condition) that is eligible will be executed.
+- **Unconditional fairness**: a scheduling policy is unconditionally fair if every unconditional atomic action (the one 
+  that does not have the boolean condition) that is eligible will be executed.
 
 Round-Robin, where time slices are assigned to each process in equal portions in a circular order, would be an
 unconditionally fair scheduling policy when we have a single processor. And if we have multiple processors, the parallel
@@ -835,25 +837,28 @@ because the condition might change from 'false' to 'true' and back to 'false' wh
 ### Critical Section Problem
 
 Concurrent programs employ two basic kinds of synchronization; Mutual exclusion (ensuring that statements in different
-processes cannot execute at the same time) and condutioned synchronization (involves delaying a process until some Boolean
-condition is true).
+processes cannot execute at the same time) and conditioned synchronization (involves delaying a process until some 
+Boolean condition is true).
 
-We will illustrate how to program sulotions for two important problems; critical sections (concerned with implementing
+We will illustrate how to program solutions for two important problems; critical sections (concerned with implementing
 atomic actions in software) and barriers (synchronization points that all processes must reach before any process is
-allowed to proceed). Mutual exclusion is typically implemented by means of locks that protects critical sections of code.
+allowed to proceed). Mutual exclusion is typically implemented by means of locks that protects critical sections of 
+code.
 
 The critical section problem, which we will solve by using coarse grained solution, will use the `await`statement to
 implement a lock. Then we'll also consider fine-grained solutions that will use `spin`-locks. Finally, we'll have a look
-at fair solutions: the tie-breaker algorithm, the ticket algorithm, and the bakery algorithm. We will illustrate different
-ways to approach the problem that has different performance and different fairness attributes. The solutions to the
-critical section problem are also important because they can be usedto implement `await`-statements, and hence arbitrary atomic actions.
+at `fair` solutions: the _tie-breaker_ algorithm, the _ticket_ algorithm, and the _bakery_ algorithm. 
+We will illustrate different ways to approach the problem that has different performance and different fairness 
+attributes. The solutions to the critical section problem are also important because they can be used to implement 
+`await`-statements, and hence arbitrary atomic actions.
 
-The critical section problem is one of the classic concurrent programming problems. It was the first problem to be studied extensively, 
-and remains of interest since most concurrent programs have critical sections of code. Now we will define the problem and develop a 
-coarse grained solution. 
+The critical section problem is one of the classic concurrent programming problems. It was the first problem to be 
+studied extensively, and remains of interest since most concurrent programs have critical sections of code. Now we will 
+define the problem and develop a coarse grained solution. 
 
-In the critical secition problem we have `N` processes, and they repeatedly executes a critical and then a non-critical section of code. 
-The critical is proceeded by an entry protocol and followed by an exit protocol, thus we can write it as 
+In the critical section problem we have `N` processes, and they repeatedly executes a critical and then a non-critical 
+section of code. The critical is proceeded by an entry protocol and followed by an exit protocol, thus we can write it 
+as follows:  
 ```
 Process P[i=1 to n]{
   while(true){
@@ -864,7 +869,52 @@ Process P[i=1 to n]{
   }
 }
 ``` 
-Each critical section is a sequence of statements that access some shared object. Each non-critical section is another sequence of statements that doesn't access the shared objects. We assume that a process that enters its critical section will eventually exit, that means that a process may terminate only outside its critical section. 
+Each critical section is a sequence of statements that access some shared object. Each non-critical section is another 
+sequence of statements that doesn't access the shared objects. We assume that a process that enters its critical section 
+will eventually exit, that means that _a process may terminate only outside its critical section_. 
+
+Now we want to design the entry and exit protocols (what we have to do before entering and after exiting the critical 
+section). We want these protocols to satisfy the following properties:
+1. **Mutual exclusion** (at most one process at a time is executing its critical section)
+2. **Absence of a deadlock** (or livelock) (If two or more processes are trying to enter their critical sections, then 
+   at least one will succeed)
+3. **Absence of unnecessary** delay (If a process is trying to enter its critical section, and the other processes are 
+   executing their non-critical sections or have already terminated, then the first process is not prevented from 
+   entering its non-critical section)
+4. **Eventual entry** (A process that is attempting to enter its critical section, will eventually succeed)
+
+The first three properties are safety-properties, and the fourth one is a liveness-property. 
+> BAD STATES
+> 
+> _Mutual exclusion_: when two processes are in the critical section (both are accessing shared resources).
+> 
+> _Absence of a deadlock_: when all the processes are waiting to enter, but none of them is
+> able to do so.
+> 
+> _Absence of livelock_: is a solution where the processes are alive but looking forever.
+> 
+> _Absence of necessary delay_: when one process that wants to enter cannot do so even though no other process are in 
+> their critical section.
+> 
+> _Eventual entry_ is a liveness-property because it depends on the scheduling policy. 
+
+A trivial way to solve the critical section problem is to enclose the critical section in angle brackets, i.e. to use
+the unconditional `await()`-statement.
+
+``` 
+<_**critical section;**_>
+```
+
+So mutual exclusion will follow by definition of the angle brackets. The other three properties would also be satisfied 
+if scheduling is _unconditionally fair_. However, this solution is asking us "How do we implement the angle brackets?".
+
+So out of all the four properties listed above, the mutual exclusion is the most important. Thus, in all our solutions 
+to the critical section problem, we will first focus on satisfying the mutual-exclusion property, and only then will we 
+focus on how to satisfy the other three properties. 
+
+To specify the mutual exclusion property, we need a way to indicate if the process is in its critical section. So let us
+simplify the notation. We will develop a solution for only two processes, P1 and P2, but the solution can be generalised
+for N processes. 
 
 
 ---
