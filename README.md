@@ -1137,3 +1137,64 @@ process Bear {
 ```
 
 ### Implementing await statements
+Any solution to the critical section problem can be used to implement an unconditional atomic action `<S;>` by hiding 
+internal control points from other processes. We denote
+
+`CSenter` - critical section entry protocol
+`CSexit` - a critical section exit protocol
+
+Now we can implement `<S;>` as 
+``` 
+CSenter;
+S; 
+CSexit;
+```
+This assumes that all code sections in all processes that reference or modify variables (modified by `S`) are protected 
+by similar entry and exit protocols (The opening angle bracket is replaced by `CSenter` and the closing angle bracket
+is replaced by `CSexit`). 
+
+So the code block above can be used as a building block to implement the await statement. A conditional atomic action,
+`<await (B) S;>`, delays the executing process until `B` is true, then it executes `S`. So `B` must be true when the 
+execution of `S` begins. To ensure that the execution is atomic we can use a critical section protocol to hide 
+intermediate states in `S`. We can use a loop to repeatedly test `B` until it is true. 
+``` 
+CSenter;
+while (!B) { ... } 
+S; 
+CSexit;
+```
+Here we assume that the critical sections in all processes that modify variables that are referenced in `B` or `S` are
+protected by similar entry- and exit-protocols. 
+
+Now, what do we actually write inside the loop-body? If the body is executed, `B` was false. So the only way `B` can 
+become true, is if some other process alters a variable which is referenced in `B`. Since we assume that any statement 
+in other processes that modifies a variable that is referenced in `B` must be in a critical section, we have to exit the
+critical section while we wait for `B` to become true. But to ensure atomicity of the evaluation of `B` and the 
+execution of `S` we must re-enter the critical section before re-evaluating `B`. 
+
+So what we might do is to perform the exit-protocol and then the enter protocol:
+``` 
+CSenter;
+while (!B) { CSexit; CSenter; } 
+S; 
+CSexit;
+```
+This implementation will preserve the semantics of the conditional atomic actions. Assuming that the critical section
+protocols guarantee mutual exclusion, if scheduling is weakly fair, then the process that executes the code-block above 
+will eventually terminate the loop, i.e. assuming that `B` will eventually become true and remains true, and the 
+scheduling is strongly fair, the loop will terminate if `B` becomes true infinitely often (This is just the definitions
+of the weakly-fair and strongly-fair scheduling policies).
+
+The code-block above is correct, but it is inefficient. This is because a process that executes it, is spinning in a 
+hard loop; continuously exiting and re-entering its critical section even though it cannot proceed until some other 
+process modifies a variable referenced in `B`. Once again, this lead to memory contention since every delayed process 
+continuously accesses the variables that are used in critical section protocols and the variables in `B`. 
+
+To reduce memory contention it is preferable for a process to delay for some period of time before re-entering the 
+critical section. Let us denote, by delay, some code that slows the process down:
+``` 
+CSenter;
+while (!B) { CSexit; Delay; CSenter; } 
+S; 
+CSexit;
+```
