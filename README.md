@@ -978,15 +978,103 @@ process P2 {
 The significance of the change of variables above, is that almost all machines have some special instruction that can be
 used to implement the conditional atomic actions (the await-statements). 
 
-### Test and Set Instruction
+### Critical Sections: Spin Locks
+Test and set instructions takes a shared lock variable as an argument and returns a boolean. As an atomic action. The 
+test and set, reads and saves the value of `lock`, and sets `lock` to true, and then returns the saved initial value of 
+`lock`. 
 
+``` 
+bool TestAndSet(bool lock) {
+    // Atomically (inside angle brackets)
+    < 
+        bool initial = lock; // save initial valie
+        lock = true;         // set lock to true
+        return initial;      // return initial value
+    >
+}
+```
+We can now re-implement the solution we saw above by using the `TestAndSet()`-method.
+```
+// Solution using Test & Set protocol
+bool lock = false; 
 
+process P1 {
+    while(true){
+        while(TestAndSet(lock)) { }
+        critical section;
+        lock = false;
+        non-critical section;
+    }
+}
 
+process P2 {
+    while(true){
+        while(TestAndSet(lock)) { }
+        critical section;
+        lock = false;
+        non-critical section;
+    }
+}
+```
 
+In particular, the conditional atomic actions will be replaced by loops that do not terminate until `lock` is false. The
+`while()` loop does not terminate until `lock` is false, and hence, since all processes execute the same protocol, this 
+solution will work for any number of processes. When a `lock`-variable is used as shown above, it is typically called a 
+`spin lock`. This is because the processes keep looping (spinning) while waiting for the lock to be cleared. 
 
+The solution above has the following properties: 
+1. Mutual exclusion is ensured because if two or more processes are trying to enter their critical section, only one can 
+   succeed in being the first to change the value of `lock` from false to true. Hence, only one will terminate its entry 
+   protocol.
+2. Absence of deadlock results from the fact that if both processes are in their entry-protocols, the `lock` is false, 
+   and hence, one of the processes will succeed in entering its critical section. 
+3. Absence of necessary delay results from the fact that if both processes are outside their critical section then 
+   `lock` is false, and hence, one can successfully enter if the other is executing its non-critical section or has 
+   already terminated.
+4. Eventual entry is not necessarily guaranteed. If the scheduling is strongly fair, then a process trying to enter its
+   critical section will succeed because `lock` will become false infinitely often. And if a scheduling policy is only 
+   weakly fair, which is most commonly the case, then a process could spin forever in its entry-protocol. However, this 
+   can only happen if there are always other processes trying and succeeding to enter their critical sections. This
+   should not be the case in practice. 
+   
+So far, the solution is likely to be fair and should be correct, but experiments on multiprocessors have shown that it 
+can lead to poor performance if several processes are competing for access to a critical section. This is because `lock`
+is a shared variable, and every delayed process can continuously reference it. This "hot-spot" causes `memory-
+contention`, which degrades the performance of memory units. The `TestAndSet()` instruction writes into `lock` every
+time it is executed, even when the value of `lock` does not change. Since shared-memory multiprocessors employ caches 
+to reduce traffic to primary memory, this makes `TestAndSet()` significantly more expensive than an instruction that 
+would just read a shared variable. 
 
+So let's see how we can reduce the overhead of memory contention by modifying the entry-protocol. Instead of simply 
+spinning until a `TestAndSet()`-retruns true, we can increase the likelihood that it returns true by using the following
+entry-protocol
 
-
+```
+bool lock = false; 
+// Solution using Test & Test & Set protcol
+process P {
+    while(true){
+    
+        // Spin while lock set
+        while(lock) { }
+        
+        // Try to grab the lock
+        while(TestAndSet(lock)) { 
+        
+            // Spin again if fail
+            while(lock){ }
+        }
+        critical section;
+        lock = false;
+        non-critical section;
+    }
+}
+```
+This is called the Test-and-Test-and-Set protocol because a process tests `lock` until there's a possibility that Test-
+and-Set can succeed. In the two additional loops (the two spinning while loops), `lock` is only examined, so its value
+can be read from a local cache without affecting other processors, thus, we reduce memory contention, but it does not
+disappear completely. In particular, when `lock` is clear, then at least one, if not all, delayed processes will execute
+`TestAndSet()` even though only one can proceed. 
 
 
 
@@ -1047,3 +1135,5 @@ process Bear {
 	}
 }
 ```
+
+### Implementing await statements
