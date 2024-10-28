@@ -394,7 +394,7 @@ operations on local variables can be considered atomic. This is referred to as t
 > When a code statement has at most one atomic operation and the rest of the operations are performed on the local
 > variables, then the whole statement can be considered atomic.
 
-#### Mutual exclusion
+### Mutual exclusion
 
 Atomic operations on a variable cannot happen simultaneously. In a way, one "happens" before the other, in that case we
 have mutual exclusion.
@@ -915,6 +915,93 @@ focus on how to satisfy the other three properties.
 To specify the mutual exclusion property, we need a way to indicate if the process is in its critical section. So let us
 simplify the notation. We will develop a solution for only two processes, P1 and P2, but the solution can be generalised
 for N processes. 
+
+``` 
+bool in1 = false; 
+bool in2 = false; 
+
+# Solution 1
+process P1 {
+    while(true){
+        <await (!in2) in1=true>
+        critical section;
+        in1 = false;
+        non-critical section;
+    }
+}
+
+
+# Solution 2
+process P2 {
+    while(true){
+        <await (!in1) in2=true>
+        critical section;
+        in2 = false;
+        non-critical section;
+    }
+}
+```
+
+### Mutual exclusion (Spin-Locks Test, Set Test, and Test&Set)
+The two solutions in the previous section are coarse-grained and the employ two variables, `in1` and `in2`. If we want 
+to generalize the solutions for `N` processes, we would have to use `N` variables. However, we can notice that there are
+only two interesting states; either one process is in its critical section, or no process is in its critical section. So
+one variable should be sufficient to distinguish between these two states, regardless of how many processes we have.
+
+Let's change the code by introducing a single variable `lock` which will indicate when a process is in a critical 
+section. That means that `lock` is true when either `in1` or `in2` is true, and otherwise false. In other words, lock is
+the same as a disjunction of `in1` and `in2`.
+
+In place of `in1` and `in2` in the original solutions, we are going to use `lock` in the entry and exit protocols. 
+
+``` 
+bool lock = false; 
+
+process P1 {
+    while(true){
+        <await (!lock) lock=true>
+        critical section;
+        lock = false;
+        non-critical section;
+    }
+}
+
+process P2 {
+    while(true){
+        <await (!lock) lock=true>
+        critical section;
+        lock = false;
+        non-critical section;
+    }
+}
+```
+The significance of the change of variables above, is that almost all machines have some special instruction that can be
+used to implement the conditional atomic actions (the await-statements). 
+
+### Test and Set Instruction
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ---
