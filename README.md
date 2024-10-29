@@ -394,7 +394,7 @@ operations on local variables can be considered atomic. This is referred to as t
 > When a code statement has at most one atomic operation and the rest of the operations are performed on the local
 > variables, then the whole statement can be considered atomic.
 
-### Mutual exclusion
+## Mutual exclusion
 
 Atomic operations on a variable cannot happen simultaneously. In a way, one "happens" before the other, in that case we
 have mutual exclusion.
@@ -502,7 +502,7 @@ requirements above. However, a weaker requirement (_at-most-once_ property) is o
 
 ---
 
-### At-Most-Once Property
+## At-Most-Once Property
 
 Consider the assignment statement `x = e`, where we assign the value `e` to the variable `x`.
 
@@ -638,7 +638,7 @@ For an _assignment_ statement `x=e`, the set of write variables will be `{x}`, f
 
 ---
 
-### Coarse-grained atomic actions
+## Coarse-grained atomic actions
 
 When non-interference does not hold, we must restrict interleavings. Interleavings is a way to run multiple programs in
 a single thread, or on a single cpu core. We do this either by synchronization, atomic blocks, etc.
@@ -760,7 +760,7 @@ y = isprime(x);
 {y==0 || y==1} (isprime() is a boolean function)
 ```
 
-### Safety and Liveness Properties (of concurrent programs)
+## Safety and Liveness Properties (of concurrent programs)
 
 Every interesting property can be formulated as safety or liveness. The key-safety property is that the final state is
 correct, and the key-liveness property is that the program will terminate. These properties are equally important for
@@ -784,7 +784,7 @@ Important liveness-properties:
 Liveness properties are affected by scheduling policies which determine which eligible atomic actions are next to
 execute.
 
-### Scheduling Policies and Fairness
+## Scheduling Policies and Fairness
 
 - Fairness is concerned with the guarantee that processes get the chance to proceed
 
@@ -834,7 +834,7 @@ because the condition might change from 'false' to 'true' and back to 'false' wh
 - **Strong fairness**: A scheduling policy is strongly fair if it's unconditionally fair and every conditional, eligible
   atomic action will eventually be executed assuming that its condition is 'always' (infinitely often) "true".
 
-### Critical Section Problem
+## Critical Section Problem
 
 Concurrent programs employ two basic kinds of synchronization; Mutual exclusion (ensuring that statements in different
 processes cannot execute at the same time) and conditioned synchronization (involves delaying a process until some 
@@ -846,11 +846,12 @@ allowed to proceed). Mutual exclusion is typically implemented by means of locks
 code.
 
 The critical section problem, which we will solve by using coarse grained solution, will use the `await`statement to
-implement a lock. Then we'll also consider fine-grained solutions that will use `spin`-locks. Finally, we'll have a look
-at `fair` solutions: the _tie-breaker_ algorithm, the _ticket_ algorithm, and the _bakery_ algorithm. 
-We will illustrate different ways to approach the problem that has different performance and different fairness 
-attributes. The solutions to the critical section problem are also important because they can be used to implement 
-`await`-statements, and hence arbitrary atomic actions.
+implement a lock. Then we'll also consider fine-grained solutions that will use `spin`-locks. 
+
+Finally, we'll have a look at `fair` solutions: the _tie-breaker_ algorithm, the _ticket_ algorithm, and the _bakery_ 
+algorithm. We will illustrate different ways to approach the problem that has different performance and different 
+fairness attributes. The solutions to the critical section problem are also important because they can be used to 
+implement `await`-statements, and hence arbitrary atomic actions.
 
 The critical section problem is one of the classic concurrent programming problems. It was the first problem to be 
 studied extensively, and remains of interest since most concurrent programs have critical sections of code. Now we will 
@@ -899,31 +900,27 @@ The first three properties are safety-properties, and the fourth one is a livene
 > _Eventual entry_ is a liveness-property because it depends on the scheduling policy. 
 
 A trivial way to solve the critical section problem is to enclose the critical section in angle brackets, i.e. to use
-the unconditional `await()`-statement.
+the unconditional `await()`-statement: `<_**critical section;**_>` So mutual exclusion will follow by definition of the 
+angle brackets. The other three properties would also be satisfied if scheduling is _unconditionally fair_. 
 
-``` 
-<_**critical section;**_>
-```
-
-So mutual exclusion will follow by definition of the angle brackets. The other three properties would also be satisfied 
-if scheduling is _unconditionally fair_. However, this solution is asking us "How do we implement the angle brackets?".
-
-So out of all the four properties listed above, the mutual exclusion is the most important. Thus, in all our solutions 
-to the critical section problem, we will first focus on satisfying the mutual-exclusion property, and only then will we 
-focus on how to satisfy the other three properties. 
+However, this solution is asking us "How do we implement the angle brackets?". Out of all the four properties listed 
+above, the mutual exclusion is the most important. Thus, in all our solutions to the critical section problem, we will 
+first focus on satisfying the mutual-exclusion property, and only then will we focus on how to satisfy the other three 
+properties. 
 
 To specify the mutual exclusion property, we need a way to indicate if the process is in its critical section. So let us
 simplify the notation. We will develop a solution for only two processes, P1 and P2, but the solution can be generalised
 for N processes. 
 
 ``` 
+// Coarse-Grained solution
 bool in1 = false; 
 bool in2 = false; 
 
 # Solution 1
 process P1 {
     while(true){
-        <await (!in2) in1=true>
+        <await (!in2) in1=true> // conditional atomic action
         critical section;
         in1 = false;
         non-critical section;
@@ -934,7 +931,7 @@ process P1 {
 # Solution 2
 process P2 {
     while(true){
-        <await (!in1) in2=true>
+        <await (!in1) in2=true> // conditional atomic action
         critical section;
         in2 = false;
         non-critical section;
@@ -1046,7 +1043,7 @@ to reduce traffic to primary memory, this makes `TestAndSet()` significantly mor
 would just read a shared variable. 
 
 So let's see how we can reduce the overhead of memory contention by modifying the entry-protocol. Instead of simply 
-spinning until a `TestAndSet()`-retruns true, we can increase the likelihood that it returns true by using the following
+spinning until a `TestAndSet()`-returns true, we can increase the likelihood that it returns true by using the following
 entry-protocol
 
 ```
@@ -1076,87 +1073,27 @@ can be read from a local cache without affecting other processors, thus, we redu
 disappear completely. In particular, when `lock` is clear, then at least one, if not all, delayed processes will execute
 `TestAndSet()` even though only one can proceed. 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
----
-
-Here is an example of sudo-code with semaphores for synchronization to represent the following problem:
-
-- We have `N` honey bees and a hungry bear.
-- They share a pot of honey.
-- The pot is initially empty.
-- Its capacity is `H` portions of honey.
-- The bear sleeps until the pot is full, then eats all the honey and goes back to sleep.
-- Each bee repeatedly gathers one portion of honey and puts it in the pot.
-- The bee who fills the pot (i.e. puts in the H'th portion) awakens the bear.
-
-```
-sem empty = 1;
-sem full = 0;
-
-// Number of portions in the pot currently available to the bear
-int portions = 0;
-
-process Bees[i=1 to N]{
-	while(true) {
-		collect_honey();
-		P(empty);
-		portions = portions + 1;
-
-		if (portions == H){
-			V(full);
-		}
-		else {
-			V(empty);
-		}
-	}
-}
-
-process Bear {
-	while(true){
-		P(eat);
-		eat_honey();
-		portions = 0;
-		V(empty);
-	}
-}
-```
-
 ### Implementing await statements
-Any solution to the critical section problem can be used to implement an unconditional atomic action `<S;>` by hiding 
+Any solution to the critical section problem can be used to implement an unconditional atomic action `<S;>` by hiding
 internal control points from other processes. We denote
 
 `CSenter` - critical section entry protocol
 `CSexit` - a critical section exit protocol
 
-Now we can implement `<S;>` as 
+Now we can implement `<S;>` as
 ``` 
 CSenter;
 S; 
 CSexit;
 ```
-This assumes that all code sections in all processes that reference or modify variables (modified by `S`) are protected 
+This assumes that all code sections in all processes that reference or modify variables (modified by `S`) are protected
 by similar entry and exit protocols (The opening angle bracket is replaced by `CSenter` and the closing angle bracket
-is replaced by `CSexit`). 
+is replaced by `CSexit`).
 
 So the code block above can be used as a building block to implement the await statement. A conditional atomic action,
-`<await (B) S;>`, delays the executing process until `B` is true, then it executes `S`. So `B` must be true when the 
-execution of `S` begins. To ensure that the execution is atomic we can use a critical section protocol to hide 
-intermediate states in `S`. We can use a loop to repeatedly test `B` until it is true. 
+`<await (B) S;>`, delays the executing process until `B` is true, then it executes `S`. So `B` must be true when the
+execution of `S` begins. To ensure that the execution is atomic we can use a critical section protocol to hide
+intermediate states in `S`. We can use a loop to repeatedly test `B` until it is true.
 ``` 
 CSenter;
 while (!B) { ... } 
@@ -1164,13 +1101,13 @@ S;
 CSexit;
 ```
 Here we assume that the critical sections in all processes that modify variables that are referenced in `B` or `S` are
-protected by similar entry- and exit-protocols. 
+protected by similar entry- and exit-protocols.
 
-Now, what do we actually write inside the loop-body? If the body is executed, `B` was false. So the only way `B` can 
-become true, is if some other process alters a variable which is referenced in `B`. Since we assume that any statement 
+Now, what do we actually write inside the loop-body? If the body is executed, `B` was false. So the only way `B` can
+become true, is if some other process alters a variable which is referenced in `B`. Since we assume that any statement
 in other processes that modifies a variable that is referenced in `B` must be in a critical section, we have to exit the
-critical section while we wait for `B` to become true. But to ensure atomicity of the evaluation of `B` and the 
-execution of `S` we must re-enter the critical section before re-evaluating `B`. 
+critical section while we wait for `B` to become true. But to ensure atomicity of the evaluation of `B` and the
+execution of `S` we must re-enter the critical section before re-evaluating `B`.
 
 So what we might do is to perform the exit-protocol and then the enter protocol:
 ``` 
@@ -1180,17 +1117,17 @@ S;
 CSexit;
 ```
 This implementation will preserve the semantics of the conditional atomic actions. Assuming that the critical section
-protocols guarantee mutual exclusion, if scheduling is weakly fair, then the process that executes the code-block above 
-will eventually terminate the loop, i.e. assuming that `B` will eventually become true and remains true, and the 
+protocols guarantee mutual exclusion, if scheduling is weakly fair, then the process that executes the code-block above
+will eventually terminate the loop, i.e. assuming that `B` will eventually become true and remains true, and the
 scheduling is strongly fair, the loop will terminate if `B` becomes true infinitely often (This is just the definitions
 of the weakly-fair and strongly-fair scheduling policies).
 
-The code-block above is correct, but it is inefficient. This is because a process that executes it, is spinning in a 
-hard loop; continuously exiting and re-entering its critical section even though it cannot proceed until some other 
-process modifies a variable referenced in `B`. Once again, this lead to memory contention since every delayed process 
-continuously accesses the variables that are used in critical section protocols and the variables in `B`. 
+The code-block above is correct, but it is inefficient. This is because a process that executes it, is spinning in a
+hard loop; continuously exiting and re-entering its critical section even though it cannot proceed until some other
+process modifies a variable referenced in `B`. Once again, this lead to memory contention since every delayed process
+continuously accesses the variables that are used in critical section protocols and the variables in `B`.
 
-To reduce memory contention it is preferable for a process to delay for some period of time before re-entering the 
+To reduce memory contention it is preferable for a process to delay for some period of time before re-entering the
 critical section. Let us denote, by delay, some code that slows the process down:
 ``` 
 CSenter;
@@ -1198,3 +1135,384 @@ while (!B) { CSexit; Delay; CSenter; }
 S; 
 CSexit;
 ```
+### Critical Sections Problem: Fair Solutions 
+The `spin-lock` solutions to the critical section problems ensure mutual exclusion, are deadlock/livelock free, and they
+avoid unnecessary delay. However, they require a strongly-fair scheduler to ensure eventual entry.
+
+As we have noticed previously, practical scheduling policies are only weakly fair. Although it is unlikely that a
+process that is trying to enter its critical section will never succeed, it could happen if two or more processes are
+always contending for entry. The `spin-lock` solutions do not control the order in which delayed processes enter their
+critical sections when two or more are trying to do so.
+
+We will now talk about fair solutions to the critical sections problem; the _tie-breaker_ algorithm, the _ticket_ 
+algorithm, and the _bakery_ algorithm. These solutions only depend on a weakly-fair scheduler, such as Round Robin, 
+which merely ensures that each process keeps getting a chance to execute, and the delayed conditions, once true, remains
+true. 
+
+The _tie-breaker_ algorithm is very simple for two processes and depends on no special machine instructions, but it is 
+complex for `N` processes. 
+
+The _ticket_ algorithm is simple for any number of `N` processes, but it requires a special machine-instruction called 
+`Fetch-and-Add`. 
+
+The _bakery_ algorithm is a variation of the _ticket_ algorithm, and it requires no special machine-instruction, but it 
+is consequently more complex, although simpler than the `N`-process _tie-breaker_ algorithm. 
+
+#### Tie-Breaker Algorithm
+Let's consider the solution for the critical section problem that we have studied before: 
+``` 
+// Coarse-Grained solution
+bool in1 = false; 
+bool in2 = false; 
+
+# Solution 1
+process P1 {
+    while(true){
+        <await (!in2) in1=true> // conditional atomic action
+        critical section;
+        in1 = false;
+        non-critical section;
+    }
+}
+
+# Solution 2
+process P2 {
+    while(true){
+        <await (!in1) in2=true> // conditional atomic action
+        critical section;
+        in2 = false;
+        non-critical section;
+    }
+}
+```
+The problem with this solution is that if each process is trying to enter its critical section, there's no control over 
+which will succeed. In particular, one process could succeed, execute its critical section, race back around to the 
+entry-protocol, and then succeed again. To make the solution fair, the processes should take turns when both are trying 
+to enter, so the _tie-breaker_ algorithm (Peterson's algorithm) is a variation of the critical-section protocol that we
+considered before. 
+
+Here we would break the tie when both processes are trying to enter, and we will do so by using an additional variable
+to indicate which process was last to enter its critical section. Let us consider in detail the coarse-grained solution
+with the goal to implement the conditional atomic actions in the entry-protocols using only simple variables and 
+sequential statements. 
+
+As a starting point, we consider implementing each await statement by first looping until the guard is false (`!in2`),
+and then executing the assignment (`in1=true`). So we can change the entry-protocol for process `P1` as follows:
+```  
+bool in1 = false; 
+bool in2 = false; 
+process P1 {
+    while(true){
+        while(in2) { skip; }    // While in2, do no operation (delay loop)
+        in1 = true:             // Then assing in1 to be true (interferes the delay loop in P2)
+        critical section;
+        
+        // The corresponding exit-protocol would set in1 to false
+        in1 = false;
+        non-critical section;
+    }
+}
+
+// And similarly in the second process
+process P2 {
+    while(true){
+        while(in1) { skip; }    // While in1, do no operation (delay loop)
+        in2 = true:             // Then assing in2 to be true (interferes the delay loop in P1)
+        critical section;
+        // The corresponding exit-protocol would set in2 to false
+        in2 = false;
+        non-critical section;
+    }
+}
+```
+The problem with this "solution" is that the two actions in the entry-protocol are not executed atomically, i.e. mutual
+exclusion is not guaranteed. For example, the desired post-condition for the delay loop in the first process is that 
+`in2` is false. 
+
+Unfortunately, this would be interfered by the assignment `in2 = true;` in the second process. Because it's possible, 
+for both processes, to evaluate the delay conditions at about the same time, and to find that they're true. Since each 
+process wants to be sure that the other is not in its critical section when the while-loop terminates, we could switch 
+the order of the statements in the entry protocols, so we would get 
+```  
+bool in1 = false; 
+bool in2 = false; 
+process P1 {
+    while(true){
+        in1 = true:             // Assing in1 to true
+        while(in2) { skip; }    // While in2, do no operation (delay loop)
+        critical section;
+        
+        // The corresponding exit-protocol would set in1 to false
+        in1 = false;
+        non-critical section;
+    }
+}
+```
+This helps, but it doesn't solve the problem. Mutual exclusion is ensured, but the deadlock can still happen (if `in1` 
+and `in2` are both true), however there's a simple way to avoid a deadlock by using an additional variable to break the 
+tie if both processes are delayed. 
+
+So, we'll have a new variable `last` which will be an integer that indicates which of the processes was last to start 
+executing its entry-protocol, and then if both processes are trying to enter their critical sections, then the last 
+process to start its entry-protocol delays. Then we'll have the following solution
+```  
+// Coarse-grained solution
+bool in1 = false; 
+bool in2 = false; 
+int last = 1;
+
+process P1 {
+    while(true){
+        // Entry-protocol 
+        last = 1;                   // Assing last to 1
+        in1 = true:                 // Assing in1 to true
+        <await(!in2 || last == 2;)> // Delay condition
+        
+        critical section;
+        
+        // The corresponding exit-protocol would set in1 to false
+        in1 = false;
+        non-critical section;
+    }
+}
+
+process P2 {
+    while(true){
+        // Entry-protocol 
+        last = 2;                   // Assign last to 2
+        in2 = true:                 // Assing in2 to true
+        <await(!in2 || last == 2;)> // Delay condition
+        
+        critical section;
+        
+        // The corresponding exit-protocol would set in2 to false
+        in2 = false;
+        non-critical section;
+    }
+}
+```
+This algorithm is very close to a fine-grained solution, that does not require `await`-statements. In particular, if 
+each `await`-statement satisfy the requirements for the at-most-once property, then we would implement them with `busy-
+waiting`-loops. 
+
+The problem here, is that the `await`-statements reference two variables altered by the other process,
+so the at-most-once property does not hold. However, we might observe that in this case it is not necessary that the 
+delay conditions (`await<>`) are evaluated atomically. 
+
+Let's see why. Suppose `P1` evaluates its delay-condition and finds that it's true. If `P1` found that 
+`int2 == false;`, then `in2` might now be true, however in that case, the process `P1` has just set `last = 2;` and 
+hence, the delay condition is still true, even though `in2` changed its value, i.e. if `P1` found that `last = 2;` then 
+the condition will remain true, because `last` will not change its value until after `P1` executes its critical section. 
+
+Thus, in either case, if `P1` thinks that the delay-condition is true, then it is in fact true (and then we have the 
+symmetric reasoning for `P2`). 
+
+So now that we have established that the delay-conditions doesn't need to be evaluated atomically, we can replace each
+`await`-statement by a while-loop that iterates as long as the negation of the delay-condition is false. So we get the 
+fine-grained version of the tie-breaker algorithm:
+```  
+// Fine-grained solution
+bool in1 = false; 
+bool in2 = false; 
+int last = 1;
+
+process P1 {
+    while(true){
+        // Entry-protocol 
+        last = 1;                   // Assing last to 1
+        in1 = true:                 // Assing in1 to true
+        while(in2 and last==1) skip;
+        
+        critical section;
+        
+        // The corresponding exit-protocol would set in1 to false
+        in1 = false;
+        non-critical section;
+    }
+}
+
+process P2 {
+    while(true){
+        // Entry-protocol 
+        last = 2;                   // Assign last to 2
+        in2 = true:                 // Assing in2 to true
+        while(in1 and last==2) skip;
+        
+        critical section;
+        
+        // The corresponding exit-protocol would set in2 to false
+        in2 = false;
+        non-critical section;
+    }
+}
+```
+This solution solves the critical section problem for two processes, but we can use the same basic idea to solve the 
+problem for any number of processes. In particular, if there are `N` processes, the entry-protocol in each process will 
+consist of a loop that iterates through `N-1` stages, and in each stage, we will use the instances of the two-process 
+tie-breaker algorithm to determine which processes gets to advance to the next stage. If we make sure that at most one 
+process at a time is allowed to get through all the `N-1` stages, then at most one at a time can be in its critical 
+section. 
+
+```  
+// Fine-grained solution
+
+// in and last are integer arrays with n values 
+ArrayList<Integer> in[1:n];   // the value in[i] indicates which stage the process Pi has executed
+ArrayList<Integer> last[1:n]; // the value last[j] indicates which process was last in stage j
+
+process P[i = 1 to n] {
+    while(true){
+        // Entry-protocol 
+        for [j = 1 to n] {
+            // Remember process i is in stage j and is last
+            last[j] = i;
+            in[i] = j;
+            
+            for [k = 1 to n st i != k] {
+                // Wait for process k is in higher numbered stage and process i was the last to enter stage j
+                while( in[k] >= in[i] && last[j] == i ) { skip; }
+            }
+        }
+        
+        critical section;
+        
+        // Exit protocol
+        in[i] = 0; 
+        non-critical section;
+    }
+}
+``` 
+
+#### Ticket Algorithm
+We will now develop an `N`-process solution to the critical section problem. The `ticket-algorithm` is based on drawing 
+numbers and then waiting turns. Many establishments employ this method to ensure that the customers are serviced in the 
+order of arrival. Upon entering the establishment the customer gets a number that is one larger than the one held by any
+other customer. The customer then waits until all customers holding smaller numbers have been serviced. 
+
+This algorithm is implemented by a number dispenser and by a display indicating which customer is being served. If the 
+store has one employee behind the service counter, customers are served one at a time in their order of arrival. We can
+use this idea to implement a fair critical section protocol. 
+
+Let `number` and `next` be integers that are initially 1, and let `turn[1:n]` be an array of integers, each of which is 
+initially 0. To enter its critical section, process `P[i]` first sets `turn[i]` to the current value of `number` and 
+then increments `number`. These are a single atomic action to ensure that customers draw unique numbers. Process `P[i]`
+then waits until the value of `next` is equal to the number it drew. Upon completing its critical section, `P[i]` 
+increments `next`, again as an atomic action. 
+
+```  
+int number = 1; 
+int next = 1; 
+turn[1:n] = ([n] 0);  // array with n elements that are initialized as 0
+
+// n processes
+process P[i=1 to n] {
+    while (true) {
+        
+        // Entry protocol
+        <turn[i] = number; number += 1; > // single atomic action to ensure the cutomers draw unique numbers
+        <await (turn[i] == next);>
+        
+        critical section; 
+        
+        // Exit protocol
+        <next += 1;>
+        non-critical section;   
+    }
+}
+```
+
+>The global invariant is that 0 < next <= number.
+>
+>The local invariants are: 
+>- turn[i] < number
+>- if P[i] is in its critical section, then turn[i] == next
+>- for all i != j { turn[i] > 0 implies that turn[i] != turn[j] } 
+
+The last invariant says that nonzero values of `turn` are unique. Hence, at most one `turn[i]` is equal to `next`.
+Hence, at most one process can be in its critical section. Because nonzero values are unique, we also get the absence 
+of deadlock and unnecessary delay. Finally, if scheduling is weakly fair, the algorithm ensures eventual entry, because 
+once a delay condition becomes true, it remains true. 
+
+Unlike the `tie-breaker`-algorithm, the ticket algorithm has a potential short-coming that is common in algorithms that
+employ incrementing counters: the values of `number` and `next` are unbounded. If the ticket algorithm runs for a very 
+long time, incrementing a counter will eventually cause arithmetic overflow. This is extremely likely to be a problem 
+in practice. 
+
+The algorithm above contains three coarse-grained atomic actions. It is easy to implement the `await`-statement using a 
+busy-waiting loop since the Boolean expression references only one shared variable. The last atomic action 
+(`<next += 1>`) can be implemented using regular LOAD and STORE instructions
+```  
+LOAD  R1, [R0]  ; Load current value of next into R1
+ADD   R1, #1    ; Increment R1 by 1
+STORE R1, [R0]  ; Store incremented value back to next
+```
+Because at-most one process can execute the exit-protocol at a time. 
+
+Unfortunately, it is hard to implement the first atomic action (`<turn[i] = number; number += 1; >`) which reads 
+`number` and then increments it. 
+
+#### Fetch-and-Add (FA)
+Some machines have instructions that return the old value of a variable and increment or decrement it as a single 
+indivisible operation `FA(var, incr): (int tmp = var; var = var + incr; return(tmp);)`. This `fetch-and-add` instruction
+does exactly what is required for the ticket algorithm. Now, the `ticket`-algorithm using the `fetch-and-add` 
+instruction becomes
+
+``` 
+int number = 1; 
+int next = 1; 
+turn[1:n] = ([n] 0);  // array with n elements that are initialized as 0
+
+process P[i=1 to n] {
+    while (true) {
+        
+        // Fetch-and-Add entry protocol
+        turn[i] = FA(number, 1) 
+        while (turn[i] =! next) { skip; }
+        
+        critical section; 
+        
+        // Exit protocol
+        next += 1;
+        non-critical section;   
+    }
+}
+```
+On the machines that do not have `fetch-and-add` or a comparable instruction, we have to use another approach. *The key-
+requirement in the ticket algorithm is that every process draw a unique number.* If a machine has an atomic increment
+instruction, we might consider implementing the first step in the entry protocol by 
+
+`turn[i] = number; <number += 1;>`. 
+
+This ensures that `number` is incremented correctly, but it does not ensure that processes draw unique numbers. In 
+particular, every process could execute the first assignment at about the same time and draw the same number! Thus, it
+is essential that both assignments be executed as a single atomic action. 
+
+We've already seen two other ways to solve the critical section problem: `spin-locks` and the `tie-breaker` algorithm. 
+Either of these could be used within the `ticket`-algorithm to make number drawing atomic. In particular, suppose 
+`CSenter` is a critical section entry-protocol and `CSexit` is the corresponding exit protocol. Then we could replace
+the `fetch-and-add` statement in the code above like this: 
+``` 
+int number = 1; 
+int next = 1; 
+turn[1:n] = ([n] 0);  // array with n elements that are initialized as 0
+
+process P[i=1 to n] {
+    while (true) {
+        
+        CSenter; turn[i] = number; number += 1; CSexit;
+        while (turn[i] =! next) { skip; }
+        
+        critical section; 
+        
+        // Exit protocol
+        next += 1;
+        non-critical section;   
+    }
+}
+```
+Altough this might seem like a curiou approach, in practice it would actually work quite well, especially if an 
+instruction like `Test-and-Set` is avaliable to implement `CSenter` and `CSexit`. With `Test-and-Set`, processes might 
+not draw numbers in exactly the order they attempt to - and theoretically a process could spin forever - but with very 
+high probability every process would draw a number, and most would be drawn in order. This is because the critical 
+section within `CSenter; turn[i] = number; number += 1; CSexit;` is very short, and hence a process is not likely to 
+delay in `CSenter`. The major source of delay in the `ticket`-algorithm is waiting for `turn[i]` to be equal to `next`. 
