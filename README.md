@@ -1510,8 +1510,8 @@ process P[i=1 to n] {
     }
 }
 ```
-Altough this might seem like a curiou approach, in practice it would actually work quite well, especially if an 
-instruction like `Test-and-Set` is avaliable to implement `CSenter` and `CSexit`. With `Test-and-Set`, processes might 
+Although this might seem like a curious approach, in practice it would actually work quite well, especially if an 
+instruction like `Test-and-Set` is available to implement `CSenter` and `CSexit`. With `Test-and-Set`, processes might 
 not draw numbers in exactly the order they attempt to - and theoretically a process could spin forever - but with very 
 high probability every process would draw a number, and most would be drawn in order. This is because the critical 
 section within `CSenter; turn[i] = number; number += 1; CSexit;` is very short, and hence a process is not likely to 
