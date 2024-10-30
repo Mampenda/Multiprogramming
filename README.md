@@ -1383,7 +1383,7 @@ process P[i = 1 to n] {
 }
 ``` 
 
-#### Ticket Algorithm
+### Ticket Algorithm
 We will now develop an `N`-process solution to the critical section problem. The `ticket-algorithm` is based on drawing 
 numbers and then waiting turns. Many establishments employ this method to ensure that the customers are serviced in the 
 order of arrival. Upon entering the establishment the customer gets a number that is one larger than the one held by any
@@ -1516,3 +1516,95 @@ not draw numbers in exactly the order they attempt to - and theoretically a proc
 high probability every process would draw a number, and most would be drawn in order. This is because the critical 
 section within `CSenter; turn[i] = number; number += 1; CSexit;` is very short, and hence a process is not likely to 
 delay in `CSenter`. The major source of delay in the `ticket`-algorithm is waiting for `turn[i]` to be equal to `next`. 
+
+### Barriers (intro)
+Many problems can be solved using iterative algorithms that successively compute better approximations to an answer, 
+terminating when either the final answer has been computed or, in the case of many numerical algorithms, when the final 
+answer has converged. Such an algorithm typically manipulates an array of values, and each iteration performs the same 
+computation on all array elements. Hence, we can often use multiple processes to compute disjoint parts of the solution
+in parallel. 
+
+A key attribute of most parallel iterative algorithms is that each iteration typically depends on the result of the 
+previous iteration. One way to structure such an algorithm is to implement the body of each iteration using one or more 
+`co` statements. Ignoring termination, and assuming that there are `N` parallel tasks on each iteration, this approach 
+has the general form
+
+```  
+while (true) {
+    co [i = 1 to N]
+        // code to implement task i;
+    oc
+}
+```
+
+Unfortunately, the above approach is quite inefficient since `co` spawns `N` processes on each iteration. It is much 
+more costly to create and destroy processes than to implement process synchronization. Thus, an alternative structure 
+will result in a more efficient algorithm. In particular, create the processes once at the beginning of the computation, 
+then have them synchronize at the end of each iteration: 
+```  
+process Worker[i = 1 to N] {
+    while(true) {
+        // code to implement task i; 
+    }
+        wait for all N tasks to complete; 
+}
+```
+This is called a _barrier synchronization_, because the delay point at the end of each iteration represents a barrier 
+that all processes have to arrive at before any are allowed to pass. Barriers can be needed both at the ends of loops, 
+as above, and at intermediate stages. Next, we'll develop several implementations of barrier synchronization. 
+
+The simplest way to specify the requirements for a barrier is to employ a shared integer, `count`, which is initially 
+zero. Assume there are `N` worker processes that need to meet at  barrier. When a process arrives at the barrier, it 
+increments `count`; when `count` is `N`, all processes can proceed. This specification leads to the following code 
+outline:
+
+```   
+int count = 0;
+
+process Worker[i = 1 to N] {
+    while(true) {
+        // code to implement task i; 
+        <count += 1;>
+        <await (count == N)
+    }
+}
+```
+We can implement the `await`-statement by a busy-waiting loop. If we also have an indivisible increment instruction, 
+s.a. `Fetch-and-Add`, we can implement the above barrier by 
+``` 
+int count = 0;
+
+process Worker[i = 1 to N] {
+    while(true) {
+        // code to implement task i; 
+        FA(count, 1);
+        while (count != N) { skip; }
+    }
+}
+```
+This is not fully adequate, however. The difficulty is that `count` must be 0 at the start of each iteration, which 
+means that `count` needs to be reset at 0 each time all processes have passed the barrier. Moreover, `count` has to be 
+reset before any process again tries to increment `count`. 
+
+It is possible to solve this reset problem by employing two counters, one that counts up to `N` and another that counts 
+down to 0, with the roles of the counter being switched after each stage. However, there are additional, pragmatic 
+problems with using shared counters. 
+
+1. They have to be incremented and/or decremented as atomic actions. 
+2. When a process is delayed, as in the code above, it is continuously examining `count`.
+
+In the worst case, `N-1` processes might be delayed waiting for the last process to arrive at the barrier. This could 
+lead to severe memory contention. One way to avoid it, is to distribute the implementation of `count` by using `N` 
+variables that sum to the same value.
+``` 
+arrive[1:N] = ([n] 0);                     // array with N integers initialized as zeroes
+int count = (arrive[1] + ... + arrive[n]); // the increment of count is replaced by arrive[i] = 1
+
+process Worker[i = 1 to N] {
+    while(true) {
+        // code to implement task i; 
+        FA(count, 1);
+        while (count != N) { skip; }
+    }
+}
+```
