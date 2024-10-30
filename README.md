@@ -1596,15 +1596,162 @@ problems with using shared counters.
 In the worst case, `N-1` processes might be delayed waiting for the last process to arrive at the barrier. This could 
 lead to severe memory contention. One way to avoid it, is to distribute the implementation of `count` by using `N` 
 variables that sum to the same value.
+
+### Flags and Coordinators
+Let `arrive[1:N]` be an array of integers initialized to zeros. We can then replace the increment of `count` by 
+`arrive[i] = 1`. The predicate `count == arrive[1] + ... + ariive[N]` is a global invariant.
+
 ``` 
-arrive[1:N] = ([n] 0);                     // array with N integers initialized as zeroes
-int count = (arrive[1] + ... + arrive[n]); // the increment of count is replaced by arrive[i] = 1
+arrive[1:N] = ([n] 0);  // array with N integers initialized as zeroes
+int count = 0;          // the increment of count is replaced by arrive[i] = 1
 
 process Worker[i = 1 to N] {
     while(true) {
         // code to implement task i; 
         FA(count, 1);
-        while (count != N) { skip; }
+        <await (count == N);>
     }
 }
 ```
+A predicate is a statement or expression that evaluates to either true or false.
+An invariant is a property that remains unchanged throughout the execution of a program. In this case,
+the predicate is described as a global invariant, meaning:
+
+    It holds true before and after certain operations or sequences of operations.
+    It represents a fundamental property of the program's state that doesn't change over time.
+    It provides a way to reason about and prove properties of the program.
+
+Memory contention would be avoided as long as elements of `arrive` are stored in different cache lines (to avoid 
+contention when they're written by the process). With this change, the remaining problems are implementing the `await`-
+statement in the code above and resetting the elements of arrive at the end of each iteration. 
+
+Using the fact that `count == arrive[1] + ... + ariive[N]` the `await`-statement could be implemented as follows:
+``` 
+arrive[1:N] = ([n] 0);  // array with N integers initialized as zeroes
+int count = 0;          // the increment of count is replaced by arrive[i] = 1
+
+process Worker[i = 1 to N] {
+    while(true) {
+        // code to implement task i; 
+        FA(count, 1);
+        < await ((arrive[1] + ... + arrive[N]) == N); >
+    }
+}
+```
+However, this re-introduces the memory contention, and, moreover, it is inefficient since the usm of the `arrive[i]` is 
+continually being computed by every waiting `Worker`. We can solve both the memory contention and reset problems by 
+using an additional set of shared values and by employing an additional process, `Coordinator`. 
+
+Instead of having each `Worker` sum and test the values of arrive, let each `Worker` wait for a single value to become 
+true. In particular, let `continue[1:N]` be another array of integers, initialized as zeroes. After setting arrive[i] to
+1, `Worker[i]` delays by waiting for `continue[i]` to be set to 1: `< await (continue[i] == 1); >`. 
+
+The `Coordinator` process waits for all elements of `arrive` to become 1, then sets all elements of continue to 1. The 
+`Coordinator` process looks as follows:
+``` 
+int count = 0;          // the increment of count is replaced by arrive[i] = 1
+
+process Worker[i = 1 to N] {
+    while(true) {
+        // code to implement task i; 
+        arrive[i] = 1;                  { 3.12 }
+        < await (continue[i] == 1); >   { 3.12 }
+    }
+}
+process Coordinator{
+    while (true) {
+        for [i = 1 to N] { <await (arrive[i] == 1);> { 3.13 }
+        for [i = 1 to N] { continue[i] = 1; }        { 3.13 }
+    }
+}
+```
+The `await` statements in `Worker` and `Coordinator` can be implemented by `while` loops since each reference a single 
+shared variable. The `Coordinator` can use a `for` statement to wait for each element of `arrive` to be set; moreover, 
+because all `arrive` flags must be set before any `Worker`is allowed to continue, the `Coordinator` can test the 
+`arrive[i]` in ant order. 
+
+Memory contention is not a problem since the processes wait for different variables to be set and these variables could 
+be stored in different cache lines. Variables `arrive` and `continue` are examples of _flag variables_ - a variable that 
+is raised by one process to signal that a synchronization condition is true. The remaining problem is augmenting 
+`{ 3.12 }` and `{ 3.13 }` with code to clear the flags by resetting them to 0 in preparation for the next iteration. 
+
+Here, the two general _Flag Synchronization Principle_ apply:
+1. The process that waits for a synchronization flag to be set is the one that should clear that flag. 
+   
+   In {3.12}, the `Worker[i]` should clear `continue[i]`, and in {3.13}, the `Coordinator` should clear all elements of 
+   `arrive[1:n]`. 
+
+2. A flag should not be set until it is known that it is clear. 
+   
+   This ensures that another process doesn't set the same flag again before it is clear (could lead to deadlock if the 
+   first process later waits for the flag to be set again). In `{ 3.13 }`, the `Coordinator` should clear `arrive[i]`
+   before setting `continue[i]`. The `Coordinator` can do this by executing another `for` statement after the first one
+   in `{ 3.13 }`. Alternatively, `Coordinator` can clear `arrive[i]` immediately after it has waited for it to be set.
+
+If we add the flag-clearing code, we get the following `Coordinator` barrier:
+``` 
+int count = 0;          // the increment of count is replaced by arrive[i] = 1
+
+process Worker[i = 1 to N] {
+    while(true) {
+        // code to implement task i; 
+        arrive[i] = 1;                  { 3.12 }
+        < await (continue[i] == 1); >   { 3.12 }
+    }
+}
+process Coordinator{
+    while (true) {
+        for [i = 1 to N] { 
+            <await (arrive[i] == 1);> { 3.13 }
+            arrive[i] = 0;
+        }
+        for [i = 1 to N] { continue[i] = 1; }        { 3.13 }
+    }
+}
+```
+Although this solution implements barrier synchronization in a way that avoids memory contention, it has two undesirable
+attributes:
+1. It requires an extra process. Busy-waiting synchronization is inefficient unless each process executes on its own 
+   processor, so the `Coordinator` should execute on its own processor. However, it would probably be better to use that
+   processor for another worker process. 
+2. The execution time of each iteration of `Coordinator`, and hence each instance of barrier synchronization, is 
+   proportional to the number of `Worker` processes. In iterative algorithms, each `Worker` often executes identical 
+   code. Hence, each is likely to arrive at the barrier at about the same time, assuming every `Worker` is executed on 
+   its own processor. Thus, all arrive flags will get set at about the same time. However, `Coordinator` cycles through 
+   the flags, waiting for each one to be set in turn. 
+
+We can overcome both problems by combining the actions of the `Coordinator` and `Workers` so that each `Worker` is also 
+a `Coordinator`. In particular, we can organize the `Workers` into a tree. `Workers` can then send arrival signals up 
+the tree and continue signals back down the tree. In particular, a worker node first waits for its children to arrive, 
+then tells it parent that it too has arrived. When the root node learns that its children have arrived, it knows that 
+all other workers have also arrived. Hence, the root can tell its children to continue; they in turn can tell their 
+children to continue, and so on. The specific action of each kind of worker process are listed below: 
+
+```  
+LEAF (leaf node): 
+arrive[LEAF] = 1; 
+<await (continue[LEAF] == 1;)>
+continue[LEAF] = 0; 
+
+INTERIOR (interiour node): 
+<await (arrive[left] == 1;)>
+arrive[left] = 0; 
+<await (arrive[right] == 1;)>
+arrive[right] = 0; 
+arrive[INTERIOR] = 1; 
+<await (continue[INTERIOUR] == 1;)>
+continue[INTERIOUR] = 0;
+continue[left] = 1;
+continue[right] = 1;
+
+ROOT (root node): 
+<await (arrive[left] == 1;)>
+arrive[left] = 0; 
+<await (arrive[right] == 1;)>
+arrive[right] = 0; 
+continue[left] = 1;
+continue[right] = 1;
+```
+The implementation above is called a _combining tree barrier_. This is because each process combines the result of its 
+children, then passes them on to its parent. This barrier uses the same number of variables as the centralized 
+coordinator, but it is much more efficient for large N, because the height of the tree is proportional to log_2(N).  
