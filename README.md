@@ -857,7 +857,7 @@ The critical section problem is one of the classic concurrent programming proble
 studied extensively, and remains of interest since most concurrent programs have critical sections of code. Now we will 
 define the problem and develop a coarse grained solution. 
 
-In the critical section problem we have `N` processes, and they repeatedly executes a critical and then a non-critical 
+In the critical section problem we have `n` processes, and they repeatedly executes a critical and then a non-critical 
 section of code. The critical is proceeded by an entry protocol and followed by an exit protocol, thus we can write it 
 as follows:  
 ```
@@ -941,7 +941,7 @@ process P2 {
 
 ### Mutual exclusion (Spin-Locks Test, Set Test, and Test&Set)
 The two solutions in the previous section are coarse-grained and the employ two variables, `in1` and `in2`. If we want 
-to generalize the solutions for `N` processes, we would have to use `N` variables. However, we can notice that there are
+to generalize the solutions for `n` processes, we would have to use `n` variables. However, we can notice that there are
 only two interesting states; either one process is in its critical section, or no process is in its critical section. So
 one variable should be sufficient to distinguish between these two states, regardless of how many processes we have.
 
@@ -1150,13 +1150,13 @@ which merely ensures that each process keeps getting a chance to execute, and th
 true. 
 
 The _tie-breaker_ algorithm is very simple for two processes and depends on no special machine instructions, but it is 
-complex for `N` processes. 
+complex for `n` processes. 
 
-The _ticket_ algorithm is simple for any number of `N` processes, but it requires a special machine-instruction called 
+The _ticket_ algorithm is simple for any number of `n` processes, but it requires a special machine-instruction called 
 `Fetch-and-Add`. 
 
 The _bakery_ algorithm is a variation of the _ticket_ algorithm, and it requires no special machine-instruction, but it 
-is consequently more complex, although simpler than the `N`-process _tie-breaker_ algorithm. 
+is consequently more complex, although simpler than the `n`-process _tie-breaker_ algorithm. 
 
 #### Tie-Breaker Algorithm
 Let's consider the solution for the critical section problem that we have studied before: 
@@ -1347,7 +1347,7 @@ process P2 {
 }
 ```
 This solution solves the critical section problem for two processes, but we can use the same basic idea to solve the 
-problem for any number of processes. In particular, if there are `N` processes, the entry-protocol in each process will 
+problem for any number of processes. In particular, if there are `n` processes, the entry-protocol in each process will 
 consist of a loop that iterates through `N-1` stages, and in each stage, we will use the instances of the two-process 
 tie-breaker algorithm to determine which processes gets to advance to the next stage. If we make sure that at most one 
 process at a time is allowed to get through all the `N-1` stages, then at most one at a time can be in its critical 
@@ -1384,7 +1384,7 @@ process P[i = 1 to n] {
 ``` 
 
 ### Ticket Algorithm
-We will now develop an `N`-process solution to the critical section problem. The `ticket-algorithm` is based on drawing 
+We will now develop an `n`-process solution to the critical section problem. The `ticket-algorithm` is based on drawing 
 numbers and then waiting turns. Many establishments employ this method to ensure that the customers are serviced in the 
 order of arrival. Upon entering the establishment the customer gets a number that is one larger than the one held by any
 other customer. The customer then waits until all customers holding smaller numbers have been serviced. 
@@ -1526,7 +1526,7 @@ in parallel.
 
 A key attribute of most parallel iterative algorithms is that each iteration typically depends on the result of the 
 previous iteration. One way to structure such an algorithm is to implement the body of each iteration using one or more 
-`co` statements. Ignoring termination, and assuming that there are `N` parallel tasks on each iteration, this approach 
+`co` statements. Ignoring termination, and assuming that there are `n` parallel tasks on each iteration, this approach 
 has the general form
 
 ```  
@@ -1537,7 +1537,7 @@ while (true) {
 }
 ```
 
-Unfortunately, the above approach is quite inefficient since `co` spawns `N` processes on each iteration. It is much 
+Unfortunately, the above approach is quite inefficient since `co` spawns `n` processes on each iteration. It is much 
 more costly to create and destroy processes than to implement process synchronization. Thus, an alternative structure 
 will result in a more efficient algorithm. In particular, create the processes once at the beginning of the computation, 
 then have them synchronize at the end of each iteration: 
@@ -1554,8 +1554,8 @@ that all processes have to arrive at before any are allowed to pass. Barriers ca
 as above, and at intermediate stages. Next, we'll develop several implementations of barrier synchronization. 
 
 The simplest way to specify the requirements for a barrier is to employ a shared integer, `count`, which is initially 
-zero. Assume there are `N` worker processes that need to meet at  barrier. When a process arrives at the barrier, it 
-increments `count`; when `count` is `N`, all processes can proceed. This specification leads to the following code 
+zero. Assume there are `n` worker processes that need to meet at  barrier. When a process arrives at the barrier, it 
+increments `count`; when `count` is `n`, all processes can proceed. This specification leads to the following code 
 outline:
 
 ```   
@@ -1586,7 +1586,7 @@ This is not fully adequate, however. The difficulty is that `count` must be 0 at
 means that `count` needs to be reset at 0 each time all processes have passed the barrier. Moreover, `count` has to be 
 reset before any process again tries to increment `count`. 
 
-It is possible to solve this reset problem by employing two counters, one that counts up to `N` and another that counts 
+It is possible to solve this reset problem by employing two counters, one that counts up to `n` and another that counts 
 down to 0, with the roles of the counter being switched after each stage. However, there are additional, pragmatic 
 problems with using shared counters. 
 
@@ -1594,7 +1594,7 @@ problems with using shared counters.
 2. When a process is delayed, as in the code above, it is continuously examining `count`.
 
 In the worst case, `N-1` processes might be delayed waiting for the last process to arrive at the barrier. This could 
-lead to severe memory contention. One way to avoid it, is to distribute the implementation of `count` by using `N` 
+lead to severe memory contention. One way to avoid it, is to distribute the implementation of `count` by using `n` 
 variables that sum to the same value.
 
 ### Flags and Coordinators
@@ -1754,4 +1754,74 @@ continue[right] = 1;
 ```
 The implementation above is called a _combining tree barrier_. This is because each process combines the result of its 
 children, then passes them on to its parent. This barrier uses the same number of variables as the centralized 
-coordinator, but it is much more efficient for large N, because the height of the tree is proportional to log_2(N).  
+coordinator, but it is much more efficient for large N, because the height of the tree is proportional to log_2(N).
+
+### Symmetric Barriers 
+In the combining-tree barrier, processes play different roles: those at interior nodes execute more actions than those 
+at the leaves, or root. If every process is executing the same algorithm and every process is executing on a different 
+processor, then all processes should arrive at the barrier at the same time. Thus, if all processes take the exact same 
+sequence of actions when they reach a barrier, then all might be able to proceed through the barrier at the same rate. 
+This section presents two _symmetric barriers_.
+
+A symmetric `n`-process barrier is constructed from pairs of simple, two-process barriers. To construct a two-process 
+barrier, we could use the coordinator/worker technique. However, the actions of the two processes would then be 
+different. Instead, we can construct a fully symmetric barrier as follows. 
+
+Let each process to set its flag and finally clears the other's flag. if `W[i]` is one process and `W[j]` is the other, 
+the symmetric two-process barriers is then implemented as follows: 
+``` 
+// Barrier code for worker process W[i] 
+<await (arrive[i] == 0);> // key-line (wait for its own flag to be set)
+arrive[i] = 1;            // set it's own flag
+<await (arrive[j] == 1);> // wait for the other to set its flag
+arrive[j] = 0;            // clear the other's flag
+
+// Barrier code for worker process W[j] 
+<await (arrive[j] == 0);> // key-line (wait for its own flag to be set)
+arrive[j] = 1;            // set it's own flag
+<await (arrive[i] == 1);> // wait for the other to set its flag
+arrive[i] = 0;            // clear the other's flag
+```
+The first line in each process is just it waiting for its own flag to be set. It is needed to guard against the 
+possible situation in which a process races back to the barrier and sets its own flag before the other process _from the
+previous use of the barrier_ cleared the flag. All four lines are needed in order to follow the Flag Synchronization 
+Principles.
+
+The question is how to combine instances of two-process barriers to construct an `n`-process barrier. We need to devise 
+an interconnection scheme so that each process eventually learns that all others have arrived. The best we can do is to 
+use some sort of binary interconnection, which will have a size proportional to log_2(n). 
+
+Let `Worker[1:n]` be the array of processes. If `n` is a power of 2, we could combine them as shown below. 
+
+![img.png](images/img1.png)
+
+This kind of barrier is called a _butterfly barrier_ due to the shape of the interconnection pattern, which is similar 
+to the butterfly interconnection pattern for the Fourier transform. A butterfly barrier has `log_2(n)` stages. Each 
+worker synchronizes with a different worker at each stage: In stage `s` a worker synchronizes with a worker at distance 
+`2^(s-1)` away. When every worker has passed through all stages, all workers must have arrived at the barrier and hence 
+all can proceed. This is because every worker has directly or indirectly synchronized with every other one. 
+
+When `n` is not a power of two, a butterfly barrier can be constructed by using the next power of `2` greater than `n` 
+and having existing worker processes substitute for the missing ones at each stage. But this is not very efficient.
+
+A different interconnection pattern, a _dissemination barrier_, is better because it can be used for any value of `n`. 
+Again there are several stages, and in stage `s` a worker synchronizes with one at distance `2^(s1)`. But in each two -
+process barrier a process sets the arrival flag of a worker to its right (modulo `n`) and waits for, then clears, its 
+own arrival flag. The techniques based on a technique for disseminating information to `n` processes in `log_2(n)` 
+rounds. 
+
+![img.png](images/img2.png)
+
+Each worker disseminates notice of its arrival at the barrier. A critical aspect of correctly implementing an n process 
+barrier, independent of which interconnection pattern is used, is to avoid race conditions that can result from using 
+multiple instances of the basic two-process barrier. 
+
+Consider the butterfly barrier pattern. Assume there's only one array of flag variables and suppose that process 1 
+arrives at its first stage and sets its flag `arrive[1]`. Further suppose process 2 is slow and has not yet arrived. 
+Further suppose process 3 an 4 arrive at the first stage, set and wait for each others flags, clears them, and proceed 
+to the second stage. In the second stage, process 3 wants to synchronize with process1, so it waits for `arrive[1] = 1`.
+It already is, so process 3 clears `arrive[1]` and proceeds to stage 3, even though process 1 had set `arrive[1]` for 
+process 2. 
+
+The net effects are that some processes will exit the barrier before they should and that some processes will wait 
+forever to get to the next stage. The same problem can occur with the dissemination barrier. 
