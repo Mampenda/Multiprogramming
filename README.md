@@ -672,6 +672,11 @@ very expensive to implement in its most general form. However, there are many sp
 that can be implemented efficiently, like for example `<await (s>0) s = s-1;` above, which is an example of a
 "_**P operation on semaphore s**_".
 
+> **_Semaphore_**
+> A semaphore is a variable or abstract data type used to control access to a common resource by multiple threads and 
+> avoid critical section problems in a concurrent system such as a multitasking operating system. Semaphores are a type 
+> of synchronization primitive.
+
 The general form of the `await` statement specifies mutual exclusion and conditioned synchronization.
 
 > _Mutual exclusion_ is a type of synchronization that ensures that statements in different processes cannot execute at
@@ -1932,3 +1937,76 @@ can use semaphores as signal flags to implement `n`-process barrier synchronizat
 or a combining tree figure. 
 
 Again, because `V` operations are remembered, we would need _fewer_ semaphores than flag variables.
+
+### Producers and Consumers: Split Binary Semaphores
+
+Let us consider the following problem: We want to find which words is used the most frequently in an english paper. The
+task in itself is not difficult, we just need to load the "dumpfile" in XML-format and come up with methods that will
+extract the text and count the words. The problem is that the size of the dumpfile is 40kB and the analysis of the file
+can take considerable time. Can we speed up this process by using concurrency?
+
+Let's write a program that analyses the first 100 000 pages:
+
+``` 
+package org.example;
+
+import java.util.HashMap;
+
+public class AnalyseText {
+
+    private static final HashMap<String, Integer> counts = new HashMap<String, Integer>();
+
+    public static void countWord(String word){
+        Integer currentCount = counts.get(word);
+        if(currentCount == null){
+            counts.put(word, 1);
+        } else {
+            counts.put(word, currentCount + 1);
+        }
+    }
+
+    public static void main(String[] args) {
+        Iterable<Page> pages = new Page(100000, "dumpfile.xml");
+        for (Page page : pages) {
+            Iterable<String> words = new Words(page.getText());
+            for (String word : words) {
+                countWord(word);
+            }
+        }
+    }
+}
+```
+We can now think, which of the operations can be done in parallel? In each operation of the main-loop, we have two
+problems that are solved:
+1. The parsing of data in XML-format
+2. Counting the words on that page.
+
+The problems of such kind are solved following the classic pattern called producer/consumer. Instead of a single Thread
+that would first produce a page and then consume it, we'll have two threads: one producer and one consumer. Let us now 
+write the Producer()-class. 
+
+``` 
+
+```
+
+
+
+
+
+Previously, when examining the producer/consumer problem, we assumed that there wa one producer and one consumer; here we
+consider the general solution in which there are multiple producers and consumers. The solution illustrates another use 
+of semaphores as signaling flags. It also introduces the important concept of a split binary semaphore, which provides 
+another way to protect critical sections. 
+
+In the producer/consumer problem, producers send messages that are received by consumers. The processes communicate 
+using a single shared buffer, which is manipulated by two operations: `deposit` and `fetch`. Producers insert messages 
+into the buffer by calling `deposit` and consumers receive messages by calling `fetch`. To ensure that messages are not 
+overwritten and that they're received only once, execution of `deposit` and `fetch` must alternate, with `deposit` 
+executed first. 
+
+The way to program the required alternation property to use signaling semaphores. Such can be used either to indicate 
+when processes reach critical execution points or to indicate changes to the status of shared variables. Here, the 
+critical execution points are starting and ending `deposit`- and `fetch` operations. The corresponding changes to the 
+shared buffer are becoming `empty` or `full`. Because there might be multiple producers or consumer, it is simpler to 
+associate a semaphore with each or the two states of the buffer rather than execution points of the process. 
+
