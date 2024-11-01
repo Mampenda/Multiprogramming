@@ -1675,7 +1675,7 @@ be stored in different cache lines. Variables `arrive` and `continue` are exampl
 is raised by one process to signal that a synchronization condition is true. The remaining problem is augmenting 
 `{ 3.12 }` and `{ 3.13 }` with code to clear the flags by resetting them to 0 in preparation for the next iteration. 
 
-Here, the two general _Flag Synchronization Principle_ apply:
+Here, the two general _Flag Synchronization Principles_ apply:
 1. The process that waits for a synchronization flag to be set is the one that should clear that flag. 
    
    In {3.12}, the `Worker[i]` should clear `continue[i]`, and in {3.13}, the `Coordinator` should clear all elements of 
@@ -1690,6 +1690,7 @@ Here, the two general _Flag Synchronization Principle_ apply:
 
 If we add the flag-clearing code, we get the following `Coordinator` barrier:
 ``` 
+/* Barrier synchronization using a central coordinator process */ 
 int count = 0;          // the increment of count is replaced by arrive[i] = 1
 
 process Worker[i = 1 to N] {
@@ -1754,7 +1755,9 @@ continue[right] = 1;
 ```
 The implementation above is called a _combining tree barrier_. This is because each process combines the result of its 
 children, then passes them on to its parent. This barrier uses the same number of variables as the centralized 
-coordinator, but it is much more efficient for large N, because the height of the tree is proportional to log_2(N).
+coordinator, but it is much more efficient for large N, because the height of the tree is proportional to log_2(n).
+
+![img.png](images/img1.png)
 
 ### Symmetric Barriers 
 In the combining-tree barrier, processes play different roles: those at interior nodes execute more actions than those 
@@ -1770,7 +1773,7 @@ different. Instead, we can construct a fully symmetric barrier as follows.
 Let each process to set its flag and finally clears the other's flag. if `W[i]` is one process and `W[j]` is the other, 
 the symmetric two-process barriers is then implemented as follows: 
 ``` 
-// Barrier code for worker process W[i] 
+/* Barrier code for worker process W[i] */ 
 <await (arrive[i] == 0);> // key-line (wait for its own flag to be set)
 arrive[i] = 1;            // set it's own flag
 <await (arrive[j] == 1);> // wait for the other to set its flag
@@ -1793,7 +1796,7 @@ use some sort of binary interconnection, which will have a size proportional to 
 
 Let `Worker[1:n]` be the array of processes. If `n` is a power of 2, we could combine them as shown below. 
 
-![img.png](images/img1.png)
+![img.png](images/img2.png)
 
 This kind of barrier is called a _butterfly barrier_ due to the shape of the interconnection pattern, which is similar 
 to the butterfly interconnection pattern for the Fourier transform. A butterfly barrier has `log_2(n)` stages. Each 
@@ -1810,7 +1813,7 @@ process barrier a process sets the arrival flag of a worker to its right (modulo
 own arrival flag. The techniques based on a technique for disseminating information to `n` processes in `log_2(n)` 
 rounds. 
 
-![img.png](images/img2.png)
+![img.png](images/img3.png)
 
 Each worker disseminates notice of its arrival at the barrier. A critical aspect of correctly implementing an n process 
 barrier, independent of which interconnection pattern is used, is to avoid race conditions that can result from using 
@@ -1874,3 +1877,58 @@ process P[i=1 to n] {
     }
 }
 ```
+
+### Semaphores and Barriers
+Previously, we've introduced barrier synchronization as a means to synchronize stages or parallel iterative algorithms.
+The busy-waiting implementations of barriers used flag variables that processes set and cleared as they arrived at and 
+left a barrier. As was the case with the critical section problem, semaphores make it relatively easy to implement 
+barrier synchronization. The basic idea is to use one semaphore for each synchronization flag. A process sets a flag by 
+executing a `V` operation; a process waits for a flag to be set and then clears it by executing a `P` operation. 
+
+Consider the problem of implementing a two-process barrier. Recall that two properties are required 
+1. Neither process can get past the barrier until both have arrived.
+2. The barrier must be reusable since in general the same process will need to synchronize after each stage of the 
+   computation
+
+For the critical section problem, we need to use only one semaphore as a lock, because the only concern is whether a 
+process is inside or outside its critical section. However, barrier synchronization requires using two semaphores as 
+signals, because we need to know each time a process arrives at or departs from the barrier. 
+
+A signalling semaphore `s` is one that is initialized to 0. A process signals an event by executing `V(s)` and other 
+processes wait for that event by executing `P(s)`. For a two-process barrier, the two significant events are the 
+processes arriving at the barrier. Hence, we can solve the problem using two signaling semaphores `arrive1` and 
+`arrive2`. Each process signals its arrival by executing a `V` operation on its own semaphore, then waits for the other 
+process to arrive by executing a `P` operation on the other process's semaphore.
+```
+sem arrive1 = 0;
+sem arrive2 = 0; 
+
+process Worker1 {
+    ...
+    V(arrive1); // signal arrival
+    P(arrive2); // wait for other process
+    ...
+}
+process Worker2 {
+    ...
+    V(arrive2); // signal arrival
+    P(arrive1); // wait for other process
+    ...
+}
+```
+Because barrier synchronization is symmetric, each process takes the same actions, each just signals and waits on 
+different semaphores. When semaphores are used in this way, they're much like flag variables, and their use follows the 
+Flag Synchronization Principles: 
+1. The process that waits for a synchronization flag to be set is the one that should clear that flag.
+2. A flag should not be set until it is known that it is clear.
+
+We can use the two-process barrier as shown above to implement an `n`-process butterfly barrier having the structure 
+shown previously, with the butterfly barrier, or we can use the same idea to implement a `n`-process dissemination 
+barrier. In both cases, we would employ an array of `arrive` semaphores. At each stage, a process `i` first signals its 
+arrival by executing `V(arrive[i])`, then waits for another process by executing `P(arrive[i])` on that process's 
+instance of `arrive`. Unlike the situation with flag variables, only one array of `arrive` semaphores is required. This 
+is because `V` operations are "remembered", wheras the value of a flag variable might be overwritten. Alternatively, we 
+can use semaphores as signal flags to implement `n`-process barrier synchronization using a central coordinator process 
+or a combining tree figure. 
+
+Again, because `V` operations are remembered, we would need _fewer_ semaphores than flag variables.
