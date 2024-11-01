@@ -1982,16 +1982,10 @@ problems that are solved:
 2. Counting the words on that page.
 
 The problems of such kind are solved following the classic pattern called producer/consumer. Instead of a single Thread
-that would first produce a page and then consume it, we'll have two threads: one producer and one consumer. Let us now 
-write the Producer()-class. 
+that would first produce a page and then consume it, we'll have two threads: one producer and one consumer. These
+classes have been implemented and are in `src/main/java/org/example/ProducerConsumer`.
 
-``` 
-
-```
-
-
-
-
+### Producers and Consumers (intro with array example)
 
 Previously, when examining the producer/consumer problem, we assumed that there wa one producer and one consumer; here we
 consider the general solution in which there are multiple producers and consumers. The solution illustrates another use 
