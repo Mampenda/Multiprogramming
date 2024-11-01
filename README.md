@@ -1825,3 +1825,52 @@ process 2.
 
 The net effects are that some processes will exit the barrier before they should and that some processes will wait 
 forever to get to the next stage. The same problem can occur with the dissemination barrier. 
+
+### Semaphores: Critical Sections Problem
+Recall that in the critical section problem, each of `n` processes repeatedly executes a critical section of code, in 
+which it requires exclusive access to some shared resource, and then executes a noncritical section, in which it 
+computes using only local objectives. In its critical section, each process requires mutually exclusive access to the 
+shared resource. 
+
+Semaphores were conceived in part to make the critical section problem easy to solve. 
+``` 
+bool lock = false; 
+
+process P1 {
+    while(true){
+        <await (!lock) lock=true>
+        critical section;
+        lock = false;
+        non-critical section;
+    }
+}
+
+process P2 {
+    while(true){
+        <await (!lock) lock=true>
+        critical section;
+        lock = false;
+        non-critical section;
+    }
+}
+```
+The code above presented a solution using `lock` variables in which variable `lock` is true when no process is in its 
+critical section and false otherwise. Let `true` be represented by 1 and false 0. Then a processes enters its critical 
+section by first waiting for `lock` to be 1 and then sets it to 0. A process leaves its critical section by resetting 
+`lock` to 1. 
+
+These are exactly the operations supposed by semaphores. Hence, let `mutex` be a semaphore that has initial value 1. 
+Execution of `P(mutex)` is the same as waiting for `lock` to 1 then setting it to 0. Similarly, execution of 
+`V(mutex)` is the same as setting `lock` to 1 (assuming it is set to 1 only when it is knows to be 0). These 
+observations lead to the solution to the critical section problem shown below.  
+``` 
+sem mutex = 1; 
+process P[i=1 to n] {
+    while (true) {
+        P(mutex); 
+        critical section;
+        V(mutex);
+        non-critical section;
+    }
+}
+```
