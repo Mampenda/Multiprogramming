@@ -13,39 +13,33 @@ Here is an example of sudo-code in _Await Language_ with semaphores for synchron
 
 ```
 // Initialize semaphores for the states of the dish
-Semaphore empty = 1;
-Semaphore nonempty = 0;
-Boolean dishEmpty = new Boolean(true);
-
-// Number of portions currently available to the baby birds
-int F = 0;
+Semaphore eat = 1;
+Semaphore fill = 0;
+int portions = 100;
 
 // Process for Parent Bird
 Process Parent {
     while (true) {
+        P(0)
         fill_dish();
         print("Parent refilling dish...");
-        dish.post(empty);           // or P(empty)
-        F += 1;
 
-        if (F != 0) {
-            dishEmpty.post(nonempty);   // or V(nonempty);
-            dishEmpty = false;
-        }
-        else {
-           dish.post(empty)    // or V(empty)
-        }
+        V(1)
     }
 }
 
 // Process for Baby Birds
 Process Baby(i=1..N) {
     while (true) {
-        <await (!dishEmpty()) eat(); > //Wait for non-empty dish, then eat one portion
-        print("Baby " + i + " eating...");
-        dishEmpty.post(empty)    // or V(empty)
-        dishEmpty = true;
-        sleep(randomTime()); // Sleep for a random duration
+        P(1);
+        eat_food();
+        portions -= 1;
+        
+        if (portions == 0){
+          V(0);
+        } else {
+          V(1);
+        }    
     }
 }
 ```
