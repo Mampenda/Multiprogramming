@@ -346,17 +346,147 @@ var c = b.onReject(x => x + 1);
 a.link(p2);
 a.reject(42);
 ```
+Note the syntax is a blend of `JavaScript` and λ (`$$\Lambda$$`) which uses: 
+- **prmoisify** to create promise
+- **onReject** to register a reject reaction
+- **link** to link promises (linking means that when the original promise is resolved/rejected, then the linked promise 
+will be resolved/rejected with the same value)
 
-Note the syntax is a blend of `JavaScript` and λ `$$\Lambda_p$$` 
+**Draw a promise graph for this code** 
 
+Remember to use the names of nodes in that graph that represent the "type" of node: 
+- **v** for value
+- **f** for function
+- **p** for promise
 
+with a subscript that represents the **line number** where the particular value/function/promise has beed **declared/
+where it appears first**.
 
+For example, the value 42 on line 5 will be denoted by **`v_5`** in the promise graph. 
 
-
-
-Additional execrise
-```javascript 
-var a = promisify({});
-var b = a.onResolve(x => x + 1);
-a.resolve(42);
+### Answer: 
+Step-by-Step breakdown of the code: 
+```javascript
+var a = promisify({});              // new promise "a" which we call P_1
+var b = promisify({});              // new promise "b" which we call P_2
+var c = b.onReject(x => x + 1);     // new rejection handler "c" for P_2 which we call f_3
+a.link(p2);                         // link P_1 to P_2, i.e., if P_1 is resolved or rejected, P_2 will also be
+a.reject(42);                       // rejects P_1 (and also P_2 because of link) with the value V_5 = 42
 ```
+
+Promise graph: 
+![img5.png](images/img5.png)
+Explanation of Nodes and Flow:
+
+1. (v_5 / 42): This is the value 42 used to reject p_1 (a.reject(42)).
+2. (a / p_1): The promise a (created on line 1) is rejected with v_5.
+3. Link => (b / p_2): Since p_1 is linked to p_2, p_2 (created on line 2) is also rejected with v_5.
+4. (f_3 / x => x + 1): This is the rejection handler function registered on p_2 with onReject on line 3, which adds 1 to the rejected value.
+5. (v_3 / 43): The result of calling f_3 with 42 is 43, which resolves p_3.
+6. (c / p_3): The promise returned by onReject on line 3 (p_3) is resolved with v_3 = 43.
+
+## Question 9: 
+Consider the following HTML/JavaScript
+
+```angular2html
+<button id="myButton"></button>
+<script>
+    setTimeout(function timeoutHandler() {
+        /* code that runs for 6 ms*/
+    }, 10); 
+    
+    setInterval(function intervalHandler(){
+        /* code that runs for 8 ms */ 
+    }, 10);
+    
+    const myButton = document.getElementById("myButton");
+    
+    myButton.addEvenListener("click", function clickHandler() {
+        Promise.resolve().then( () => { /* some promise handling code that runs for 4 ms */ });
+        /* click-handling code that runs for 10 ms */
+    });
+    /* code that runs for 18 ms */
+</script>
+```
+
+This code runs on a computer super-user, who clicks the button `myButton` 6 ms after the execution starts. 
+What happens at particular time points? 
+
+What happens-------------------------at what time
+`clickHandler` finishes X ms
+`clickHandler` starts X ms
+interval fires for the first time X ms
+interval fires for the second time X ms
+interval fires for the third time X ms
+interval fires for the fourth time X ms
+`intervalHandler` start X ms
+`intervalHandler` finishes X ms
+mainline execution starts 0 ms
+mainline execution finishes X ms 
+promise handler starts X ms
+promise handler finishes X ms 
+promise resolved X ms
+`timeoutHandler` starts X ms
+`timeoutHandler` finishes X ms
+timer fires X ms 
+user clicks the button 6 ms
+
+### Answer:
+#### Assumptions
+
+1. Mainline Execution:** Starts immediately when the <script> tag is reached. 
+2. Timers and Promises: Timers (setTimeout, setInterval) and Promises are queued differently:
+   - setTimeout and setInterval handlers are added to the macrotask queue. 
+   - Promises are resolved and their handlers are queued in the microtask queue, which runs after the current task (like an event handler) but before any further macrotasks.
+3. Time-Tracking:
+   - Each task's execution is completed before any other task of the same type (macrotask or microtask) can start.
+   - The code inside each handler will block the main thread until it finishes.
+
+#### Breakdown of Each Step
+
+Mainline Execution (0 ms): The mainline code starts immediately. It includes setting up the timers, defining the 
+button click event listener, and finally running the initial code block. 
+   setTimeout(timeoutHandler, 10): Schedules timeoutHandler to execute 10 ms after the mainline finishes. 
+   setInterval(intervalHandler, 10): Schedules intervalHandler to execute 10 ms after the mainline finishes and then 
+   every 10 ms afterward.
+   myButton event listener is set up, which listens for a click event. 
+   Total Time for Mainline Execution: 18 ms 
+   Mainline finishes at 18 ms.
+
+User Clicks the Button (6 ms):
+   The click occurs at 6 ms, but because the mainline execution is still running, the click event is queued until the 
+   mainline completes at 18 ms.
+
+Click Event Processing (Starts at 18 ms):
+   clickHandler starts at 18 ms. 
+   Inside clickHandler:
+       Microtask Enqueue: The Promise resolution is scheduled to execute after clickHandler completes. 
+       The click-handling code takes 10 ms. 
+   clickHandler finishes at 28 ms.
+
+Promise Handling (Starts at 28 ms):
+   After clickHandler finishes, the microtask queue is processed.
+   The promise handler takes 4 ms.
+   Promise handler finishes at 32 ms.>
+
+Timer Execution (Starting at 32 ms):
+   Now, we start processing the timer macrotasks that are queued.
+
+First Interval (intervalHandler) Fires at 32 ms:
+    intervalHandler starts at 32 ms and takes 8 ms.
+    intervalHandler finishes at 40 ms.
+
+Timeout (timeoutHandler) Fires at 40 ms:
+    timeoutHandler, scheduled to run 10 ms after mainline execution, starts now because the mainline and click-related tasks have completed.
+    timeoutHandler starts at 40 ms and runs for 6 ms.
+    timeoutHandler finishes at 46 ms.
+
+Second Interval (intervalHandler) Fires at 46 ms:
+    The second interval fires 10 ms after the first interval completed, aligning with the original 10 ms interval setup.
+    intervalHandler starts at 46 ms and finishes at 54 ms.
+
+Third Interval (intervalHandler) Fires at 54 ms:
+    intervalHandler starts at 54 ms and finishes at 62 ms.
+
+Fourth Interval (intervalHandler) Fires at 62 ms:
+    intervalHandler starts at 62 ms and finishes at 70 ms.
