@@ -438,7 +438,7 @@ R2    W1    W2    W1    W2    R1
 W2    W2    W1    W2    W1    W1
 ```
 
-Only two of the interleavings are optional/viable, and those are the ones which gives the result 0. But the four others
+_Only two of the interleavings are optional/viable, and those are the ones which gives the result 0_. But the four others
 yields a result which gives the wrong answer.
 
 ---
@@ -1072,7 +1072,7 @@ process P {
     }
 }
 ```
-This is called the Test-and-Test-and-Set protocol because a process tests `lock` until there's a possibility that Test-
+This is called the `Test-and-Test-and-Set` protocol because a process tests `lock` until there's a possibility that Test-
 and-Set can succeed. In the two additional loops (the two spinning while loops), `lock` is only examined, so its value
 can be read from a local cache without affecting other processors, thus, we reduce memory contention, but it does not
 disappear completely. In particular, when `lock` is clear, then at least one, if not all, delayed processes will execute

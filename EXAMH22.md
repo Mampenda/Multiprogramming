@@ -471,24 +471,25 @@ user clicks the button              after 6 ms
 9. Macrotask third `setInterval(function intervalHandler {}, 10)` starts after 54 ms and runs for 8 ms (62 ms)
 10. Macrotask fourth `setInterval(function intervalHandler {}, 10)` starts after 62 ms and runs for 8 ms (70 ms)
 
-What happens--------at what time
-`clickHandler` finishes             after 28 ms
-`clickHandler`starts                after 18 ms
-interval starts for the first time  after 38 ms
-interval starts for the second time after 46 ms
-interval starts for the third time  after 54 ms
-interval starts for the fourth time after 62 ms
-`intervalHandler` starts            after 32 ms
-`intervalHandler` finishes          after 70 ms
-mainline execution starts           after 0 ms
-mainline execution finishes         after 18 ms
-promise handler starts              after 28 ms
-promise handler finishes            after 32 ms
-promise resolved                    after 32 ms
-`timeoutHandler` starts             after 32 ms
-`timeoutHandler` finishes           after 38 ms
-timer starts                        after 32 ms
-user clicks the button              after 6 ms
+
+    What happens--------at what time
+    `clickHandler` finishes             after 28 ms
+    `clickHandler`starts                after 18 ms
+    interval starts for the first time  after 10 ms
+    interval starts for the second time after 46 ms
+    interval starts for the third time  after 54 ms
+    interval starts for the fourth time after 62 ms
+    `intervalHandler` starts            after 32 ms
+    `intervalHandler` finishes          after 70 ms
+    mainline execution starts           after 0 ms
+    mainline execution finishes         after 18 ms
+    promise handler starts              after 28 ms
+    promise handler finishes            after 32 ms
+    promise resolved                    after 32 ms
+    `timeoutHandler` starts             after 32 ms
+    `timeoutHandler` finishes           after 38 ms
+    timer starts                        after 10 ms
+    user clicks the button              after 6 ms
 
 MORE DETAILED EXPLANATION:
 `Mainline Execution` (0 ms): The mainline code _starts_ immediately when the script is loaded, and it takes 18 ms.

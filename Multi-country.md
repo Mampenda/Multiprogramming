@@ -44,10 +44,10 @@ process vaccinated[i = 1 to N] {
 
         // Enter critical section for adjusting vaccinated passanger count
         P(vaxMutex);                // Lock access to "vaxCounter" for synchronization
-        vaxCounter++;               // Increment nr. of vaccinated passangers in the zone
         
-        // If this is the first passanger in the zone...
-        if (vaxCounter == 1) {
+        // CRITICAL SECTION //
+        vaxCounter++;               // Increment nr. of vaccinated passangers in the zone
+        if (vaxCounter == 1) {      // If this is the first passanger in the zone...
             P(doc_checking_zone);   // Lock the zone for un-vaccinated passangers
         }
         V(vaxMutex);                // Release access to "vaxCounter"
@@ -72,10 +72,10 @@ process unvaccinated[i = 1 to M] {
 
         // Enter critical section for adjusting vaccinated passanger count
         P(unvaxMutex);                // Lock access to "unvaxCounter" for synchronization
-        unvaxCounter++;               // Increment nr. of un-vaccinated passangers in the zone
         
-        // If this is the first passanger in the zone...
-        if (unvaxCounter == 1) {
+        // CRITICAL SECTION //
+        unvaxCounter++;               // Increment nr. of un-vaccinated passangers in the zone
+        if (unvaxCounter == 1) {      // If this is the first passanger in the zone...
             P(doc_checking_zone);     // Lock the zone for vaccinated passangers
         }
         V(unvaxMutex);                // Release access to "unvaxCounter"
