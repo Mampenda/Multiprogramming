@@ -236,7 +236,7 @@ There's duality between monitors and message passing. What is that duality exact
 notions about monitors, and the columns represent notions about message passing. Click the circle in a cell to represent
 that a notion about monitors is dual to a notion about message passing. 
 
-![img4.png](images/img4.png)
+![img4.png](../images/img4.png)
 
 ### Answer: 
 Here’s how we map the notions in monitors to the corresponding concepts in message passing, identifying which cells 
@@ -375,7 +375,7 @@ a.reject(42);                       // rejects P_1 (and also P_2 because of link
 ```
 
 Promise graph: 
-![img5.png](images/img5.png)
+![img5.png](../images/img5.png)
 Explanation of Nodes and Flow:
 
 1. (v_5 / 42): This is the value 42 used to reject p_1 (a.reject(42)).
@@ -539,12 +539,12 @@ Fourth Interval (`intervalHandler` starts at 40 ms and takes 8 ms.
 `intervalHandler` finishes at 48 ms.
 
 ## Question 10: 
-![SemanticsCheatSheet.png](images/SemanticsCheatSheet.png)
-![SemanticsCheatSheet2.png](images/SemanticsCheatSheet2.png)
-![SemanticsCheatSheet3.png](images/SemanticsCheatSheet3.png)
+![SemanticsCheatSheet.png](../images/SemanticsCheatSheet.png)
+![SemanticsCheatSheet2.png](../images/SemanticsCheatSheet2.png)
+![SemanticsCheatSheet3.png](../images/SemanticsCheatSheet3.png)
 
 What does this rule describe?
-![SemanticsOfPromises1.png](images/SemanticsOfPromises1.png)
+![SemanticsOfPromises1.png](../images/SemanticsOfPromises1.png)
 
 Options:
 1. This rule handles the case when a pending promise is resolved.
@@ -560,7 +560,7 @@ Options:
 
 ## Question 11:
 What does this rule describe?
-![SemanticsOfPromises2.png](images/SemanticsOfPromises2.png)
+![SemanticsOfPromises2.png](../images/SemanticsOfPromises2.png)
 
 Options:
 1. This rule handles the case when a pending promise is resolved.
