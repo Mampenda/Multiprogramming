@@ -5,12 +5,6 @@ Compiler: allowed to statically optimize the code by reordering things
 JVM: allowed to dynamically optimize the code by reordering 
 
 
-
-
-
-
-
-
 BYTECODE 
 a = b + c; // statement
 

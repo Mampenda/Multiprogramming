@@ -438,18 +438,18 @@ user clicks the button              after 6 ms
 
 <button id="myButton"></button>
 <script>
-    /* (6 - MACROTASK TIMEOUT) */ 
-    setTimeout(function timeoutHandler() { /* (7 - timeoutHandler) code that runs for 6 ms, each 10 ms */ }, 10);
+    /* ( - MACROTASK TIMEOUT) */ 
+    setTimeout(function timeoutHandler() { /* ( - timeoutHandler) code that runs for 6 ms, each 10 ms */ }, 10);
 
-    /* (8 - MACROTASK TIMER) */
-    setInterval(function intervalHandler() { /* (9 - intervalHandler) code that runs for 8 ms, each 10 ms */ }, 10);
+    /* ( - MACROTASK TIMER) */
+    setInterval(function intervalHandler() { /* ( - intervalHandler) code that runs for 8 ms, each 10 ms */ }, 10);
 
     /* (2 - USER CLICKS THE BUTTON) */
     const myButton = document.getElementById("myButton");
 
     /* (4 - CLICK HANDLER) starts before the other methods because user clicked after 6 ms */
     myButton.addEventListener("click", function clickHandler() {
-        Promise.resolve().then(() => { /* (5 - PROMISE) code that runs for 4 ms */ });
+        Promise.resolve().then(() => { /* ( - PROMISE) code that runs for 4 ms */ });
         /* (4 - CLICK HANDLER) code that runs for 10 ms */
     });
     /* (1 - MAINLINE EXECUTION) code that runs for 18 ms (3 - MAINLINE FINISHES after 18 seconds) */ 
@@ -476,9 +476,9 @@ user clicks the button              after 6 ms
     `clickHandler` finishes             after 28 ms
     `clickHandler`starts                after 18 ms
     interval starts for the first time  after 10 ms
-    interval starts for the second time after 46 ms
-    interval starts for the third time  after 54 ms
-    interval starts for the fourth time after 62 ms
+    interval starts for the second time after 20 ms
+    interval starts for the third time  after 30 ms
+    interval starts for the fourth time after 40 ms
     `intervalHandler` starts            after 32 ms
     `intervalHandler` finishes          after 70 ms
     mainline execution starts           after 0 ms
@@ -497,13 +497,20 @@ It sets up the timers, defines the button click event listener, and finally run 
    `setTimeout(timeoutHandler, 10)`: Schedules `timeoutHandler` to run 10 ms after the mainline finishes. 
    `setInterval(intervalHandler, 10)`: Schedules `intervalHandler` to run 10 ms after the mainline finishes and then 
                                        every 10 ms afterward.
-   `myButton` event listener is set up, so whenever it's clicked, `clickHandler` will run. 
-   Total Time for Mainline Execution: 18 ms 
-   Mainline finishes at 18 ms.
+   `myButton` event listener is set up, so whenever it's clicked, `clickHandler` will run.
 
 User Clicks `myButton` (6 ms):
    The click occurs at 6 ms, but because the mainline execution is still running, the click event is queued until the 
    mainline completes at 18 ms.
+
+Timer Execution (Starts at 10 ms):
+Now, we start processing the `timer` macrotasks that are queued.
+
+First Interval (`intervalHandler`, starts at 10 ms):
+`intervalHandler` starts at 10 ms and takes 8 ms.
+`intervalHandler` finishes at 18 ms.
+
+`Mainline Execution` finishes at 18 ms.
 
 Click Event Processing (Starts at 18 ms):
    `clickHandler` starts as soon as the mainline is finished at 18 ms because user clicked after 6 ms. 
@@ -511,32 +518,25 @@ Click Event Processing (Starts at 18 ms):
        Microtask Enqueue: The Promise resolution is scheduled to execute after `clickHandler` completes.
    `clickHandler` finishes at 28 ms (started at 18 ms and took 10 ms to finish).
 
+Timeout (`timeoutHandler`, starts at 10 ms):
+`timeoutHandler`,   scheduled to run 10 ms after mainline execution
+`timeoutHandler` starts at 10 ms and runs for 6 ms.
+`timeoutHandler` finishes at 16 ms.
+
+Second Interval (`intervalHandler`, starts at 20 ms):
+The second `intervalHandler` starts at 20 ms and takes 8 ms.
+`intervalHandler` finishes at 28 ms.
+
 Promise Runs (Starts at 28 ms):
    After `clickHandler` finishes, the microtask queue is processed, and it takes 4 ms.
    Promise handler finishes at 32 ms (started at 28ms to finish).
 
-Timer Execution (Starts at 32 ms):
-   Now, we start processing the `timer` macrotasks that are queued.
+Third Interval (`intervalHandler` starts at 30 ms and takes 8 ms.
+`intervalHandler` finishes at 38 ms.
 
-Timeout (`timeoutHandler`, starts at 32 ms):
-    `timeoutHandler`,   scheduled to run 10 ms after mainline execution, starts now because the mainline and 
-                        click-related tasks have completed.
-    `timeoutHandler` starts at 32 ms and runs for 6 ms.
-    `timeoutHandler` finishes at 38 ms.
 
-First Interval (`intervalHandler`, starts at 38 ms):
-`intervalHandler` starts at 38 ms and takes 8 ms.
-`intervalHandler` finishes at 40 ms.
-
-Second Interval (`intervalHandler`, starts at 46 ms):
-    The second interval fires 10 ms after the first interval completed, aligning with the original 10 ms interval setup.
-    `intervalHandler` starts at 46 ms and finishes at 54 ms.
-
-Third Interval (`intervalHandler`, starts at 54 ms):
-    `intervalHandler` starts at 54 ms and finishes at 62 ms.
-
-Fourth Interval (`intervalHandler`, fires at 62 ms):
-    `intervalHandler` starts at 62 ms and finishes at 70 ms.
+Fourth Interval (`intervalHandler` starts at 40 ms and takes 8 ms.
+`intervalHandler` finishes at 48 ms.
 
 ## Question 10: 
 ![SemanticsCheatSheet.png](images/SemanticsCheatSheet.png)
