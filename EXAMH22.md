@@ -388,105 +388,217 @@ Explanation of Nodes and Flow:
 ## Question 9: 
 Consider the following HTML/JavaScript
 
-```angular2html
+```html
+
 <button id="myButton"></button>
 <script>
     setTimeout(function timeoutHandler() {
         /* code that runs for 6 ms*/
-    }, 10); 
-    
-    setInterval(function intervalHandler(){
-        /* code that runs for 8 ms */ 
     }, 10);
-    
+
+    setInterval(function intervalHandler() {
+        /* code that runs for 8 ms */
+    }, 10);
+
     const myButton = document.getElementById("myButton");
-    
-    myButton.addEvenListener("click", function clickHandler() {
-        Promise.resolve().then( () => { /* some promise handling code that runs for 4 ms */ });
-        /* click-handling code that runs for 10 ms */
+
+    /* (clickHandler) starts before the other methods because user clicked after 6 ms*/
+    myButton.addEventListener("click", function clickHandler() {
+        Promise.resolve().then(() => { /* some promise handling code that runs for 4 ms */ });
+        /* click-handling code that runs for 10 ms (CLICK HANDLER)*/
     });
-    /* code that runs for 18 ms */
+    /* code that runs for 18 ms (MAINLINE EXECUTION)*/ 
 </script>
 ```
 
 This code runs on a computer super-user, who clicks the button `myButton` 6 ms after the execution starts. 
 What happens at particular time points? 
 
-What happens-------------------------at what time
-`clickHandler` finishes X ms
-`clickHandler` starts X ms
-interval fires for the first time X ms
-interval fires for the second time X ms
-interval fires for the third time X ms
-interval fires for the fourth time X ms
-`intervalHandler` start X ms
-`intervalHandler` finishes X ms
-mainline execution starts 0 ms
-mainline execution finishes X ms 
-promise handler starts X ms
-promise handler finishes X ms 
-promise resolved X ms
-`timeoutHandler` starts X ms
-`timeoutHandler` finishes X ms
-timer fires X ms 
-user clicks the button 6 ms
+What happens--------at what time
+`clickHandler` finishes             after X ms
+`clickHandler`starts                after X ms
+interval starts for the first time  after X ms
+interval starts for the second time after X ms
+interval starts for the third time  after X ms
+interval starts for the fourth time after X ms
+`intervalHandler` starts            after X ms
+`intervalHandler` finishes          after X ms
+mainline execution starts           after 0 ms
+mainline execution finishes         after X ms 
+promise handler starts              after X ms
+promise handler finishes            after X ms 
+promise resolved                    after X ms
+`timeoutHandler` starts             after X ms
+`timeoutHandler` finishes           after X ms
+timer starts                        after X ms 
+user clicks the button              after 6 ms
 
 ### Answer:
-#### Assumptions
+```html
 
-1. Mainline Execution:** Starts immediately when the <script> tag is reached. 
-2. Timers and Promises: Timers (setTimeout, setInterval) and Promises are queued differently:
-   - setTimeout and setInterval handlers are added to the macrotask queue. 
-   - Promises are resolved and their handlers are queued in the microtask queue, which runs after the current task (like an event handler) but before any further macrotasks.
-3. Time-Tracking:
-   - Each task's execution is completed before any other task of the same type (macrotask or microtask) can start.
-   - The code inside each handler will block the main thread until it finishes.
+<button id="myButton"></button>
+<script>
+    /* (6 - MACROTASK TIMEOUT) */ 
+    setTimeout(function timeoutHandler() { /* (7 - timeoutHandler) code that runs for 6 ms, each 10 ms */ }, 10);
+
+    /* (8 - MACROTASK TIMER) */
+    setInterval(function intervalHandler() { /* (9 - intervalHandler) code that runs for 8 ms, each 10 ms */ }, 10);
+
+    /* (2 - USER CLICKS THE BUTTON) */
+    const myButton = document.getElementById("myButton");
+
+    /* (4 - CLICK HANDLER) starts before the other methods because user clicked after 6 ms */
+    myButton.addEventListener("click", function clickHandler() {
+        Promise.resolve().then(() => { /* (5 - PROMISE) code that runs for 4 ms */ });
+        /* (4 - CLICK HANDLER) code that runs for 10 ms */
+    });
+    /* (1 - MAINLINE EXECUTION) code that runs for 18 ms (3 - MAINLINE FINISHES after 18 seconds) */ 
+</script>
+```
 
 #### Breakdown of Each Step
 
-Mainline Execution (0 ms): The mainline code starts immediately. It includes setting up the timers, defining the 
-button click event listener, and finally running the initial code block. 
-   setTimeout(timeoutHandler, 10): Schedules timeoutHandler to execute 10 ms after the mainline finishes. 
-   setInterval(intervalHandler, 10): Schedules intervalHandler to execute 10 ms after the mainline finishes and then 
-   every 10 ms afterward.
-   myButton event listener is set up, which listens for a click event. 
+1. Mainline Execution starts at 0 ms
+2. User clicks button after 6 ms
+3. Mainline finished after 18 ms
+4. `clickHandler` starts processing click-event after mainline finishes (starts after 18 ms, takes 10 ms) (28 ms)
+5. Microtask promise starts after 28 ms and finishes after 4 ms (32 ms)
+6. Macrotask `setTimeout(function timeoutHandler() {}, 10)` starts after 32 ms and runs for 6 ms (38 ms)
+   (supposed to start after 10 but had to wait for other processes to finish, timeout before intervals)
+7. Macrotask first `setInterval(function intervalHandler {}, 10)` starts after 38 ms and runs for 8 ms (46 ms)
+   (supposed to start after 10 but had to wait for other processes to finish)
+8. Macrotask second `setInterval(function intervalHandler {}, 10)` starts after 46 ms and runs for 8 ms (54 ms)
+9. Macrotask third `setInterval(function intervalHandler {}, 10)` starts after 54 ms and runs for 8 ms (62 ms)
+10. Macrotask fourth `setInterval(function intervalHandler {}, 10)` starts after 62 ms and runs for 8 ms (70 ms)
+
+What happens--------at what time
+`clickHandler` finishes             after 28 ms
+`clickHandler`starts                after 18 ms
+interval starts for the first time  after 38 ms
+interval starts for the second time after 46 ms
+interval starts for the third time  after 54 ms
+interval starts for the fourth time after 62 ms
+`intervalHandler` starts            after 32 ms
+`intervalHandler` finishes          after 70 ms
+mainline execution starts           after 0 ms
+mainline execution finishes         after 18 ms
+promise handler starts              after 28 ms
+promise handler finishes            after 32 ms
+promise resolved                    after 32 ms
+`timeoutHandler` starts             after 32 ms
+`timeoutHandler` finishes           after 38 ms
+timer starts                        after 32 ms
+user clicks the button              after 6 ms
+
+MORE DETAILED EXPLANATION:
+`Mainline Execution` (0 ms): The mainline code _starts_ immediately when the script is loaded, and it takes 18 ms.
+It sets up the timers, defines the button click event listener, and finally run the initial code block. 
+   `setTimeout(timeoutHandler, 10)`: Schedules `timeoutHandler` to run 10 ms after the mainline finishes. 
+   `setInterval(intervalHandler, 10)`: Schedules `intervalHandler` to run 10 ms after the mainline finishes and then 
+                                       every 10 ms afterward.
+   `myButton` event listener is set up, so whenever it's clicked, `clickHandler` will run. 
    Total Time for Mainline Execution: 18 ms 
    Mainline finishes at 18 ms.
 
-User Clicks the Button (6 ms):
+User Clicks `myButton` (6 ms):
    The click occurs at 6 ms, but because the mainline execution is still running, the click event is queued until the 
    mainline completes at 18 ms.
 
 Click Event Processing (Starts at 18 ms):
-   clickHandler starts at 18 ms. 
-   Inside clickHandler:
-       Microtask Enqueue: The Promise resolution is scheduled to execute after clickHandler completes. 
-       The click-handling code takes 10 ms. 
-   clickHandler finishes at 28 ms.
+   `clickHandler` starts as soon as the mainline is finished at 18 ms because user clicked after 6 ms. 
+   Inside `clickHandler`:
+       Microtask Enqueue: The Promise resolution is scheduled to execute after `clickHandler` completes.
+   `clickHandler` finishes at 28 ms (started at 18 ms and took 10 ms to finish).
 
-Promise Handling (Starts at 28 ms):
-   After clickHandler finishes, the microtask queue is processed.
-   The promise handler takes 4 ms.
-   Promise handler finishes at 32 ms.>
+Promise Runs (Starts at 28 ms):
+   After `clickHandler` finishes, the microtask queue is processed, and it takes 4 ms.
+   Promise handler finishes at 32 ms (started at 28ms to finish).
 
-Timer Execution (Starting at 32 ms):
-   Now, we start processing the timer macrotasks that are queued.
+Timer Execution (Starts at 32 ms):
+   Now, we start processing the `timer` macrotasks that are queued.
 
-First Interval (intervalHandler) Fires at 32 ms:
-    intervalHandler starts at 32 ms and takes 8 ms.
-    intervalHandler finishes at 40 ms.
+Timeout (`timeoutHandler`, starts at 32 ms):
+    `timeoutHandler`,   scheduled to run 10 ms after mainline execution, starts now because the mainline and 
+                        click-related tasks have completed.
+    `timeoutHandler` starts at 32 ms and runs for 6 ms.
+    `timeoutHandler` finishes at 38 ms.
 
-Timeout (timeoutHandler) Fires at 40 ms:
-    timeoutHandler, scheduled to run 10 ms after mainline execution, starts now because the mainline and click-related tasks have completed.
-    timeoutHandler starts at 40 ms and runs for 6 ms.
-    timeoutHandler finishes at 46 ms.
+First Interval (`intervalHandler`, starts at 38 ms):
+`intervalHandler` starts at 38 ms and takes 8 ms.
+`intervalHandler` finishes at 40 ms.
 
-Second Interval (intervalHandler) Fires at 46 ms:
+Second Interval (`intervalHandler`, starts at 46 ms):
     The second interval fires 10 ms after the first interval completed, aligning with the original 10 ms interval setup.
-    intervalHandler starts at 46 ms and finishes at 54 ms.
+    `intervalHandler` starts at 46 ms and finishes at 54 ms.
 
-Third Interval (intervalHandler) Fires at 54 ms:
-    intervalHandler starts at 54 ms and finishes at 62 ms.
+Third Interval (`intervalHandler`, starts at 54 ms):
+    `intervalHandler` starts at 54 ms and finishes at 62 ms.
 
-Fourth Interval (intervalHandler) Fires at 62 ms:
-    intervalHandler starts at 62 ms and finishes at 70 ms.
+Fourth Interval (`intervalHandler`, fires at 62 ms):
+    `intervalHandler` starts at 62 ms and finishes at 70 ms.
+
+## Question 10: 
+![SemanticsCheatSheet.png](images/SemanticsCheatSheet.png)
+![SemanticsCheatSheet2.png](images/SemanticsCheatSheet2.png)
+![SemanticsCheatSheet3.png](images/SemanticsCheatSheet3.png)
+
+What does this rule describe?
+![SemanticsOfPromises1.png](images/SemanticsOfPromises1.png)
+
+Options:
+1. This rule handles the case when a pending promise is resolved.
+2. This rule states that resolving a settled promise has no effect.
+3. This rule handles the case when a fulfill reaction is registered on a promise that is already resolved.
+4. This rule registers a fulfill reaction on a pending promise.
+5. This rule extracts a fulfill reaction from the queue, executes it with the promise's value, and uses the returned
+   value to resolve the dependent promise.
+
+### Answer:
+4. This rule registers a fulfill reaction on a pending promise.
+
+
+## Question 11:
+What does this rule describe?
+![SemanticsOfPromises2.png](images/SemanticsOfPromises2.png)
+
+Options:
+1. This rule handles the case when a pending promise is resolved.
+2. This rule turns an address into a promise
+3. This rule handles the case when a fulfill reaction is registered on a promise that is already resolved.
+4. This rule states that resolving a settled promise has no effect.
+
+### Answer:
+4. This rule states that resolving a settled promise has no effect.
+
+
+
+
+Task 10.3 from exam:
+### Question:
+What does this rule describe?
+![SemanticsOfPromises3.png](Pictures%2FSemanticsOfPromises3.png)
+
+Options:
+1. This rule causes a pending promise to be "linked" to another.
+2. This rule causes an already settled promise to be "linked" to another.
+3. This rule causes a non-settled promise to be "linked" to another.
+4. This rule causes a promise to be "linked" to another, With no regards to the state of that original promise.
+
+### Answer:
+4. This rule causes a promise to be "linked" to another, With no regards to the state of that original promise.
+
+
+Task 10.4 from exam:
+### Question:
+What does this rule describe?
+![SemanticsOfPromises4.png](Pictures%2FSemanticsOfPromises4.png)
+
+Options:
+1. This rule enables evaluation and recomposition of expressions according to the evaluation contexts.
+2. This rule turns an address into a promise.
+3. This rule registers a fulfill reaction on a pending promise.
+4. This rule clears fulfill and reject reactions of a settled promise.
+5. This rule registers a reject reaction on a pending promise.
+
+### Answer:
+4. This rule clears fulfill and reject reactions of a settled promise.
