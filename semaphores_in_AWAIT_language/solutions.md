@@ -1,4 +1,5 @@
-# Bear and Honey
+# Exercises with Solutions
+## Bear and Honey
 Here is an example of sudo-code with semaphores for synchronization to represent the following problem:
 
 - We have `N` honey bees and a hungry bear.
@@ -9,44 +10,41 @@ Here is an example of sudo-code with semaphores for synchronization to represent
 - Each bee repeatedly gathers one portion of honey and puts it in the pot.
 - The bee who fills the pot (i.e. puts in the H'th portion) awakens the bear.
 
-### Answer: 
+### Answer:
 ```java
+sem nonempty = 1;
 sem empty = 0;
-sem full = 1;
 
-// Numper of portions in the pot
-int portions = 0;
+int protions = 0;
 
 process Bees([i=1 to N]){
-    while(true){
-        collect_honey(); // non-citical section
-        P(empty);        // entry-protocol
+  while(true){
+    gather_honey();             //non-critical section 
+    P(empty);                   // entry-protocol
+    portions = portions + 1;    // critical section
 
-        // critical section
-        portions += 1;
-        
-        // exit-protocol
-        if (portions == H){
-            V(full);
-        } else {
-            V(empty);
-        }
+    // exit-protocol
+    if(portions == H){
+      V(nonempty);
+    } else {
+      V(empty);
     }
+  }
 }
 
-protocol Bear() {
-    sleep(); // non-citical section
-    P(full); // entry-protocol
-    
-    // critical section
-    portions -= 1;
-    
+process Bear(){
+  while(true){
+    sleep();                    //non-critical section
+    P(nonempty);                // entry-protocol
+    portions = portions - 1;    // critical section
+
     // exit-protocol
-    if (portions == 0) {
-        V(empty);
+    if (portions == 0){
+      V(empty);
     } else {
-        V(full);
+      V(nonempty);
     }
+  }
 }
 ```
 
@@ -67,42 +65,42 @@ Here is an exercise of sudo-code in _Await Language_ with semaphores for synchro
 ### Answer:
 ```java
 sem empty = 0;
-sem non-empty = 1; 
+sem full = F;
+sem dishMutex;
 
-// number of portions in the dish
 int portions = F;
 
-process Babybirds([i=1 to N]){
-    while (true){
-        sleep();        // non-critical section
-        P(non-empty)    // entry-protocol
-        
-        // critical section
-        portions = portions - 1; 
-        
-        // exit-protocol
-        if (portions == 0){
-            V(empty);
-        } else { 
-            V(non-empty);
-        }
+process BabyBirds([i=1 to N]){
+    while(true){
+      sleep(); // non-critical section
+      
+      // entry-protocol
+      P(full);
+      P(dishMutex);
+      
+      portions = portions - 1; // critical section
+      
+      // exit-protocol
+      if (portions == 0){ V(empty); }
+      V(dishMutex);
     }
 }
 
-process Mamabird(){
+process MamaBird(){
     while(true){
-        wait();     // non-critical section
-        P(empty);   // entry-protocol
-        
-        // critical section
-        portions = F;
-        
-        // exit-protocol
-        V(non-empty)
+        wait();         // non-critical section
+      // entry-protocol 
+      P(empty);
+      P(dishMutex); 
+      
+      portions = F;   // critical section
+    
+      // exit-protocol 
+      V(nonempty);
+      V(dishMutex);
     }
 }
 ```
-
 
 ## Gløgg
 Here is an exercise of sudo-code in _Await Language_ with semaphores for synchronization:
@@ -121,123 +119,85 @@ synchronization. Make sure that your solution avoids deadlock.
 
 ### Answer:
 ```java
-sem barista = 1; 
-sem almonds = 0;
-sem gløgg = 0;
-sem mug = 0;
+sem barista;
+sem gløgg;
+sem mug;
+sem almonds;
 
 process Barista(){
-    while(true){
-        wait();     // non-critical section
-        P(barista); // Entry protocol (put two ingredients on the table)
-        
-        // critical section (the random missing ingredient: 0=almonds, 1=gløgg, 2=mug)
-        missingIngridient = randomInt(0,2);
-        
-        // exit-protocol
-        if (missingIngredient == 0){ V(almonds); }
-        if (missingIngredient == 1){ V(gløgg); }
-        if (missingIngredient == 2){ V(mug); }
-    }
+  while(true){
+    wait();     // non-critical section
+    P(barista); // entry-protocol
+    int missing_ingredient = randomInt(0..2); // critical section (0=gløgg, 1=mug, 2=almonds)
+
+    // exit-protocol 
+    if (missing_ingredient == 0){ V(gløgg); }
+    if (missing_ingredient == 1){ V(mug); }
+    if (missing_ingredient == 2){ V(almonds); }
+  }
 }
 
-process Player1(){
-    while(true){
-        wait();     // non-critical section
-        P(almonds); // entry protocol 
-        
-        // critical section
-        make_gløgg();
-        drink_gløgg();
-        
-        // exit protocol
-        V(barista);
-    }
+process P1(){
+  while(true){
+    wait();   // non-critical section
+    P(gløgg); // entry-protocol
+
+    // critical section
+    make_gløgg();
+    drink_gløgg();
+
+    V(barista); // exit-protocol
+  }
 }
+process P2(){
+  while(true){
+    wait(); // non-critical section
+    P(mug); // entry-protocol
 
-process Player2(){
-    while(true){
-        wait();     // non-critical section
-        P(gløgg);   // entry protocol 
+    // critical section
+    make_gløgg();
+    drink_gløgg();
 
-        // critical section
-        make_gløgg();
-        drink_gløgg();
-
-        // exit protocol
-        V(barista);
-    }
+    V(barista); // exit-protocol
+  }
 }
+process P3(){
+  while(true){
+    wait();     // non-critical section
+    P(almonds); // entry-protocol
 
-process Player3(){
-    while(true){
-        wait();     // non-critical section
-        P(mug);     // entry protocol 
+    // critical section
+    make_gløgg();
+    drink_gløgg();
 
-        // critical section
-        make_gløgg();
-        drink_gløgg();
-
-        // exit protocol
-        V(barista);
-    }
-}
-```
-
-## Dining Philosophers
-In short, the dining philosophers problem is about five philosophers that are seated around a table with five plates
-and five utensils available. For simplicity, we'll use chopsticks.
-
-Each philosopher needs two chopsticks to be able to eat, so there's at most two philosophers that can eat at the same
-time. After a philosopher has finished eating, she'll put down both chopsticks, making them available for the other
-philosophers.
-
-Solve the Dining Philosophers Problem with the philosophers as processes and all the forks as semaphores.
-
-### Answer:
-```java 
-sem fork[5] = {1,1,1,1,1}
-
-process Philosopher([1=0 to 4]){
-    while(true){
-        think(); // non-critical section
-        
-        // entry-protocol
-        P(fork[i]);
-        P(fork[i+1]);
-        
-        eat(); // critical section
-        
-        // exit-protocol
-        V(fork[i]);
-        V(fork[i+1]);
-    }
+    V(barista); // exit-protocol
+  }
 }
 ```
 
 ## Producers and Consumers - Split Binary Semaphores
 Make producers/consumers processes that synchronizes with split binary semaphores.
 The buffer has only room for one element of data.
-### Answer
+### Answer:
 ```java
 type buffer;
-sem empty = 1; 
-sem full = 0;
+sem empty = 0;
+sem full = 1; 
 
 process Producer([i=1 to M]){
-	while(true) {
-		P(empty);   // entry-protocol
-		buf = data; // critical section (fill buffer with data)
-		V(full);    // exit-protocol
-	}
+    while(true){
+        P(empty);       // entry-protocol 
+        buffer = data;  // critical section
+        V(full);        // exit-protocol
+    }
 }
 
 process Consumer([j=1 to N]){
-	while(true) {
-		P(full);    // entry-protocol
-		data = buf; // critical section (consume data from buffer)
-		V(empty);   // exit-protocol
-	}
+  while(true){
+    P(full);       // entry-protocol 
+    data = buffer; // critical section
+    V(empty);      // exit-protocol
+  }
 }
 ```
 
@@ -245,48 +205,48 @@ process Consumer([j=1 to N]){
 Make producers/consumers processes that synchronizes around a buffer.
 ### Answer:
 ```java
-type buffer[n]; // A buffer of size 'n' that acts as the shared resource between producers and consumers.
-int front = 0;  // 'front' is the index from which the consumer will read (consume) data.
-int rear = 0;   // 'rear' is the index where the producer will write (produce) data.
+type buffer[n]; // buffer of size n is initially empty 
 
-// Semaphores representing the nr of empty slots (n) and nr of items (0) in the buffer
-sem empty = n;  // Initial value is 'n' because initially, the buffer is empty.
-sem full = 0;   // Initial value is '0' because initially the buffer has with no items to consume.
+// front and rear has index 0 since buffer is initially empty
+int front = 0; 
+int rear = 0;
 
-// Mutex semaphores to provide mutual exclusion
-sem mutexD = 1;
-sem mutexF = 1; 
+// semaphore for producer and consumer for mutual exclusion and signalling
+sem mutexP; 
+sem mutexC; 
+sem full = 0;  // zero full slots
+sem empty = n; // n empty slots
 
 process Producer([i=1 to M]){
-  while(true) {
-    // ENTRY PROTOCOL
-    P(empty);   // Wait on 'empty' to ensure there is space in the buffer.
-    P(mutexD);  // Lock the critical section for the producer.
+  while(true){
+    // entry-protocol
+    P(empty);
+    P(mutexP);
 
-    // CRITICAL SECTION
-    buf[rear] = data;        // Place the produced data in the buffer at the 'rear' index.
-    rear = (rear + 1) mod n; // Move 'rear' to the next index, 'mod n' ensures wrap-around
-
-    // EXIT PROTOCOL
-    V(mutexD);  // Release the producer's lock on the buffer.
-    V(full);    // Signal the 'full' semaphore to indicate a new item is available in the buffer.
-	}
+    // critical section
+    buffer[rear] = data;
+    rear = (rear + 1) mod n; // wrap-around
+    
+    // exit-protocol
+    V(mutexC);
+    V(full);
+  }
 }
 
 process Consumer([j=1 to N]){
-while(true) {
-    // ENTRY PROTOCOL
-    P(full);     // Wait on 'full' to ensure there is data to consume.
-    P(mutexF);   // Lock the critical section for the consumer. 
-  
-    // CRITICAL SECTION
-    result = buf[front];        // Read and consume the data from the buffer at the 'front' index.
-    front = (front + 1) mod n;  // Move 'front' to the next index, 'mod n' ensures wrap-around
+  while(true){
+    // entry-protocol
+    P(full);
+    P(mutexC);
 
-    // EXIT PROTOCOL
-    V(mutexF);  // Release the consumer's lock on the buffer.
-    V(empty);   // Signal (increment) the 'empty' semaphore to indicate a space is available in the buffer.
-	}
+    // critical section 
+    data = buffer[front];
+    front = (front + 1) mod n; // wrap-around
+
+    // exit-protocol
+    V(mutexP);
+    V(empty);
+  }
 }
 ```
 
@@ -310,48 +270,96 @@ The solution is supposed to be unfair. (**Hint**: You only need one counter and 
 
 ### Answer:
 ```java
-int readerCount = 0; // Counter to keep track of the number of active readers
+sem readers;
+sem writers;
+int active_readers;
 
-sem readers = 1;  // Semaphore to control access to the 'readerCount' (ensuring mutual exclusion)
-sem writers = 1;  // Semaphore to ensure exclusive access to the shared resource for writers
-
-process Reader() {
-  while (true) {
-    // entry-protocol for Reader
-    P(readers);        // Acquire 'readers' to safely increment 'readerCount'
-    readerCount += 1;  // Increment 'readerCount'
-
-    // If this is the first reader, acquire 'writers' to block writers from writing.
-    if (readerCount == 1) { P(writers); }
-    V(readers);  // Release 'readers', allowing other readers to update 'readerCount'.
-
-    // CRITICAL SECTION for Reader (multiple readers can access the resource at the same time).
-    read();
-
-    // exit-protocol for Reader
-    P(readers);        // Re-acquire 'readers' to safely decrement 'readerCount' as the reader is about to leave.
-    readerCount -= 1;  // Decrement 'readerCount'
-
-    // If this is the last reader, release 'writers' to allow writers to access the shared resource.
-    if (readerCount == 0) { V(writers); }
-
-    V(readers);   // Release 'readers', allowing other readers to update 'readerCount'.
+process Writers([i=1 to M]){
+  while(true){
+    P(writers); // entry-protocol
+    write();    // critical section
+    V(readers); // exit protocol
   }
 }
 
-process Writer() {
-  while (true) {
-    P(writers); // entry-protocol: Acquire 'writers' to block all readers and other writers.
+process Readers([j=1 to N]){
+  while(true){
+    P(readers); // entry-protocol (for updating active_readers)
+    active_readers = active_readers + 1; // critical section 
 
-    // CRITICAL SECTION for Writer (Writing to the shared resource)
-    write();
+    // if this is the first reader, block writers and allow other readers
+    if (active_readers == 1) { P(writers); }
+    V(readers);
+    read(); // critical section 
 
-    V(writers); // exit-protocol: Release 'writers' to allow others to read/write
+    P(readers); // entry-protocol (for updating active_readers)
+    active_readers = active_readers - 1; // critical section
+
+    // exit protocol    
+    if (active_readers == 0){ V(writers); }
+    V(readers);
   }
 }
 ```
 
-## Exercise 8: Multi-country
+## Readers/Writers another variant
+Consider the following variant of the Readers/Writers problem:
+Reader processes query a database and writer processes examine and modify it. Readers may access the database
+concurrently, but writers require exclusive access. Although the database is shared, we cannot encapsulate it by a
+monitor, because readers could not then access it concurrently since all code within a monitor executes with mutual
+exclusion.
+
+Instead, we use a monitor merely to arbitrate access to the database. The database itself is global to the readers and
+writers. The arbitration monitor grants permission to access the database. To do so, it requires that processes inform
+it when they want access and when they have finished. There are two kinds of processes and two actions per process, so
+the monitor has four procedures: `request_read`, `request_write`, `release_read`, `release_write`. These procedures are
+used in the obvious ways.
+
+For example, a reader calls `request_read` before reading the database and calls `release_read` after reading the
+database. To synchronize access to the database, we need to record how many processes are reading and how many processes
+are writing.
+
+In the implementation below, `nr` is the number of readers, and `nw` is the number of writers; both of them are
+initially 0. Each variable is incremented in the appropriate request procedure and decremented in the appropriate
+release procedure. A software developer has started on the implementation of this monitor. Your task is to fill
+in the missing parts. Your solution does not need to arbitrate between readers and writers.
+
+### Answer:
+```java
+// Read-Write Controller
+monitor RW_Controller() {
+  sem OK_to_read;
+  sem OK_to_write;
+  int readers = 0;
+  int writers = 0;
+}
+
+// Reader's enter protocol
+procedure request_read(){
+  while(writers > 0){ wait(OK_to_read); }
+  readers = readers + 1;
+}
+
+// Reader's exit protocol
+procedure release_read() {
+  readers = readers - 1;
+  if (readers == 0 ) { signal(OK_to_write); }
+}
+
+// Writer's enter protocol
+procedure request_write() {
+  while( readers > 0 || writers > 0) { wait(OK_to_write); }
+  writers = writers + 1;
+}
+
+// Writer's exit protocol
+procedure release_write() {
+  writers = writers - 1;
+  signal_all(OK_to_read);
+}
+```
+
+## Exercise 9: Multi-country
 
 Consider Multi-country, which is a country, and Multi-city, which is its capital city.
 
@@ -380,63 +388,83 @@ Your task is to simulate the described situation in the AWAIT language.
 
 ### Answer:
 ```java
-// Semaphores for synchronization
-sem vaxMutex = 1;
-sem unvaxMutex = 1;
-sem doc_check_zone = 1;
+sem MutexV; // Mutex for vaccinated counter
+sem MutexU; // Mutex for un-vaccinated counter
+sem checkZone; // Mutex for check zone
 
-// Counters to track the number of passengers currently in the Documents Checking Zone
-int vaxCounter = 0;
-int unvaxCounter = 0;
+int vaxCount = 0;
+int unvaxCount = 0;
 
-process vaccinated([i = 1 to N]){
-    while(true) {
-      walk_to_DCZ(); // non-critical section (Mingling Zone: passengers walk towards the Document Checking Zone)
-      
-      P(vaxMutex); // entry-protocol
-        
-      // CRITICAL SECTION
-      vaxCounter++;  // Increment nr. of vaccinated passengers in the zone
-      
-      // If this is the first passenger in the zone, lock the zone for un-vaccinated passengers
-      if (vaxCounter == 1) { P(doc_check_zone); }
-      
-      V(vaxMutex); // Release access to "vaxCounter"
+process Vaccinated([i=1 to N]){
+  while(true){
+    walk_to_check_zone(); // non-critical section
 
-      check_docs();
+    // entry-protocol (for counter)
+    P(MutexV);
+    vaxCount = vaxCount + 1;
 
-      // exit-protocol
-      P(vaxMutex);   // Lock access to "vaxCounter" for synchronization
-      vaxCounter--;  // Decrement nr. of vaccinated passengers in the zone
+    // entry-protocol (for check zone)
+    if (vaxCount = 1) { P(checkZone); }
+    V(MutexV);
+    check(); // critical section
 
-      // If this is the last passenger in the zone, release "doc_checking_zone"
-      if (vaxCounter == 0) { V(doc_check_zone); }
-      V(vaxMutex); // Release "vaxCounter"
-    }
+    // exit-protocol
+    P(MutexV);
+    vaxCount = vaxCount - 1;
+    if (vaxCount == 0) { V(checkZone); }
+    V(MutexV);
+  }
 }
 
-process unvaccinated([i = 1 to M]){
-    while(true){
-      walk_to_DCZ(); // non-critical section  (Mingling Zone: passengers walk towards the Document Checking Zone)
-      
-      P(unvaxMutex); //entry-protocol
+process UnVaccinated([j=1 to M]){
+  while(true){
+    walk_to_check_zone(); // non-critical section
 
-      // CRITICAL SECTION
-      unvaxCounter++; // Increment nr. of un-vaccinated passengers in the zone
-      
-      // If this is the first passenger in the zone, lock it for vaccinated passengers
-      if (unvaxCounter == 1){ P(doc_check_zone); }
-      V(unvaxMutex); // Release access to "unvaxMutex"
-      
-      check_docs(); 
-      
-      // exit-protocol
-      P(unvaxMutex); // Acquire lock on "unvaxMutex" 
-      unvaxCounter--; // Decrement nr. of un-vaccinated passengers in the zone
-      
-      // If this is the last passanger in the zone, release mutex for zone
-      if (unvaxCounter == 0){ V(doc_check_zone); }
-      V(unvaxMutex); // Release "unvaxMutex" 
-    }
+    // entry-protocol (for counter)
+    P(MutexU);
+    unvaxCount = unvaxCount + 1;
+
+    // entry-protocol (for check zone)
+    if (unvaxCount = 1) { P(checkZone); }
+    V(MutexU);
+    check(); // critical section
+
+    // exit-protocol
+    P(MutexU);
+    unvaxCount = unvaxCount - 1;
+    if (unvaxCount == 0) { V(checkZone); }
+    V(MutexU);
+  }
+}
+```
+
+## Dining Philosophers
+In short, the dining philosophers problem is about four philosophers that are seated around a table with five plates
+and five utensils available. For simplicity, we'll use chopsticks.
+
+Each philosopher needs two chopsticks to be able to eat, so there's at most two philosophers that can eat at the same
+time. After a philosopher has finished eating, she'll put down both chopsticks, making them available for the other
+philosophers.
+
+Solve the Dining Philosophers Problem with the philosophers as processes and all the forks as semaphores.
+
+### Answer:
+```java
+sem fork[5] = {1,1,1,1,1}
+
+process Philosopher([i=0 to 4]){
+  while(true){
+    think(); // non-critical section
+
+    // entry-protocol
+    P(fork[i]);
+    P(fork[i+1]);
+
+    eat(); // critical section
+
+    // exit-protocol
+    V(fork[i]);
+    V(fork[i+1]);
+  }
 }
 ```

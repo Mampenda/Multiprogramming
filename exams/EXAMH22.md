@@ -571,11 +571,7 @@ Options:
 ### Answer:
 4. This rule states that resolving a settled promise has no effect.
 
-
-
-
-Task 10.3 from exam:
-### Question:
+## Question 12:
 What does this rule describe?
 ![SemanticsOfPromises3.png](Pictures%2FSemanticsOfPromises3.png)
 
@@ -589,8 +585,7 @@ Options:
 4. This rule causes a promise to be "linked" to another, With no regards to the state of that original promise.
 
 
-Task 10.4 from exam:
-### Question:
+## Question 13:
 What does this rule describe?
 ![SemanticsOfPromises4.png](Pictures%2FSemanticsOfPromises4.png)
 

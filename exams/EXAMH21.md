@@ -100,7 +100,7 @@ networks as if they were local procedures.
 A savings account is shared by several people (processes). Each person may deposit or withdraw funds from the account. 
 The current balance in the account is the sum of all deposits to date minus the sum of all withdrawals to date. The 
 balance must never become negative. A deposit never has to delay (except for mutual exclusion), but a withdrawal has to 
-wait until there are suffcient funds. A junior software developer was asked to implement a monitor to solve this
+wait until there are sufficient funds. A junior software developer was asked to implement a monitor to solve this
 problem, using Signal-and-Continue discipline. Here is the code the junior developer has written so far:
 ```java
 monitor Account(){
@@ -113,7 +113,7 @@ monitor Account(){
 ```
 This solution is incorrect. Help the junior developer implement the monitor correctly.
 
-### Answer: 
+### Answer:
 ```java
 monitor Account(){
 int balance = 0;
