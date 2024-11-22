@@ -539,9 +539,9 @@ Fourth Interval (`intervalHandler` starts at 40 ms and takes 8 ms.
 `intervalHandler` finishes at 48 ms.
 
 ## Question 10: 
-![SemanticsCheatSheet.png](../images/SemanticsCheatSheet.png)
+![SemanticsCheatSheet.png](../images/SemanticsCheatSheet1.png)
 ![SemanticsCheatSheet2.png](../images/SemanticsCheatSheet2.png)
-![SemanticsCheatSheet3.png](../images/SemanticsCheatSheet3.png)
+![SemanticsCheatSheet3.png](../images/SemanticsCheatSheet2.png)
 
 What does this rule describe?
 ![SemanticsOfPromises1.png](../images/SemanticsOfPromises1.png)
@@ -560,7 +560,7 @@ Options:
 
 ## Question 11:
 What does this rule describe?
-![SemanticsOfPromises2.png](../images/SemanticsOfPromises2.png)
+![SemanticsOfPromises2.png](../images/SemanticsOfPromises3.png)
 
 Options:
 1. This rule handles the case when a pending promise is resolved.

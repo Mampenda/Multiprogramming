@@ -14,20 +14,23 @@ Here is an example of sudo-code with semaphores for synchronization to represent
 ```java
 sem nonempty = 1;
 sem empty = 0;
+sem pot;
 
 int protions = 0;
 
 process Bees([i=1 to N]){
   while(true){
     gather_honey();             //non-critical section 
-    P(empty);                   // entry-protocol
+    
+    // entry-protocol
+    P(empty);                   
+    P(pot);
     portions = portions + 1;    // critical section
 
     // exit-protocol
-    if(portions == H){
-      V(nonempty);
-    } else {
-      V(empty);
+    if(portions == H) {
+        V(nonempty);
+        P(pot);
     }
   }
 }
@@ -35,15 +38,15 @@ process Bees([i=1 to N]){
 process Bear(){
   while(true){
     sleep();                    //non-critical section
-    P(nonempty);                // entry-protocol
+    
+    // entry-protocol
+    P(nonempty);                
+    P(pot);
     portions = portions - 1;    // critical section
 
     // exit-protocol
-    if (portions == 0){
-      V(empty);
-    } else {
-      V(nonempty);
-    }
+    if (portions == 0){ V(empty); }
+    P(pot);
   }
 }
 ```
@@ -302,63 +305,6 @@ process Readers([j=1 to N]){
 }
 ```
 
-## Readers/Writers another variant
-Consider the following variant of the Readers/Writers problem:
-Reader processes query a database and writer processes examine and modify it. Readers may access the database
-concurrently, but writers require exclusive access. Although the database is shared, we cannot encapsulate it by a
-monitor, because readers could not then access it concurrently since all code within a monitor executes with mutual
-exclusion.
-
-Instead, we use a monitor merely to arbitrate access to the database. The database itself is global to the readers and
-writers. The arbitration monitor grants permission to access the database. To do so, it requires that processes inform
-it when they want access and when they have finished. There are two kinds of processes and two actions per process, so
-the monitor has four procedures: `request_read`, `request_write`, `release_read`, `release_write`. These procedures are
-used in the obvious ways.
-
-For example, a reader calls `request_read` before reading the database and calls `release_read` after reading the
-database. To synchronize access to the database, we need to record how many processes are reading and how many processes
-are writing.
-
-In the implementation below, `nr` is the number of readers, and `nw` is the number of writers; both of them are
-initially 0. Each variable is incremented in the appropriate request procedure and decremented in the appropriate
-release procedure. A software developer has started on the implementation of this monitor. Your task is to fill
-in the missing parts. Your solution does not need to arbitrate between readers and writers.
-
-### Answer:
-```java
-// Read-Write Controller
-monitor RW_Controller() {
-  sem OK_to_read;
-  sem OK_to_write;
-  int readers = 0;
-  int writers = 0;
-}
-
-// Reader's enter protocol
-procedure request_read(){
-  while(writers > 0){ wait(OK_to_read); }
-  readers = readers + 1;
-}
-
-// Reader's exit protocol
-procedure release_read() {
-  readers = readers - 1;
-  if (readers == 0 ) { signal(OK_to_write); }
-}
-
-// Writer's enter protocol
-procedure request_write() {
-  while( readers > 0 || writers > 0) { wait(OK_to_write); }
-  writers = writers + 1;
-}
-
-// Writer's exit protocol
-procedure release_write() {
-  writers = writers - 1;
-  signal_all(OK_to_read);
-}
-```
-
 ## Exercise 9: Multi-country
 
 Consider Multi-country, which is a country, and Multi-city, which is its capital city.
@@ -450,21 +396,50 @@ Solve the Dining Philosophers Problem with the philosophers as processes and all
 
 ### Answer:
 ```java
-sem fork[5] = {1,1,1,1,1}
+sem fork[5] = {1,1,1,1,1}   // list of five semaphores
+sem table = 1;              // global mutex for table
+int timeout = 1000;         // timeout for 1000 ms
 
 process Philosopher([i=0 to 4]){
-  while(true){
-    think(); // non-critical section
+  while(true) {
+    think();  // Non-critical section
 
-    // entry-protocol
-    P(fork[i]);
-    P(fork[i+1]);
+    P(table);               // Acquire global mutex
+    try_acquire_forks(i);   // Try to acquire forks with timeout
+    V(table);               // Release global mutex
 
-    eat(); // critical section
+    if (success) {
+        eat(); 
+      
+        // Release forks (right first, then left)
+        V(fork[(i+1)%5]);
+        V(fork[i]);
+    } else {
+        wait();  // Wait before trying again
+    }
+  }
+}
 
-    // exit-protocol
+function try_acquire_forks(i) {
+  P(fork[i]);  // Pick up left fork
+  timeout = now() + timeout_ms;
+  
+  while(true) {
+    P(fork[(i+1)%5]);  // Pick up right fork
+    
+    // Release left fork if timeout finished and try again later
+    if(now() > timeout) { 
+        V(fork[i]); 
+        return false;
+    }
+    
+    // Eat if required right fork
+    eat();
+
+    // Release forks (right first, then left)
+    V(fork[(i+1)%5]);
     V(fork[i]);
-    V(fork[i+1]);
+    return true;
   }
 }
 ```

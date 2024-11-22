@@ -85,11 +85,14 @@ enabling the following main ideas:
 
 - Transparency: RPC makes remote calls appear like local function calls, abstracting away details such as network 
   communication, data encoding, and server interaction. 
+
 - Client-Server Model: In RPC, the client sends a request to the server to execute a specific function, and the server 
   returns the result. The client doesn’t need to know about the server's underlying code or location. 
+
 - Stubs and Serialization: RPC uses stubs (client and server proxies) to package the request, serialize data, send it 
   over the network, and handle responses. This allows complex data structures to be transmitted across different 
   environments. 
+
 - Synchronous and Asynchronous Calls: Typically, RPC is synchronous (the client waits for the server’s response), but 
   some implementations support asynchronous calls, allowing the client to continue without waiting.
 
