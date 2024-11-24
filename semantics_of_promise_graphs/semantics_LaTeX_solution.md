@@ -7,15 +7,15 @@ $$\begin{align}
 & r \in \text{RejectReactions} \newline
 & \pi \in \text{Queue} \newline
 & p \in \text{Reaction} \newline
-& \Psi \in \text{PromiseValue} 
+& \Psi \in \text{PromiseValue}
 \newline
 \newline
-& Addr & = & \text{address in the heap} & \newline
+& Addr & = & \text{list of addresses} & \newline
 & \langle \sigma, \psi, f, r, \pi \rangle & = &  \text{ heap, promise state, list of fulfill reactions, list of reject
 reactions, queue of event loop} \newline
 & Nil & = & \text{ empty list} \newline
 & x :: xs & = & \text{ list concatenation (merging lists)} \newline
-& xs ::: ys & = & \text{ represents the append operation (here between two lists)} \newline \newline
+& xs ::: ys & = & \text{ represents the append operation (here between two lists)}
 \end{align}$$
 
 The **syntax** of the calculus λ has the following expressions:
@@ -32,7 +32,9 @@ execution by the event loop} & \newline
 latter is also} & \newline
 \end{flalign} $$
 
-The **runtime** of lambda_p has:
+$$ \begin{flalign}
+& \text{The} \textbf{ runtime} \text{ of } \lambda_p \text{ has}: &
+\end{flalign} $$
 
 $$ \begin{flalign}
 & \textbf{prmosie state } \psi \text{: maps each address to an algebraic data type } \psi \in \text{PromiseValue } &
@@ -80,34 +82,28 @@ $$\begin{gather}
 
 #### Explanation:
 $$\begin{flalign}
-a \in Addr &: \text{ a is the address of an object}
-\newline
-a \in dom(\sigma) &: \text{ a is allocated in the heap } (\sigma)
-\newline
-\psi(a) = P &: \text{ the promise is in the pending state}
-\newline
-a' \in Addr &: \text{dependent promise a' is the address of an object}
-\newline
-a' \notin dom(\sigma) &: \text{ allocate a', since it's not in the heap } \sigma \newline
-\psi' = \psi[a' \mapsto P] &: \text{ state } \psi' \text{ of dependent promise a' from adding a' to P}
-\newline
-\sigma\ = \sigma[a' \mapsto \text{{}}] &: \text{ heap is updated by mapping a' to an empty value {}}
-\newline
-\lambda &: \text{ the fulfill reaction} \newline
-[a' \mapsto Nil] &: \text{ initialize its reaction to the empty list } Nil \newline
-\newline
-\newline \text{CONTINUE HERE}
-a \mapsto f(a) ::: (\lambda,a') &: \text{ value from f(a) is updated to include new fulfill reaction } (λ,a') \newline
-r' = r[a \mapsto Nil] &: \text{ reaction r' is created from r by mapping a to the empty list} \newline
-a \mapsto f(a) ::: (\lambda, a') &: \text{ add the pair} (\lambda, a') \text{ to the fulfill reactions of the original}
-\text{ promise } a \newline
+a \in Addr &: \text{ a is the address of an object}  \newline
+a \in dom(\sigma) &: \text{ a is allocated in the heap } (\sigma) \newline
+a' \in Addr &: \text{dependent promise a' is the address of an object} \newline
+a' \notin dom(\sigma) &: \text{ allocate a', since it's not in the heap } \sigma \newline \newline
+\psi(a) = P &: \text{ the promise is in the pending state} \newline \newline
+\psi' = \psi[a' \mapsto P] &: \text{ state } \psi' \text{ of dependent promise a' from adding a' to P} \newline
+\sigma' = \sigma[a' \mapsto \text{{}}] &: \text{ heap is updated by mapping a' to an empty value {}} \newline \newline
+\lambda &: \text{ the fulfill reaction} \newline \newline
+[a' \mapsto Nil] &: \text{ map a' to the empty list } Nil \newline
+f' = f[a \mapsto f(a) ::: (\lambda,a')] &: \text{ new fulfill reaction is created by appending the pair } (λ,a')
+\text{ to the fulfill reaction of original promise a} \newline
+r' = r[a \mapsto Nil] &: \text{ reject reaction r' is created by mapping a' to the empty list} \newline \newline
+\langle \sigma,\psi,f,r,\pi,E[a.onResolve(\lambda)] \rangle \rightarrow \langle \sigma',\psi',f',r',\pi,E[a'] \rangle &:
+\text{Consider } E[a.onResolve(\lambda)] \text{, allocate a depndent promise with address a', initialize its reactions }
+\newline &.. \text{to empty list and add the pair } (\lambda, a') \text{ to the fulfill reactions of original promise a}
 \end{flalign}$$
 
 $$\begin{flalign}
 \newline
-\text{When a is eventually resolved the function } \lambda \text{ will be executed asynchronously by the event loop,}
-\newline \text{and its return value will be used to resolve the dependent promise } a' \newline \newline
-\text{In other words: } \textbf{This rule registers a fulfill reaction on a pending promise.} 
+& \text{When a is eventually resolved the function } \lambda \text{ will be executed asynchronously by the event loop,}
+& \text{ and its return value will be used to resolve the dependent promise } a' \newline \newline
+& \text{In other words: } \textbf{This rule registers a fulfill reaction on a pending promise.}
 \end{flalign}$$
 
 ## Task 12 - What kind of bugs can be detected by what kind of situations in a promise graph?
