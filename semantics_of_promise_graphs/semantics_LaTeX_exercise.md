@@ -79,33 +79,6 @@ $$\begin{gather}
 \end{gather} $$
 ---
 
-#### Explanation:
-$$\begin{flalign}
-a \in Addr &: \text{ a is the address of an object}  \newline
-a \in dom(\sigma) &: \text{ a is allocated in the heap } (\sigma) \newline
-a' \in Addr &: \text{dependent promise a' is the address of an object} \newline
-a' \notin dom(\sigma) &: \text{ allocate a', since it's not in the heap } \sigma \newline \newline
-\psi(a) = P &: \text{ the promise has state "pending"} \newline \newline
-\psi' = \psi[a' \mapsto P] &: \text{ add state } \psi' \text{ of dependent promise } a' \text{ as "pending"} \newline
-\sigma' = \sigma[a' \mapsto \text{{}}] &: \text{ update heap of dependant promiise } a' \text{ by mapping }  a'
-\text{ to empty value {}} \newline \newline
-\lambda &: \text{ the fulfill reaction} \newline \newline
-f' = f[a \mapsto f(a) ::: (\lambda,a')][a' \mapsto Nil] &: \text{ add a fulfill reaction for } a', (λ,a'), 
-\text{ to the list of } \text{ fulfill reactions of promise } a \text{, clear fulfil reactions for } a' \newline
-r' = r[a \mapsto Nil] &: \text{ clear reject reaction from promise } a \newline \newline
-\langle \sigma,\psi,f,r,\pi,E[a.onResolve(\lambda)] \rangle \rightarrow \langle \sigma',\psi',f',r',\pi,E[a'] \rangle &:
-\text{Consider } E[a.onResolve(\lambda)] \text{, allocate a dependant promise with address a', initialize its reactions}
-\newline &.. \text{ to empty list and add the pair } (\lambda, a') \text{ to the fulfill reactions of original promise a} 
-\end{flalign}$$
-
-$$\begin{flalign}
-\newline
-& \text{When a is eventually resolved the function } \lambda \text{ will be executed asynchronously by the event loop,}
-& \text{ and its return value will be used to resolve the dependent promise } a' \newline \newline
-& \text{In other words: } \textbf{This rule registers a fulfill reaction on a pending promise.}
-\end{flalign}$$
----
-
 ### Rule 2: 
 
 $$\begin{gather}  a \in Addr & a \in dom(\sigma) & \psi(a) = F(v)
@@ -125,36 +98,6 @@ $$\begin{gather}
 \end{gather} $$
 ---
 
-#### Explanation:
-$$\begin{flalign}
-a \in Addr &: \text{ a is the address of an object}  \newline
-a \in dom(\sigma) &: \text{ a is allocated in the heap } (\sigma) \newline
-a' \in Addr &: \text{dependent promise a' is the address of an object} \newline
-a' \notin dom(\sigma) &: \text{ allocate a', since it's not in the heap } \sigma \newline \newline
-\psi(a) = F(v) &: \text{ the promise has been fulfilled with a value v according to the promise state map } \psi
-\newline \newline
-\psi' = \psi[a' \mapsto F(v)] &: \text{ add state } \psi' \text{ of dependent promise } a' \text{ as "resolved" with }
-\text{ value v} \newline
-\sigma' = \sigma[a' \mapsto \text{{}}] &: \text{ update heap of dependant promiise } a' \text{ by mapping }  a'
-\text{ to empty value {}} \newline \newline
-f' = f[a' \mapsto Nil] &: \text{ clear fulfill reaction on dependant promise } a' \newline
-r' = r[a' \mapsto Nil] &: \text{ clear reject reaction on dependant promise } a' \newline
-\newline
-\pi' = \pi ::: (F(v), \lambda, a') &: \text{ append the triple } (F(v), \lambda, a') \text{ to the queue} \newline
-\newline 
-\langle \sigma,\psi,f,r,\pi,E[a.onResolve(\lambda)] \rangle \rightarrow \langle \sigma',\psi',f',r',\pi,E[a'] \rangle &:
-\text{Consider } E[a.onResolve(\lambda)] \text{, allocate a dependent promise a', and enqueue (i.e. append) } \newline
-&.. (F(v), \lambda, a') \text{ to the queue } \pi \text{ and return a'}
-\end{flalign}$$
-
-$$\begin{flalign}
-\newline
-& \text{The effect of this is that, despite the promise already being resolved, the reaction being registered is }
-\text{scheduled for execution.} \newline \newline
-& \text{In other words: } \textbf{This rule schedules the reaction being registered of a resolved promise for execution}
-\end{flalign}$$
----
-
 ### Rule 3:
 
 $$\begin{gather}  a \in Addr & a \in dom(\sigma) & \psi(a) \in \{F(v'),R(v')\}
@@ -163,21 +106,6 @@ $$\begin{gather}  a \in Addr & a \in dom(\sigma) & \psi(a) \in \{F(v'),R(v')\}
 $$\begin{gather}
 \langle \sigma,\psi,f,r,\pi,E[a.onResolve(v)] \rangle \rightarrow \langle \sigma,\psi,f,r,\pi,E[undef] \rangle
 \end{gather} $$
----
-#### Explanation:
-$$\begin{flalign}
-a \in Addr &: \text{ a is the address of an object}  \newline
-a \in dom(\sigma) &: \text{ a is allocated in the heap } (\sigma) \newline \newline
-\psi(a) \in \{F(v'),R(v')\} &: \text{the state, } \psi \text{, indicates that the promise is already resolved/rejected} 
-\newline \newline
-\langle \sigma,\psi,f,r,\pi,E[a.onResolve(\lambda)] \rangle \rightarrow \langle \sigma',\psi',f',r',\pi,E[a'] \rangle &:
-\text{Consider } E[a.onResolve(\lambda)] \text{, which have already been resolved/rejected, and add resolve reaction} 
-\end{flalign}$$
-
-$$\begin{align}
-& \text{In other words: } \textbf{This rule states that resolving a settled promise has no effect because the resolve}
-\textbf{ action will never be executed.}
-\end{align}$$
 ---
 
 ### Rule 4:
@@ -193,24 +121,6 @@ $$\begin{gather}
 \langle \sigma,\psi,f,r,\pi,E[a_1.link(a_2)] \rangle \rightarrow \langle \sigma,\psi,f,r,\pi,E[undef] \rangle
 \end{gather} $$
 ---
-#### Explanation:
-$$\begin{flalign}
-a_1 \in Addr &: a_1 \text{ is the address of an object}  \newline
-a_1 \in dom(\sigma) &: a_1 \text{ is allocated in the heap } (\sigma) \newline
-a_2 \in Addr &: a_2 \text{ is the address of an object}  \newline
-a_2 \in dom(\sigma) &: a_2 \text{ is allocated in the heap } (\sigma) \newline
-\newline
-\pi' = \pi ::: (F(v), default, a') &: \text{ append the triple } (F(v), default, a') \text{ to the queue} \newline
-\newline
-\psi(a_1) \in \{F(v'),R(v')\} &: \text{the state of the promise } a \text{ according to the promise state map } \psi
-\newline &..\text{indicates that the promise has already been resolved/rejected}
-\end{flalign}$$
-
-$$\begin{align}
-& \text{In other words: } \textbf{This rule causes an already settled promise to be "linked" to another. Regardless of }
-\textbf{their states.}
-\end{align}$$
----
 
 ### Rule 5: 
 
@@ -225,24 +135,6 @@ $$\begin{gather}
 $$\begin{gather}
 \langle \sigma,\psi,f,r,\pi,E[promisify(a)] \rangle \rightarrow \langle \sigma,\psi,f,r,\pi,E[undef] \rangle
 \end{gather} $$
----
-
-#### Explanation:
-$$\begin{flalign}
-a \in Addr &: a \text{ is the address of an object}  \newline
-a \in dom(\sigma) &: a \text{ is allocated in the heap } (\sigma) \newline
-a \notin dom(\psi) &: a \text{ has no promise state} \newline \newline
-\psi' = \psi[a \mapsto P] &: \text{ register state for promise } a \text{ as "pending"} \newline
-f' = f[a \mapsto Nil] &: \text{clear fulfill reaction on promise } a \newline
-r' = r[a \mapsto Nil] &: \text{clear reject reaction on promise } a \newline
-\newline \newline
-\langle \sigma,\psi,f,r,\pi,E[promisify(a)] \rangle \rightarrow \langle \sigma,\psi,f,r,\pi,E[undef] \rangle &:
-\text{ promisify() is removed from the queue after it's performed, i.e. converted from promise to undefined}
-\end{flalign}$$
-
-$$\begin{align}
-& \text{In other words: } \textbf{This rule clears fulfill/reject reactions of a settled promise}
-\end{align}$$
 ---
 
 ### Rule 6:
