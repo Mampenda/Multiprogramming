@@ -8,20 +8,22 @@ co < x = x * y; > || x = x + y; oc
 ```
 Does the program meet the requirements of the At-Most-Once-Property? Explain
 your answer. What are the possible final values of x and y? Explain your answer.
+
 ### Answer: 
-The first statement in the `co oc`-block is an atomic action (surrounded by angle brackets `<>`), but the second is not.
+The program does not meet the requirements of the At-Most-Once-Property because the two commands are both 
+reading/updating the same critical reference `x`. Since only one of them are atomic, indicated by the angle brackets 
+`<>`, there's a risk of interference, where the non-atomic command `x = x+y` will read the value of `x`, then the 
+atomic command `< x = x*y >` will execute, before the non-atomic command continues its execution. 
 
-This does _not_ meet the requirements At-Most-Once property because both processes has a critical reference `e` and both
-of the `x`'s are read by the other process. 
+The possible final values are: 
+1. `< x = x * y; >` executes first, then `x = x + y;` executes: x = 1*3 = 3, then x = 3+3 = 6  => x = 6, y = 3. 
+2. `x = x + y;` executes first, then `< x = x * y; >` executes: x = 1+3 = 4, then x = 4*3 = 12 => x = 12, y = 3
+3. `x = x + y` reads `x`, then `< x = x * y; >` executes, then `x = x + y` finishes executing: 
+   1. x = x+y = 1+3
+   2. x = x*y = 1*3 = 3
+   3. x = x+y = 1+3 = 4
+   Resulting in x = 4, y = 3
 
-For a program to meet the requirements of the At-Most-Once property a process can either have a critical reference `e`, 
-but then `x` can't be read by another process, or if there is no critical reference, `x` can be read by other processes.
- 
-The possible final values for `x` and `y` are: 
-1. `x = x*y` executes first => `x` = 6, `y` = 3
-2. `x = x+y` executes first => `x` = 12, `y` = 3
-3. The non-atomic process reads `x = 1`, then the atomic process finishes executing, resulting in 
-   `x = 3`, but then the non-atomic process finishes last, making `x = 4`, resulting in`x = 4, y = 3`.
 
 ## Question 2: 
 Consider the following program written in the AWAIT language:
@@ -43,11 +45,16 @@ Which of the following statements hold for this program?
 2. If the scheduling policy is strongly fair, this program will never terminate. 
 3. If the scheduling policy is weakly fair, this program might not terminate.
 4. If the scheduling policy is weakly fair, this program will never terminate.
+
 ### Answer: 
-The correct statements are `1` and `3`.
+The statements that hold for this program are:
+(1) If the scheduling policy is strongly fair, this program will eventually terminate.
+(3) If the scheduling policy is weakly fair, this program might not terminate.
+
 
 ## Question 3: 
 Describe the difference between synchronous and asynchronous message passing.
+
 ### Answer: 
 1. `Synchronous` message passing requires the sender and receiver to both be active and _wait_ for each other during
    communication. The sender waits (blocks) until the receiver acknowledges the message, ensuring that both parties are
@@ -57,21 +64,25 @@ Describe the difference between synchronous and asynchronous message passing.
    receiver to be ready or acknowledge it. The message is often _stored in a queue_, allowing the sender to continue its 
    process independently of the receiver’s state or readiness.
 
+
 ## Question 4:
 Three persons P1, P2, and P3 were invited by their friend F to make some sandwiches (made of bread, eggs, and tomato).
 To make a sandwich, three ingredients are needed: a slice of bread, a slice of tomato, and a slice of an egg.
 
 Each of these persons P1, P2, P3 has only one type of each of the ingredients:
-person P1 has slices of bread.
-person P2 has slices of tomato.
-person P3 has slices of egg.
+- person P1 has slices of bread.
+- person P2 has slices of tomato.
+- person P3 has slices of egg.
+- 
 We assume that persons P1, P2, and P3 each has an unlimited supply of these ingredients (i.e., slices of bread, slices 
 of tomato, slices of egg), respectively. Their friend F, who invited them, also has an unlimited supply of all the 
 ingredients.
 
-Here is what happens: the host F puts two random ingredients on the table. Then the invited person who has the third 
-ingredient picks up these other two ingredients, makes the sandwich, and then eats it. The host of the party F waits for
-that person to finish. This "cycle" of is then infinitely repeated.
+Here is what happens: 
+- the host F puts two random ingredients on the table. 
+- Then the invited person who has the third ingredient picks up the two ingredients, makes the sandwich, then eats it. 
+- The host of the party F waits for that person to finish. 
+- This "cycle" of is then infinitely repeated.
 
 Write code in the AWAIT language that simulates this situation.
 Represent the persons P1, P2, P3, F as processes.
@@ -81,69 +92,82 @@ EXPLAIN very briefly the advantages of using the split binary semaphore.
 
 ### Answer: 
 ```java
+sem tableMutex;
+sem F;
 sem bread;
 sem tomato;
 sem egg; 
-sem host; 
 
-process F(){
-    while(true){
-        wait();  // non-critical section
-        P(host); // entry-protocol (the host puts two ingredients on the table)
-       
-        // critical section (the missing ingredient is either 0-bread, 1-tomato, or 2-egg)
-        int missing_ingredient = randInt(0,2);
-        
-        // exit-protocol
-        if(missing_ingredient == 0){ V(bread); }
-        if(missing_ingredient == 1){ V(tomato); }
-        if(missing_ingredient == 2){ V(egg); }
-    }
+process HostF(){
+    wait(); // non-critical section
+   
+    // entry-protocol    
+    P(F);
+    P(tableMutex);
+    
+    // critical section (0 = bread, 1 = tomato, 2 = egg)
+    int missing_ingredient = randomInt(0..2); 
+    
+    // exit-protocol
+    if (missing_ingredient == 0){ V(bread); }
+    if (missing_ingredient == 1){ V(tomato); }
+    if (missing_ingredient == 2){ V(egg); }
+    V(tableMutex);
 }
 
-process P1(){
-    while(true){
-       wait();   // non-critical section
-       P(bread); // entry-protocol
-       
-       // critical section
-       make_sandwich(); 
-       eat_sandwich();
-       
-       V(host); // exit-protocol
-    }
+process personA(){
+   wait(); // non-critical section
+   
+   // entry-protocol
+   P(bread);
+   P(tableMutex);
+   
+   // critical section
+   make_sandwich();
+   eat_sandwich();
+   
+   // exit-protocol 
+   V(tableMutex);
+   V(F);
 }
 
-process P2(){
-   while(true){
-      wait();    // non-critical section
-      P(tomato); // entry-protocol
+process personB(){
+   wait(); // non-critical section
 
-      // critical section
-      make_sandwich();
-      eat_sandwich();
+   // entry-protocol
+   P(tomato);
+   P(tableMutex);
 
-      V(host); // exit-protocol
-   }
+   // critical section
+   make_sandwich();
+   eat_sandwich();
+
+   // exit-protocol 
+   V(tableMutex);
+   V(F);
 }
 
-process P3(){
-   while(true){
-      wait();  // non-critical section
-      P(egg);  // entry-protocol
+process personC(){
+   wait(); // non-critical section
 
-      // critical section
-      make_sandwich();
-      eat_sandwich();
+   // entry-protocol
+   P(egg);
+   P(tableMutex);
 
-      V(host); // exit-protocol
-   }
+   // critical section
+   make_sandwich();
+   eat_sandwich();
+
+   // exit-protocol 
+   V(tableMutex);
+   V(F);
 }
 ```
 
-This code uses split binary semaphores, where multiple semaphores (in this case, bread, tomato, and egg) to control 
-access to specific resources based on the available "ingredient" on the table. Each process (P1, P2, and P3) waits on a 
-unique semaphore (bread, tomato, or egg) to proceed with making and eating a sandwich.
+This solution uses binary split semaphores where each process waits for their own semaphore in addition to the common
+mutex for the table. The advantages of this is that each process waits for its own semaphore before accessing the
+critical section, minimizing the chance of two processes/threads accessing the critical section at the same time. 
+
 
 ## Question 5: 
 Consider the following variant of the Readers/Writers problem: 
@@ -169,48 +193,32 @@ in the missing parts. Your solution does not need to arbitrate between readers a
 
 ### Answer: 
 ```java
-monitor RW_Controller() {
-    int nr = 0; // number of readers (do not need exclusive access)
-    int nw = 0; // number of writers (does need exclusive access) 
-    cond OK_to_write;   // signalled when nr == 0 and nw == 0
-    cond OK_to_read;    // signalled when nw == 0
-}
-
-// Reader's enter protocol
-procedure request_read() {
-   while (nw > 0) { wait(OK_to_read); } // entry-protocol (readers should wait if there's an active writer)
-   nr = nr + 1;                         // critical section (increment number of readers)
-}
-
-// Reader's exit protocol
-procedure release_read() {
-
-   // critical section (decrement number of readers)
-   nr = nr - 1;
-
-   // exit-protocol (if there's no more readers, signal to other writers that it's OK to write)
-   if (nr == 0){
-      signal(OK_to_write);
-   }
-}
-
-// Writer's enter protocol
-procedure request_write() {
-    // entry-protocol (writers must wait until there are no other readers/writers accessing the database)
-    while (nr > 0 || nw > 0) { wait(OK_to_write); }
+monitor RW_Controller(){
+    int nr = 0;
+    int nw = 0;
+    cond OK_to_read;
+    cond OK_to_write;
     
-    // critical section (increment number of writers)
-    nw = nw + 1;
-}
-
-// Writer's exit protocol
-procedure release_write() {
-
-   // critical section (decrement number of writers)
-   nw = nw - 1;
-
-   // exit-protocol (signal readers that it's OK to read)
-   signal_all(OK_to_read);
+    request_read{
+        while(nw > 0){ wait(OK_to_read); }
+        nr = nr + 1;
+   }
+   
+   release_read{
+       nr = nr - 1;
+       if(nr == 0){ signal(OK_to_write); }
+   }
+        
+   request_write{
+       while(nr > 0 || nw > 0){ wait(OK_to_write); }
+       nw = nw + 1; 
+   }
+   
+   release_write{
+      nw = nw - 1;
+      signal(OK_to_write);
+      signal_all(OK_to_read);
+   }
 }
 ```
 
@@ -222,20 +230,21 @@ wait until there are sufficient funds.
 
 A software developer was asked to implement a monitor to solve this problem, using Signal-and-Continue discipline. 
 Below is the code the developer has written so far. Help the developer to finish the implementation.
+
 ```java
 monitor Account(){
     int balance = 0;
-    cond cv; // condition variable
+    cond cv; 
     
-    procedure Deposit(int amount){
-        balance = balance + amount;// critical section (increase balance)
-        signal_all(cv);            // exit-protocol: signal to all other processes that the condition is fulfilled
+    procedure deposit(int amount){
+        balance = balance + amount; 
+        signal_all(cv);
    }
     
-    procedure Withdraw(int amount){
-        while(amount > balance){ wait(cv); }// entry-protocol: while withdraw-amount is larger than balance, wait for cv
-        balance = balance - amount;         // critical section (decrease balance)
-    }
+    procedure withdrawl(int amount){
+        if(amount > balance){ wait(cv); }
+        balance = balance - amount; 
+   }
 }
 ```
 
@@ -243,10 +252,10 @@ monitor Account(){
 Using Modern CSP, specify behaviour of a traffic light that repeatedly turns green, then yellow, and
 then red.
 
-### Answer:
-`TrafficLight = Green -> Yellow -> Red -> TrafficLight`
-In this specification, the traffic light repeatedly goes through the sequence Green -> Yellow -> Red in a loop, 
-representing a continuous cycle.
+### Answer: 
+```
+TrafficLight --> Green --> Yellow --> Red --> TrafficLight
+```
 
 ## Question 8: 
 What will be printed when the following JavaScript code is executed?
@@ -274,7 +283,7 @@ function* foo(x) {
 }
 
 var it = foo(100);            // Creates a generator instance `it`
-var res = it.next(2);         // Starts the generator; `2` is ignored because the generators in JavaScript runs until their first yield statement
+var res = it.next(2);         // `2` is ignored because the generators in JavaScript runs until their first yield statement
 
 console.log(res.value);       // Prints `false` because 'yield false' pauses and returns 'false'
 res = it.next(3);             // Resumes after generator yielding 'false' and computes y = 100 * 3 = 300
@@ -302,15 +311,66 @@ Draw a promise graph for this code. Remember to use the names of nodes in that g
 with a subscript that represents the line number where that particular value/function/promise has been declared/where it
 appears first. For example, the value 100 on line 4 will be denoted by v in the promise graph.
 
-### Answer: 
-Step-by-Step breakdown of the code:
+### Answer:
 ```javascript
-var a = promisify({});              // new promise "a" which we call P_1
-var b = a.onResolve(x => x+1);      // new resolve handler "b" for P_1 which we call f_2
-var c = a.onReject(x => x + 1);     // new rejection handler "c" for P_1 which we call f_3
-a.resolve(100);                     // resolves P_1 with the value V_5 = 100
+var a = promisify({});           // 1 - new promise (P1/a)
+var b = a.onResolve(x => x + 1); // 2 - resolve handler (f2/b/x => x+1) for (P1/a)
+var c = a.onResolve(y => y - 1); // 3 - resolve handler (f3/c/y => y-1) for (P1/a)
+a.resolve(100);                  // 4 - root (V4/100) that resolves (P1/a)
 ```
-Promise graph: 
-```scss
-(V_1/100) --Resolve--> (P_1/a) --Link--> (f_2/b) --Resolve--> (V_2/101) ----> (f_3/c) --Resolve--> (V_3/99)
 ```
+(V4/100) --Resolve--> (P1/a) --Resolve--> (f2/b/x => x+1) --> (V2/101) --Resolve--> (P2/b)
+                        |
+                        v
+                        + ----Resolve--> (f3/c/y => y-1) --> (V3/99) ----Resolve--> (P3/c) 
+```
+
+## Question 10 (use the one from H22/V24 since H23 does not show)
+Consider the following HTML/JavaScript attached in the PDF file to this question. 
+This code runs on a computer of a super-user, who clicks the button `myButton` 6 ms after the execution starts. 
+
+What happens at particular time points?
+```html
+
+<button id="myButton"></button>
+<script>
+    setTimeout(function timeoutHandler() {
+        /* code that runs for 6 ms*/
+    }, 10);
+
+    setInterval(function intervalHandler() {
+        /* code that runs for 8 ms */
+    }, 10);
+
+    const myButton = document.getElementById("myButton");
+    
+    myButton.addEventListener("click", function clickHandler() {
+        Promise.resolve().then(() => { /* some promise handling code that runs for 4 ms */ });
+        /* click-handling code that runs for 10 ms */
+    });
+    /* code that runs for 18 ms */ 
+</script>
+```
+
+| What happens...                    | ...at what time? |
+|------------------------------------|------------------|
+| `clickHandler` finishes            | at X ms          |
+| `clickHandler` starts              | at X ms          |
+| interval fires for the first time  | at X ms          |
+| interval fires for the second time | at X ms          |
+| interval fires for the third time  | at X ms          |
+| interval fires for the fourth time | at X ms          |
+| `intervalHandler` starts           | at X ms          |
+| `intervalHandler` finishes         | at X ms          |
+| mainline execution starts          | at 0 ms          |
+| mainline execution finishes        | at X ms          |
+| promise handler starts             | at X ms          |
+| promise handler finishes           | at X ms          |
+| promise resolved a tiny bit after  | at X ms          |
+| `timeoutHandler` starts            | at X ms          |
+| `timeoutHandler` finishes          | at X ms          |
+| timer fires                        | at X ms          |
+| user clicks button                 | at 6 ms          |
+
+
+### Answer: 

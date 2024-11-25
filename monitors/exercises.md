@@ -1,4 +1,4 @@
-# Exercises 
+# Exercises - Monitors
 
 ## Question 1 - Readers/Writers (another variant)
 Consider the following variant of the Readers/Writers problem:

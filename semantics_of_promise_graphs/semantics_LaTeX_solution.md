@@ -62,7 +62,7 @@ $$ \begin{flalign}
 
 ## Exercises:
 
-### Rule 1:
+### Rule 1: E-OnResolve-Pending
 
 $$\begin{gather}
 a \in Addr & a \in dom(\sigma) & \psi(a) = P
@@ -106,7 +106,7 @@ $$\begin{flalign}
 \end{flalign}$$
 ---
 
-### Rule 2:
+### Rule 2: E-OnResolve-Fulfilled
 
 $$\begin{gather}  a \in Addr & a \in dom(\sigma) & \psi(a) = F(v)
 \end{gather} $$
@@ -151,7 +151,8 @@ $$\begin{flalign}
 \newline
 & \text{The effect of this is that, despite the promise already being resolved, the reaction being registered is }
 \text{scheduled for execution.} \newline \newline
-& \text{In other words: } \textbf{This rule schedules the reaction being registered of a resolved promise for execution}
+& \text{In other words: } \newline 
+& \textbf{This rule schedules the reaction being registered of a resolved promise for execution}
 \end{flalign}$$
 ---
 
@@ -175,8 +176,8 @@ a \in dom(\sigma) &: \text{ a is allocated in the heap } (\sigma) \newline \newl
 \end{flalign}$$
 
 $$\begin{align}
-& \text{In other words: } \textbf{This rule states that resolving a settled promise has no effect because the resolve}
-\textbf{ action will never be executed.}
+& \text{In other words: } \newline
+& \textbf{This rule states that resolving a settled promise has no effect because the action will never be executed.} &&
 \end{align}$$
 ---
 
@@ -207,8 +208,8 @@ a_2 \in dom(\sigma) &: a_2 \text{ is allocated in the heap } (\sigma) \newline
 \end{flalign}$$
 
 $$\begin{align}
-& \text{In other words: } \textbf{This rule causes an already settled promise to be "linked" to another. Regardless of }
-\textbf{their states.}
+& \text{In other words: } \newline
+& \textbf{This rule causes an already settled promise to be "linked" to another. Regardless of their states.}
 \end{align}$$
 ---
 
@@ -241,7 +242,80 @@ r' = r[a \mapsto Nil] &: \text{clear reject reaction on promise } a \newline
 \end{flalign}$$
 
 $$\begin{align}
-& \text{In other words: } \textbf{This rule clears fulfill/reject reactions of a settled promise}
+& \text{In other words: } \newline
+& \textbf{This rule clears fulfill/reject reactions of a settled promise} &&&&&&&&&&&&
+\end{align}$$
+---
+
+### Rule 6: E-Resolve-Pending
+$$\begin{gather} a \in Addr & a \in dom(\sigma) & \psi(a) = P \end{gather} $$
+$$\begin{gather}
+f(a) = (\lambda_1,a_1)...(\lambda_n,a_n) & \pi'=\pi:::(F(v),\lambda_1,a_1)...(F(v), \lambda_n,a_n)
+\end{gather} $$
+$$\begin{gather} \psi'=\psi[a \mapsto F(v)] & f'=f[a \mapsto Nil] & r'=r[a \mapsto Nil] \end{gather} $$
+---
+$$\begin{gather}
+\langle \sigma,\psi,f,r,\pi,E[a.resolve(v)] \rangle \rightarrow \langle \sigma,\psi',f',r',\pi',E[undef] \rangle
+\end{gather} $$
+---
+
+#### Explanation:
+$$\begin{flalign}
+a \in Addr &: a \text{ is the address of an object}  \newline
+a \in dom(\sigma) &: a \text{ is allocated in the heap } (\sigma) \newline
+\psi(a)=P &: a \text{ has state "pending"} \newline \newline
+f(a) = (\lambda_1,a_1)...(\lambda_n,a_n) &: \text{ fulfill reactions are extracted} \newline
+\pi'=\pi:::(F(v),\lambda_1,a_1)...(F(v), \lambda_n,a_n) &: \text{ fulfill reactions are enqueued}
+\newline \newline
+\psi' = \psi[a \mapsto F(v)] &: \text{register state for promise } a \text{ as "resolved" with value v} \newline
+f' = f[a \mapsto Nil] &: \text{clear fulfill reaction on promise } a \newline
+r' = r[a \mapsto Nil] &: \text{clear reject reaction on promise } a \newline \newline
+\langle \sigma,\psi,f,r,\pi,E[a.resolve(v)] \rangle \rightarrow \langle \sigma,\psi',f',r',\pi',E[undef] \rangle &:
+\text{Consider the expression } a.resolve(v) \text{, where } a \text{ is an } \newline
+&.. \text{address allocated in the heap and the state }
+\text{ of } a \text{ is "pending"}
+\end{flalign}$$
+
+$$\begin{align}
+& \text{In other words: } \newline
+&\textbf{This rule handles the case when a pending promise is resolved and the requirements for resolving it.}
+\newline & \textbf{The fulfillment reactions are queued but not immediately executed.}
+\end{align}$$
+---
+
+### Rule 7: E-Link-Pending
+$$\begin{gather}  a_1 \in Addr & a_1 \in dom(\sigma) & a_2 \in Addr & a_2 \in dom(\sigma) & \psi(a_1) = P
+\end{gather} $$
+$$\begin{gather}
+f' = f[a_1 \mapsto f(a_1) ::: (default, a_2)] & r' = r[a_1 \mapsto r(a_1) ::: (default, a_2)]
+\end{gather} $$
+---
+$$\begin{gather}
+\langle \sigma,\psi,f,r,\pi,E[a_1.link(a_2)] \rangle \rightarrow \langle \sigma,\psi,f',r',\pi,E[undef] \rangle
+\end{gather} $$
+---
+
+#### Explanation:
+$$\begin{flalign}
+a_1 \in Addr &: a_1 \text{ is the address of an object}  \newline
+a_1 \in dom(\sigma) &: a_1 \text{ is allocated in the heap } (\sigma) \newline
+a_2 \in Addr &: a_2 \text{ is the address of an object}  \newline
+a_2 \in dom(\sigma) &: a_2 \text{ is allocated in the heap } (\sigma) \newline
+\newline
+f' = f[a_1 \mapsto f(a_1) ::: (default, a_2)]) &: \text{ register fulfill reaction } (default, a_2) \text{ to promise }
+a_1 \newline
+r' = r[a_1 \mapsto r(a_1) ::: (default, a_2)] &: \text{ register reject reaction } (default, a_2) \text{ to promise }
+a_1 \newline \newline
+\langle \sigma,\psi,f,r,\pi,E[a_1.link(a_2)] \rangle \rightarrow \langle \sigma,\psi,f',r',\pi,E[undef] \rangle &:
+\text{ link } a_2 \text{ to } a_1 \text{, so when } a_1 \text{ is resolved, all registered } \newline
+&.. \text{reactions will be executed with the identity function, } \newline &.. \text{causing } a_2
+\text{ to be resolved/rejected with the same value}
+\end{flalign}$$
+
+$$\begin{align}
+& \text{In other words: } \newline
+& \textbf{This rule causes a promise to be "linked" to another, so when the first is resolved, the second is also}
+\textbf{ with the same value.}
 \end{align}$$
 ---
 

@@ -15,7 +15,6 @@ oc
 > 1. `<x = x+y >` runs first, and then `<y = x*y>` runs. In this case, the result would be `x = 3+2 = 5` and `y = 5*3 = 15`
 > 2. `<y = x*y>` runs first, and then `<x = x+y >` runs. In this case, the result would be `y = 2*3 = 6` and `x = 2+6 = 8`
 
-
 ## Question 2:
 A semaphore is a program variable that holds an integer value. It can be manipulated by the operations `P` and `V`. 
 Describe the semantics of these operations. 
@@ -386,8 +385,10 @@ Explanation of Nodes and Flow:
 6. (c / p_3): The promise returned by onReject on line 3 (p_3) is resolved with v_3 = 43.
 
 ## Question 9: 
-Consider the following HTML/JavaScript
+Consider the following HTML/JavaScript attached in the PDF file to this question.
+This code runs on a computer of a super-user, who clicks the button `myButton` 6 ms after the execution starts.
 
+What happens at particular time points?
 ```html
 
 <button id="myButton"></button>
@@ -401,142 +402,66 @@ Consider the following HTML/JavaScript
     }, 10);
 
     const myButton = document.getElementById("myButton");
-
-    /* (clickHandler) starts before the other methods because user clicked after 6 ms*/
+    
     myButton.addEventListener("click", function clickHandler() {
         Promise.resolve().then(() => { /* some promise handling code that runs for 4 ms */ });
-        /* click-handling code that runs for 10 ms (CLICK HANDLER)*/
+        /* click-handling code that runs for 10 ms */
     });
-    /* code that runs for 18 ms (MAINLINE EXECUTION)*/ 
+    /* code that runs for 18 ms */ 
 </script>
 ```
 
-This code runs on a computer super-user, who clicks the button `myButton` 6 ms after the execution starts. 
-What happens at particular time points? 
-
-What happens--------at what time
-`clickHandler` finishes             after X ms
-`clickHandler`starts                after X ms
-interval starts for the first time  after X ms
-interval starts for the second time after X ms
-interval starts for the third time  after X ms
-interval starts for the fourth time after X ms
-`intervalHandler` starts            after X ms
-`intervalHandler` finishes          after X ms
-mainline execution starts           after 0 ms
-mainline execution finishes         after X ms 
-promise handler starts              after X ms
-promise handler finishes            after X ms 
-promise resolved                    after X ms
-`timeoutHandler` starts             after X ms
-`timeoutHandler` finishes           after X ms
-timer starts                        after X ms 
-user clicks the button              after 6 ms
+| What happens...                    | ...at what time? |
+|------------------------------------|------------------|
+| `clickHandler` finishes            | at X ms          |
+| `clickHandler` starts              | at X ms          |
+| interval fires for the first time  | at X ms          |
+| interval fires for the second time | at X ms          |
+| interval fires for the third time  | at X ms          |
+| interval fires for the fourth time | at X ms          |
+| `intervalHandler` starts           | at X ms          |
+| `intervalHandler` finishes         | at X ms          |
+| mainline execution starts          | at 0 ms          |
+| mainline execution finishes        | at X ms          |
+| promise handler starts             | at X ms          |
+| promise handler finishes           | at X ms          |
+| promise resolved a tiny bit after  | at X ms          |
+| `timeoutHandler` starts            | at X ms          |
+| `timeoutHandler` finishes          | at X ms          |
+| timer fires                        | at X ms          |
+| user clicks button                 | at 6 ms          |
 
 ### Answer:
-```html
 
-<button id="myButton"></button>
-<script>
-    /* ( - MACROTASK TIMEOUT) */ 
-    setTimeout(function timeoutHandler() { /* ( - timeoutHandler) code that runs for 6 ms, each 10 ms */ }, 10);
+| What happens                         | at what time |
+|--------------------------------------|--------------|
+| `clickHandler` finishes              | after 28 ms  |
+| `clickHandler`starts                 | after 18 ms  |
+| interval fires for the first time    | after 32 ms  |
+| interval fires for the second time   | after 40 ms  |
+| interval fires for the third time    | after 50 ms  |
+| interval fires for the fourth time   | after 60 ms  |
+| `intervalHandler` starts             | after 10 ms  |
+| `intervalHandler` finishes           | after 70 ms  |
+| Mainline execution starts            | after 0 ms   |
+| Mainline execution finishes          | after 18 ms  |
+| Promise handler starts               | after 28 ms  |
+| Promise handler finishes             | after 32 ms  |
+| Promise resolved  (a tiny bit after) | after 18 ms  |
+| `timeoutHandler` starts              | after 32 ms  |
+| `timeoutHandler` finishes            | after 38 ms  |
+| Timer fires                          | after 10 ms  |
+| User clicks the button               | after 6 ms   |
 
-    /* ( - MACROTASK TIMER) */
-    setInterval(function intervalHandler() { /* ( - intervalHandler) code that runs for 8 ms, each 10 ms */ }, 10);
-
-    /* (2 - USER CLICKS THE BUTTON) */
-    const myButton = document.getElementById("myButton");
-
-    /* (4 - CLICK HANDLER) starts before the other methods because user clicked after 6 ms */
-    myButton.addEventListener("click", function clickHandler() {
-        Promise.resolve().then(() => { /* ( - PROMISE) code that runs for 4 ms */ });
-        /* (4 - CLICK HANDLER) code that runs for 10 ms */
-    });
-    /* (1 - MAINLINE EXECUTION) code that runs for 18 ms (3 - MAINLINE FINISHES after 18 seconds) */ 
-</script>
-```
-
-#### Breakdown of Each Step
-
-1. Mainline Execution starts at 0 ms
-2. User clicks button after 6 ms
-3. Mainline finished after 18 ms
-4. `clickHandler` starts processing click-event after mainline finishes (starts after 18 ms, takes 10 ms) (28 ms)
-5. Microtask promise starts after 28 ms and finishes after 4 ms (32 ms)
-6. Macrotask `setTimeout(function timeoutHandler() {}, 10)` starts after 32 ms and runs for 6 ms (38 ms)
-   (supposed to start after 10 but had to wait for other processes to finish, timeout before intervals)
-7. Macrotask first `setInterval(function intervalHandler {}, 10)` starts after 38 ms and runs for 8 ms (46 ms)
-   (supposed to start after 10 but had to wait for other processes to finish)
-8. Macrotask second `setInterval(function intervalHandler {}, 10)` starts after 46 ms and runs for 8 ms (54 ms)
-9. Macrotask third `setInterval(function intervalHandler {}, 10)` starts after 54 ms and runs for 8 ms (62 ms)
-10. Macrotask fourth `setInterval(function intervalHandler {}, 10)` starts after 62 ms and runs for 8 ms (70 ms)
-
-
-    What happens--------at what time
-    `clickHandler` finishes             after 28 ms
-    `clickHandler`starts                after 18 ms
-    interval starts for the first time  after 10 ms
-    interval starts for the second time after 20 ms
-    interval starts for the third time  after 30 ms
-    interval starts for the fourth time after 40 ms
-    `intervalHandler` starts            after 32 ms
-    `intervalHandler` finishes          after 70 ms
-    mainline execution starts           after 0 ms
-    mainline execution finishes         after 18 ms
-    promise handler starts              after 28 ms
-    promise handler finishes            after 32 ms
-    promise resolved                    after 32 ms
-    `timeoutHandler` starts             after 32 ms
-    `timeoutHandler` finishes           after 38 ms
-    timer starts                        after 10 ms
-    user clicks the button              after 6 ms
-
-MORE DETAILED EXPLANATION:
-`Mainline Execution` (0 ms): The mainline code _starts_ immediately when the script is loaded, and it takes 18 ms.
-It sets up the timers, defines the button click event listener, and finally run the initial code block. 
-   `setTimeout(timeoutHandler, 10)`: Schedules `timeoutHandler` to run 10 ms after the mainline finishes. 
-   `setInterval(intervalHandler, 10)`: Schedules `intervalHandler` to run 10 ms after the mainline finishes and then 
-                                       every 10 ms afterward.
-   `myButton` event listener is set up, so whenever it's clicked, `clickHandler` will run.
-
-User Clicks `myButton` (6 ms):
-   The click occurs at 6 ms, but because the mainline execution is still running, the click event is queued until the 
-   mainline completes at 18 ms.
-
-Timer Execution (Starts at 10 ms):
-Now, we start processing the `timer` macrotasks that are queued.
-
-First Interval (`intervalHandler`, starts at 10 ms):
-`intervalHandler` starts at 10 ms and takes 8 ms.
-`intervalHandler` finishes at 18 ms.
-
-`Mainline Execution` finishes at 18 ms.
-
-Click Event Processing (Starts at 18 ms):
-   `clickHandler` starts as soon as the mainline is finished at 18 ms because user clicked after 6 ms. 
-   Inside `clickHandler`:
-       Microtask Enqueue: The Promise resolution is scheduled to execute after `clickHandler` completes.
-   `clickHandler` finishes at 28 ms (started at 18 ms and took 10 ms to finish).
-
-Timeout (`timeoutHandler`, starts at 10 ms):
-`timeoutHandler`,   scheduled to run 10 ms after mainline execution
-`timeoutHandler` starts at 10 ms and runs for 6 ms.
-`timeoutHandler` finishes at 16 ms.
-
-Second Interval (`intervalHandler`, starts at 20 ms):
-The second `intervalHandler` starts at 20 ms and takes 8 ms.
-`intervalHandler` finishes at 28 ms.
-
-Promise Runs (Starts at 28 ms):
-   After `clickHandler` finishes, the microtask queue is processed, and it takes 4 ms.
-   Promise handler finishes at 32 ms (started at 28ms to finish).
-
-Third Interval (`intervalHandler` starts at 30 ms and takes 8 ms.
-`intervalHandler` finishes at 38 ms.
-
-
-Fourth Interval (`intervalHandler` starts at 40 ms and takes 8 ms.
-`intervalHandler` finishes at 48 ms.
+$$\begin{align}
+& \textbf{Macrotask queue: }
+\textbf{Mainline JS} \rightarrow \textbf{click event } \rightarrow \textbf{ timer's event} \rightarrow
+\textbf{ intervals's event}  \rightarrow \textbf{ intervsal's event}  \rightarrow \textbf{ intervals's event}
+\newline
+& \textbf{Microtask queue: }  
+\textbf{ Promise Success}
+&&&&&&&&&&&&&&&&&&
+\end{align}$$
 
 ## Question 10: 
 ![SemanticsCheatSheet.png](../images/SemanticsCheatSheet1.png)

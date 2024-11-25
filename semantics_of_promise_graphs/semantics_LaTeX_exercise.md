@@ -60,19 +60,16 @@ $$ \begin{flalign}
 & \text{reactions are awaiting asynchronous computation by the event loop} &
 \end{flalign} $$
 
-## Exercises:
+## Exercise 11 - Semantics of Promise Rules:
 
 ### Rule 1:
 
 $$\begin{gather}
-a \in Addr & a \in dom(\sigma) & \psi(a) = P
-\end{gather} $$
-$$\begin{gather}
+a \in Addr & a \in dom(\sigma) & \psi(a) = P \end{gather} $$
+$$\begin{gather} 
 a' \in Addr & a' \notin dom(\sigma) & \psi' = \psi[a'\mapsto P] & \sigma'=\sigma[a' \mapsto \{\}]
 \end{gather} $$
-$$\begin{gather}
-f' \mapsto f[a \mapsto f(a) ::: (\lambda,a')][a' \mapsto Nil] & r'=r[a' \mapsto Nil]
-\end{gather} $$
+$$\begin{gather} f' \mapsto f[a \mapsto f(a) ::: (\lambda,a')][a' \mapsto Nil] & r'=r[a' \mapsto Nil] \end{gather} $$
 ---
 $$\begin{gather}
 \langle \sigma,\psi,f,r,\pi,E[a.onResolve(\lambda)] \rangle \rightarrow \langle \sigma',\psi',f',r',\pi,E[a'] \rangle
@@ -81,17 +78,12 @@ $$\begin{gather}
 
 ### Rule 2: 
 
-$$\begin{gather}  a \in Addr & a \in dom(\sigma) & \psi(a) = F(v)
-\end{gather} $$
+$$\begin{gather}  a \in Addr & a \in dom(\sigma) & \psi(a) = F(v) \end{gather} $$
 $$\begin{gather}
 a' \in Addr & a' \notin dom(\sigma) & \psi' = \psi[a'\mapsto F(v)] & \sigma'=\sigma[a' \mapsto \text{{}}]
 \end{gather} $$
-$$\begin{gather}
-f' = f[a' \mapsto Nil] & r'=r[a' \mapsto Nil] \newline
-\end{gather} $$
-$$\begin{gather}
-\pi' = \pi ::: (F(v), \lambda, a')
-\end{gather} $$
+$$\begin{gather} f' = f[a' \mapsto Nil] & r'=r[a' \mapsto Nil] \newline \end{gather} $$
+$$\begin{gather} \pi' = \pi ::: (F(v), \lambda, a') \end{gather} $$
 ---
 $$\begin{gather}
 \langle \sigma,\psi,f,r,\pi,E[a.onResolve(\lambda)] \rangle \rightarrow \langle \sigma',\psi',f',r',\pi,E[a'] \rangle
@@ -100,8 +92,8 @@ $$\begin{gather}
 
 ### Rule 3:
 
-$$\begin{gather}  a \in Addr & a \in dom(\sigma) & \psi(a) \in \{F(v'),R(v')\}
-\end{gather} $$
+$$\begin{gather}  a \in Addr & a \in dom(\sigma) & \psi(a) \in \{F(v'),R(v')\} \end{gather} $$
+
 ---
 $$\begin{gather}
 \langle \sigma,\psi,f,r,\pi,E[a.onResolve(v)] \rangle \rightarrow \langle \sigma,\psi,f,r,\pi,E[undef] \rangle
@@ -112,10 +104,7 @@ $$\begin{gather}
 
 $$\begin{gather}  a_1 \in Addr & a_1 \in dom(\sigma) & a_2 \in Addr & a_2 \in dom(\sigma) & \psi(a_1) = F(v)
 \end{gather} $$
-
-$$\begin{gather}
-\pi' = \pi ::: (F(v), default, a_2)
-\end{gather} $$
+$$\begin{gather} \pi' = \pi ::: (F(v), default, a_2) \end{gather} $$
 ---
 $$\begin{gather}
 \langle \sigma,\psi,f,r,\pi,E[a_1.link(a_2)] \rangle \rightarrow \langle \sigma,\psi,f,r,\pi,E[undef] \rangle
@@ -124,12 +113,8 @@ $$\begin{gather}
 
 ### Rule 5: 
 
-$$\begin{gather}  
-a \in Addr & a \in dom(\sigma) & a \notin dom(\psi)
-\end{gather} $$
-$$\begin{gather}  
-\psi' = \psi[a \mapsto P] & f' = f[a \mapsto Nil] & r' = r[a \mapsto Nil]
-\end{gather} $$
+$$\begin{gather} a \in Addr & a \in dom(\sigma) & a \notin dom(\psi) \end{gather} $$
+$$\begin{gather} \psi' = \psi[a \mapsto P] & f' = f[a \mapsto Nil] & r' = r[a \mapsto Nil] \end{gather} $$
 
 ---
 $$\begin{gather}
@@ -138,18 +123,53 @@ $$\begin{gather}
 ---
 
 ### Rule 6:
-$$\begin{gather}  
-\
+$$\begin{gather} a \in Addr & a \in dom(\sigma) & \psi(a) = P \end{gather} $$
+$$\begin{gather}
+f(a) = (\lambda_1,a_1)...(\lambda_n,a_n) & \pi'=\pi:::(F(v),\lambda_1,a_1)...(F(v), \lambda_n,a_n)
 \end{gather} $$
-$$\begin{gather}  
-\
-\end{gather} $$
-
+$$\begin{gather} \psi'=\psi[a \mapsto F(v)] & f'=f[a \mapsto Nil] & r'=r[a \mapsto Nil] \end{gather} $$
 ---
 $$\begin{gather}
-\
+\langle \sigma,\psi,f,r,\pi,E[a.resolve(v)] \rangle \rightarrow \langle \sigma,\psi',f',r',\pi',E[undef] \rangle
 \end{gather} $$
 ---
+
+### Rule 7: 
+$$\begin{gather}  a_1 \in Addr & a_1 \in dom(\sigma) & a_2 \in Addr & a_2 \in dom(\sigma) & \psi(a_1) = P
+\end{gather} $$
+$$\begin{gather} 
+f' = f[a_1 \mapsto f(a_1) ::: (default, a_2)] & r' = r[a_1 \mapsto r(a_1) ::: (default, a_2)]
+\end{gather} $$
+---
+$$\begin{gather}
+\langle \sigma,\psi,f,r,\pi,E[a_1.link(a_2)] \rangle \rightarrow \langle \sigma,\psi,f',r',\pi,E[undef] \rangle
+\end{gather} $$
+---
+
+#### Explanation:
+$$\begin{flalign}
+a_1 \in Addr &: a_1 \text{ is the address of an object}  \newline
+a_1 \in dom(\sigma) &: a_1 \text{ is allocated in the heap } (\sigma) \newline
+a_2 \in Addr &: a_2 \text{ is the address of an object}  \newline
+a_2 \in dom(\sigma) &: a_2 \text{ is allocated in the heap } (\sigma) \newline
+\newline
+f' = f[a_1 \mapsto f(a_1) ::: (default, a_2)]) &: \text{ register fulfill reaction } (default, a_2) \text{ to promise } 
+a_1 \newline
+r' = r[a_1 \mapsto r(a_1) ::: (default, a_2)] &: \text{ register reject reaction } (default, a_2) \text{ to promise }
+a_1 \newline \newline
+\langle \sigma,\psi,f,r,\pi,E[a_1.link(a_2)] \rangle \rightarrow \langle \sigma,\psi,f',r',\pi,E[undef] \rangle &:
+\text{ link } a_2 \text{ to } a_1 \text{, so when } a_1 \text{ is resolved, all registered } \newline 
+&.. \text{reactions will be executed with the identity function, } \newline &.. \text{causing } a_2
+\text{ to be resolved/rejected with the same value}
+\end{flalign}$$
+
+$$\begin{align}
+& \text{In other words: } \newline
+& \textbf{This rule causes a promise to be "linked" to another, so when the first is resolved, the second is also}
+\textbf{ with the same value.}
+\end{align}$$
+---
+
 
 ## Task 12 - What kind of bugs can be detected by what kind of situations in a promise graph?
 
@@ -166,6 +186,5 @@ $$\begin{gather}
 |-----|-------------------------------------------------------------|
 |     | Multiple resolve/reject edges leading to the same promise   |
 |     | A promise that has no outgoing registration edges           |
-|     | Multiple resolve/reject edges leading to the same promise   |
 |     | A promise with a reject edge, but no registration edge      |
 |     | A promise with no resolve or reject edges nor any link edge |
