@@ -297,6 +297,7 @@ monitor RW_Controller(){
 
 ```
 
+
 ## Question 6:
 There is a duality between monitors and message passing. What is that duality exactly? In the table, the rows represent 
 notions about monitors, and the columns represent notions about message passing. Click the circle in a cell to represent
@@ -335,6 +336,7 @@ that a notion about monitors is dual to a notion about message passing
 | request channel and operation kinds      | procedure identifiers |
 | recieve_request()                        | monitor entry         |
 
+
 ## Question 7:
 Using Communicating Sequential Processes (CSP), define a process Copy that copies characters from process Bergen to 
 process Vestland.
@@ -343,12 +345,14 @@ process Vestland.
 ```java
 process Copy(){
     char c;
-    co:
-    Bergen?c 	->  // Recieve a character from Vestland and store it in 'c'
-    Vestland!c;     // Send the character stored in 'c' through Bergen
+    
+    co
+        Bergen?c -> // Recieve a character from Bergen and store it in 'c'
+        Vestland!c  // Send the character stored in 'c' through Vestland      
     oc
 }
 ```
+
 
 ## Question 7.5 (again):
 Using Communicating Sequential Processes, define a process Copy the copies a character from Vestland to Bergen.
@@ -356,13 +360,15 @@ Using Communicating Sequential Processes, define a process Copy the copies a cha
 ### Answer:
 ```java
 process Copy(){
-    char c;
-    co:
-    Vestland?c 	->  // Recieve a character from Vestland and store it in 'c'
-    Bergen!c;       // Send the character stored in 'c' through Bergen
-    oc
+    char c; 
+    
+    co
+          Vestland?c -> // Recieve a character from Vestland and store it in 'c'
+          Bergen!c      // Send the character stored in 'c' through Bergen  
+    oc 
 }
 ```
+
 
 ## Question 8:
 What will be printed when the following JavaScript code is executed?
@@ -399,6 +405,7 @@ console.log(res.value);  // Prints `40` because `y` is returned from the generat
 
 Final answer: "true" and "40".
 
+
 ## Question 9:
 Consider the JavaScript code: 
 ```javascript
@@ -408,6 +415,20 @@ var c = b.onReject(x => x -1);
 a.link(b);
 a.reject(1);
 ```
+
+### Answer: 
+```javascript
+var a = promisify({});
+var b = promisify({});
+var c = b.onReject(x => x -1);
+a.link(b);
+a.reject(1);
+```
+
+
+
+
+
 
 ### Answer:
 Step-by-Step breakdown of the code:
@@ -423,30 +444,11 @@ Promise graph:
 (V5/1) --Reject--> (P1/a) --Link--> (P2/b) --Reject--> (f3/c/x => x-1) --> (V3/0) --Reject--> (P3/c) 
 ```
 
-### Question 10 (need to find code snippet for this one): 
+### Question 10 (need to find script for this one): 
 Consider the following HTML/JavaScript
 
 ```html
 
-<button id="myButton"></button>
-<script>
-    setTimeout(function timeoutHandler() {
-        /* code that runs for 6 ms*/
-    }, 10);
-
-    setInterval(function intervalHandler() {
-        /* code that runs for 8 ms */
-    }, 10);
-
-    const myButton = document.getElementById("myButton");
-
-    /* (clickHandler) starts before the other methods because user clicked after 6 ms*/
-    myButton.addEventListener("click", function clickHandler() {
-        Promise.resolve().then(() => { /* some promise handling code that runs for 4 ms */ });
-        /* click-handling code that runs for 10 ms (CLICK HANDLER)*/
-    });
-    /* code that runs for 18 ms (MAINLINE EXECUTION)*/ 
-</script>
 ```
 The user **never** clicks the button `myOtherButton`. 
 The user clicks the button `myButton` 7 ms after the execution starts. 
@@ -525,6 +527,44 @@ What happens at particular time points?
 | timer fires                        | at X ms          |
 | user clicks button                 | at 6 ms          |
 
-#### Answer: 
+#### Answer:
 
+| What happens...                    | ...at what time? |
+|------------------------------------|------------------|
+| `clickHandler` finishes            | at 28 ms         |
+| `clickHandler` starts              | at 18 ms         |
+| interval fires for the first time  | at 10 ms         |
+| interval fires for the second time | at 20 ms         |
+| interval fires for the third time  | at 30 ms         |
+| interval fires for the fourth time | at 40 ms         |
+| `intervalHandler` starts           | at 38 ms         |
+| `intervalHandler` finishes         | at 46 ms         |
+| mainline execution starts          | at 0 ms          |
+| mainline execution finishes        | at 18 ms         |
+| promise handler starts             | at 28 ms         |
+| promise handler finishes           | at 32 ms         |
+| promise resolved a tiny bit after  | at 18 ms         |
+| `timeoutHandler` starts            | at 32 ms         |
+| `timeoutHandler` finishes          | at 38 ms         |
+| timer fires                        | at 10 ms         |
+| user clicks button                 | at 6 ms          |
+#### Answer: 
+What happens------------------------at what time
+`clickHandler` finishes             after 28 ms
+`clickHandler`starts                after 18 ms
+interval fires for the first time   after 38 ms
+interval fires for the second time  after 46 ms
+interval fires for the third time   after 54 ms
+interval fires for the fourth time  after 62 ms
+`intervalHandler` starts            after 38 ms
+`intervalHandler` finishes          after 62 ms
+mainline execution starts           after 0 ms
+mainline execution finishes         after 18 ms
+promise handler starts              after 28 ms
+promise handler finishes            after 32 ms
+promise resolved                    (a tiny bit after) after 28 ms
+`timeoutHandler` starts             after 32 ms
+`timeoutHandler` finishes           after 38 ms
+timer starts                        after  ms
+user clicks the button              after 6 ms
 

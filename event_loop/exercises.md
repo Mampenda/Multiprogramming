@@ -4,7 +4,7 @@
 JavaScript has single-threaded execution model, hence only one task can be executed at a time.
 This means that all created tasks have to wait in a queue until their turns for execution comes.
 
-```javascript
+```html
 <button id={"first"}></button>
 <button id={"second"}></button>
 <script>
@@ -15,7 +15,7 @@ This means that all created tasks have to wait in a queue until their turns for 
     /* code that runs for 15 ms*/
 </script>
 ```
-A super user who
+A super-user who
 - clicks the first button after 5 ms the script stats executing, and
 - clicks the second button 12 ms after the script start executing.
 
@@ -24,7 +24,7 @@ Now the code includes a promise in the first button-click handler.
 Promise handlers (i.e., the callbacks that are attached to the promise’s then() method) are always called
 asynchronously, even if when attached to an already resolved promise.
 
-```javascript
+```html
 <button id={"first"}></button>
 <button id={"second"}></button>
 <script>
@@ -39,7 +39,6 @@ asynchronously, even if when attached to an already resolved promise.
     {/* code that runs for 15 ms */}
 </script>
 ```
-
 The engine calls all promise callbacks asynchronously after the first handler is done. By creating a new microtask
 queue and pushing the promise onto the microtask queue.
 
@@ -90,7 +89,7 @@ they are provided by the host environment.
 - cancels the interval timer identifier by the passed value
 
 ## Example 3 - Timer execution within the event loop
-```javascript
+```html
 <button id={"myButton"}></button>
 <script>
     {/* Mainline JS execution runs for 18 ms*/}
@@ -134,20 +133,27 @@ Consider the following HTML/JavaScript
 
 | What happens...                    | ...at what time? |
 |------------------------------------|------------------|
-| `clickHandler` finishes            | at X ms          |
-| `clickHandler` starts              | at X ms          |
-| interval fires for the first time  | at X ms          |
-| interval fires for the second time | at X ms          |
-| interval fires for the third time  | at X ms          |
-| interval fires for the fourth time | at X ms          |
-| `intervalHandler` starts           | at X ms          |
-| `intervalHandler` finishes         | at X ms          |
+| `clickHandler` finishes            | at 28 ms         |
+| `clickHandler` starts              | at 18 ms         |
+| interval fires for the first time  | at 38 ms         |
+| interval fires for the second time | at 46 ms         |
+| interval fires for the third time  | at 52 ms         |
+| interval fires for the fourth time | at 60 ms         |
+| `intervalHandler` starts           | at 10 ms         |
+| `intervalHandler` finishes         | at 70 ms         |
 | mainline execution starts          | at 0 ms          |
-| mainline execution finishes        | at X ms          |
-| promise handler starts             | at X ms          |
-| promise handler finishes           | at X ms          |
-| promise resolved a tiny bit after  | at X ms          |
-| `timeoutHandler` starts            | at X ms          |
-| `timeoutHandler` finishes          | at X ms          |
-| timer fires                        | at X ms          |
+| mainline execution finishes        | at 18 ms         |
+| promise handler starts             | at 28 ms         |
+| promise handler finishes           | at 32 ms         |
+| promise resolved a tiny bit after  | at 18 ms         |
+| `timeoutHandler` starts            | at 32 ms         |
+| `timeoutHandler` finishes          | at 38 ms         |
+| timer fires                        | at 10 ms         |
 | user clicks button                 | at 6 ms          |
+
+$$\begin{flalign}
+& \textbf{Macrotask queue} &:& \text{ Mainline JS} \rightarrow  \text{clickHandler} \rightarrow \text{timeoutHandler} 
+\rightarrow \text{intervalHandler} \rightarrow ... \rightarrow \text{intervalHandler}
+\newline
+& \textbf{Microtask queue} &:& \text{ Promise success}
+\end{flalign} $$

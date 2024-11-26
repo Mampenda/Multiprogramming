@@ -152,7 +152,7 @@ $$\begin{flalign}
 & \text{The effect of this is that, despite the promise already being resolved, the reaction being registered is }
 \text{scheduled for execution.} \newline \newline
 & \text{In other words: } \newline 
-& \textbf{This rule schedules the reaction being registered of a resolved promise for execution}
+& \textbf{This rule schedules the reaction of a resolved promise for execution}
 \end{flalign}$$
 ---
 
@@ -209,11 +209,44 @@ a_2 \in dom(\sigma) &: a_2 \text{ is allocated in the heap } (\sigma) \newline
 
 $$\begin{align}
 & \text{In other words: } \newline
+& \textbf{This rule causes an already settled promise to be "linked" to another. }
+\end{align}$$
+---
+
+
+### Rule 5:
+
+$$\begin{gather}  a_1 \in Addr & a_1 \in dom(\sigma) & a_2 \in Addr & a_2 \in dom(\sigma) & \psi(a) \in \{F(v'),R(v')\}
+\end{gather} $$
+
+$$\begin{gather}
+\pi' = \pi ::: (F(v), default, a_2)
+\end{gather} $$
+---
+$$\begin{gather}
+\langle \sigma,\psi,f,r,\pi,E[a_1.link(a_2)] \rangle \rightarrow \langle \sigma,\psi,f,r,\pi,E[undef] \rangle
+\end{gather} $$
+---
+#### Explanation:
+$$\begin{flalign}
+a_1 \in Addr &: a_1 \text{ is the address of an object}  \newline
+a_1 \in dom(\sigma) &: a_1 \text{ is allocated in the heap } (\sigma) \newline
+a_2 \in Addr &: a_2 \text{ is the address of an object}  \newline
+a_2 \in dom(\sigma) &: a_2 \text{ is allocated in the heap } (\sigma) \newline
+\newline
+\pi' = \pi ::: (F(v), default, a') &: \text{ append the triple } (F(v), default, a') \text{ to the queue} \newline
+\newline
+\psi(a_1) \in \{F(v'),R(v')\} &: \text{the state of the promise } a \text{ according to the promise state map } \psi
+\newline &..\text{indicates that the promise has already been resolved/rejected}
+\end{flalign}$$
+
+$$\begin{align}
+& \text{In other words: } \newline
 & \textbf{This rule causes an already settled promise to be "linked" to another. Regardless of their states.}
 \end{align}$$
 ---
 
-### Rule 5:
+### Rule 6:
 
 $$\begin{gather}  
 a \in Addr & a \in dom(\sigma) & a \notin dom(\psi)
@@ -247,7 +280,7 @@ $$\begin{align}
 \end{align}$$
 ---
 
-### Rule 6: E-Resolve-Pending
+### Rule 7: E-Resolve-Pending
 $$\begin{gather} a \in Addr & a \in dom(\sigma) & \psi(a) = P \end{gather} $$
 $$\begin{gather}
 f(a) = (\lambda_1,a_1)...(\lambda_n,a_n) & \pi'=\pi:::(F(v),\lambda_1,a_1)...(F(v), \lambda_n,a_n)
@@ -283,7 +316,7 @@ $$\begin{align}
 \end{align}$$
 ---
 
-### Rule 7: E-Link-Pending
+### Rule 8: E-Link-Pending
 $$\begin{gather}  a_1 \in Addr & a_1 \in dom(\sigma) & a_2 \in Addr & a_2 \in dom(\sigma) & \psi(a_1) = P
 \end{gather} $$
 $$\begin{gather}
@@ -314,7 +347,7 @@ a_1 \newline \newline
 
 $$\begin{align}
 & \text{In other words: } \newline
-& \textbf{This rule causes a promise to be "linked" to another, so when the first is resolved, the second is also}
+& \textbf{This rule causes a pending promise to be "linked" to another, so when the first is resolved, the second is also}
 \textbf{ with the same value.}
 \end{align}$$
 ---

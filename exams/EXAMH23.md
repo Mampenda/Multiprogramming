@@ -373,4 +373,24 @@ What happens at particular time points?
 | user clicks button                 | at 6 ms          |
 
 
-### Answer: 
+### Answer:
+
+| What happens...                    | ...at what time? |
+|------------------------------------|------------------|
+| `clickHandler` finishes            | at 28 ms         |
+| `clickHandler` starts              | at 18 ms         |
+| interval fires for the first time  | at 10 ms         |
+| interval fires for the second time | at 20 ms         |
+| interval fires for the third time  | at 30 ms         |
+| interval fires for the fourth time | at 40 ms         |
+| `intervalHandler` starts           | at 38 ms         |
+| `intervalHandler` finishes         | at 46 ms         |
+| mainline execution starts          | at 0 ms          |
+| mainline execution finishes        | at 18 ms         |
+| promise handler starts             | at 28 ms         |
+| promise handler finishes           | at 32 ms         |
+| promise resolved a tiny bit after  | at 18 ms         |
+| `timeoutHandler` starts            | at 32 ms         |
+| `timeoutHandler` finishes          | at 38 ms         |
+| timer fires                        | at 10 ms         |
+| user clicks button                 | at 6 ms          |

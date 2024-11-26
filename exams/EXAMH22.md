@@ -15,6 +15,7 @@ oc
 > 1. `<x = x+y >` runs first, and then `<y = x*y>` runs. In this case, the result would be `x = 3+2 = 5` and `y = 5*3 = 15`
 > 2. `<y = x*y>` runs first, and then `<x = x+y >` runs. In this case, the result would be `y = 2*3 = 6` and `x = 2+6 = 8`
 
+
 ## Question 2:
 A semaphore is a program variable that holds an integer value. It can be manipulated by the operations `P` and `V`. 
 Describe the semantics of these operations. 
@@ -35,6 +36,7 @@ can when it is 0 (true).
 **The `P`-operation looks like this: `P(s) == <await (s>0) s = s - 1;>`**
 
 **The `V`-operation looks like this: `V(s) == <s = s + 1;>`**
+
 
 ## Question 3: 
 Three persons, who like gløgg very much, have gathered to play the following game in a bar. To drink a portion, each of 
@@ -112,6 +114,7 @@ process Player3(){
 	}
 }
 ```
+
 
 ## Question 4:
 Recall the Readers/Writers problem: 
@@ -230,6 +233,7 @@ procedure release_write() {
 }
 ```
 
+
 ## Question 5:
 There's duality between monitors and message passing. What is that duality exactly? In the table, the rows represent 
 notions about monitors, and the columns represent notions about message passing. Click the circle in a cell to represent
@@ -296,6 +300,7 @@ should be "checked" (i.e., have duality):
             save pending request() corresponds to saving a request when it cannot be processed immediately, similar to 
             waiting in a monitor.
 
+
 ## Question 6: 
 Using Communicating Sequential Processes, define a process `Copy` that copies a character from process `Vestland` to 
 process `Bergen`. 
@@ -319,6 +324,7 @@ Explanation:
 
 `Bergen!c`: After receiving the character, the Copy process sends the character stored in c through the Bergen channel.
 
+
 ## Question 7: 
 Using JavaScript, define a promise which is immediately resolved. Use `console.log` to print out the value of the 
 promise.
@@ -335,6 +341,7 @@ myPromise.then(value => console.log(value));
 `.then(value => console.log(value))`:   The `.then()` method is used to handle the resolved value of the promise. In 
                                         this case, we’re using console.log to print out the value once the promise 
                                         resolves.
+
 
 ## Question 8:
 Consider the JavaScript code 
@@ -384,6 +391,7 @@ Explanation of Nodes and Flow:
 5. (v_3 / 43): The result of calling f_3 with 42 is 43, which resolves p_3.
 6. (c / p_3): The promise returned by onReject on line 3 (p_3) is resolved with v_3 = 43.
 
+
 ## Question 9: 
 Consider the following HTML/JavaScript attached in the PDF file to this question.
 This code runs on a computer of a super-user, who clicks the button `myButton` 6 ms after the execution starts.
@@ -431,37 +439,28 @@ What happens at particular time points?
 | timer fires                        | at X ms          |
 | user clicks button                 | at 6 ms          |
 
+
 ### Answer:
+| What happens...                    | ...at what time? |
+|------------------------------------|------------------|
+| `clickHandler` finishes            | at 28 ms         |
+| `clickHandler` starts              | at 18 ms         |
+| interval fires for the first time  | at 10 ms         |
+| interval fires for the second time | at 20 ms         |
+| interval fires for the third time  | at 30 ms         |
+| interval fires for the fourth time | at 40 ms         |
+| `intervalHandler` starts           | at 38 ms         |
+| `intervalHandler` finishes         | at 46 ms         |
+| mainline execution starts          | at 0 ms          |
+| mainline execution finishes        | at 18 ms         |
+| promise handler starts             | at 28 ms         |
+| promise handler finishes           | at 32 ms         |
+| promise resolved a tiny bit after  | at 18 ms         |
+| `timeoutHandler` starts            | at 32 ms         |
+| `timeoutHandler` finishes          | at 38 ms         |
+| timer fires                        | at 10 ms         |
+| user clicks button                 | at 6 ms          |
 
-| What happens                         | at what time |
-|--------------------------------------|--------------|
-| `clickHandler` finishes              | after 28 ms  |
-| `clickHandler`starts                 | after 18 ms  |
-| interval fires for the first time    | after 32 ms  |
-| interval fires for the second time   | after 40 ms  |
-| interval fires for the third time    | after 50 ms  |
-| interval fires for the fourth time   | after 60 ms  |
-| `intervalHandler` starts             | after 10 ms  |
-| `intervalHandler` finishes           | after 70 ms  |
-| Mainline execution starts            | after 0 ms   |
-| Mainline execution finishes          | after 18 ms  |
-| Promise handler starts               | after 28 ms  |
-| Promise handler finishes             | after 32 ms  |
-| Promise resolved  (a tiny bit after) | after 18 ms  |
-| `timeoutHandler` starts              | after 32 ms  |
-| `timeoutHandler` finishes            | after 38 ms  |
-| Timer fires                          | after 10 ms  |
-| User clicks the button               | after 6 ms   |
-
-$$\begin{align}
-& \textbf{Macrotask queue: }
-\textbf{Mainline JS} \rightarrow \textbf{click event } \rightarrow \textbf{ timer's event} \rightarrow
-\textbf{ intervals's event}  \rightarrow \textbf{ intervsal's event}  \rightarrow \textbf{ intervals's event}
-\newline
-& \textbf{Microtask queue: }  
-\textbf{ Promise Success}
-&&&&&&&&&&&&&&&&&&
-\end{align}$$
 
 ## Question 10: 
 ![SemanticsCheatSheet.png](../images/SemanticsCheatSheet1.png)

@@ -60,7 +60,7 @@ $$ \begin{flalign}
 & \text{reactions are awaiting asynchronous computation by the event loop} &
 \end{flalign} $$
 
-## Exercise 11 - Semantics of Promise Rules:
+## Exercise - Semantics of Promise Rules:
 
 ### Rule 1:
 
