@@ -10,7 +10,7 @@ co
 	< y = x * y>
 oc
 ```
-- What are the possible final values for `x` and `y`? Explain how you got those values.
+What are the possible final values for `x` and `y`? Explain how you got those values.
 
 ### Answer:
 This program satisfies the at-most-once property as one atomic action, indicated by the angle brackets `<>`,
@@ -36,7 +36,7 @@ co
     < b = a - b >
 oc
 ```
-- What are the possible final values for `a` and `b`? Explain how you got those values.
+What are the possible final values for `a` and `b`? Explain how you got those values.
 
 ### Answer:
 This program satisfies the at-most-property as one atomic action, indicated by angle brackets `<>`, `< a = a+b >` reads

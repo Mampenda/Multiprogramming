@@ -200,6 +200,75 @@ process U(){
 }
 ```
 
-
-
 ## Question 8 - Gløgg
+Here is an exercise of sudo-code in _Await Language_ with semaphores for synchronization:
+
+- Three persons, who like gløgg very much, have gathered to play the following game in a bar. To drink a portion, each
+  of them obviously needs three ingredients: the gløgg, a mug, and almonds.
+- One player has the gløgg, the second has mugs, and the third has the almonds. Assume each of the players has an
+  unlimited supply of their ingredients, respectively.
+- The barista, who also has an unlimited supply of the ingredients, puts two random ingredients on the table.
+- The player who has the third ingredient picks up the other two, makes the drink, and then drinks it.
+- The barista waits for the player to finish.
+- This "cycle" then repeats.
+
+"Simulate" this behaviour in the AWAIT language. Represent the players and the barista as processes. Use semaphores for
+synchronization. Make sure that your solution avoids deadlock.
+
+### Answer:
+```java
+sem barista;
+sem gløgg;
+sem mug;
+sem almonds;
+
+process Barista(){
+  while(true){
+    wait();     // non-critical section
+    P(barista); // entry-protocol
+    int missing_ingredient = randomInt(0..2); // critical section (0=gløgg, 1=mug, 2=almonds)
+
+    // exit-protocol 
+    if (missing_ingredient == 0){ V(gløgg); }
+    if (missing_ingredient == 1){ V(mug); }
+    if (missing_ingredient == 2){ V(almonds); }
+  }
+}
+
+process P1(){
+  while(true){
+    wait();   // non-critical section
+    P(gløgg); // entry-protocol
+
+    // critical section
+    make_gløgg();
+    drink_gløgg();
+
+    V(barista); // exit-protocol
+  }
+}
+process P2(){
+  while(true){
+    wait(); // non-critical section
+    P(mug); // entry-protocol
+
+    // critical section
+    make_gløgg();
+    drink_gløgg();
+
+    V(barista); // exit-protocol
+  }
+}
+process P3(){
+  while(true){
+    wait();     // non-critical section
+    P(almonds); // entry-protocol
+
+    // critical section
+    make_gløgg();
+    drink_gløgg();
+
+    V(barista); // exit-protocol
+  }
+}
+```

@@ -1,6 +1,6 @@
 # Exercises - Event Loop
 
-## Exercise 1 (Exam H22)
+## Exercise 1
 Consider the following HTML/JavaScript
 
 ```html
