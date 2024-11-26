@@ -221,27 +221,27 @@ Consider the following HTML/JavaScript
 | timer fires                        | at X ms          |
 | user clicks button                 | at 6 ms          |
 
-### Answer: 
+### Answer:
 
-| What happens                         | at what time |
-|--------------------------------------|--------------|
-| `clickHandler` finishes              | after 28 ms  |
-| `clickHandler`starts                 | after 18 ms  |
-| interval fires for the first time    | after 38 ms  |
-| interval fires for the second time   | after 46 ms  |
-| interval fires for the third time    | after 54 ms  |
-| interval fires for the fourth time   | after 62 ms  |
-| `intervalHandler` starts             | after 10 ms  |
-| `intervalHandler` finishes           | after 70 ms  |
-| Mainline execution starts            | after 0 ms   |
-| Mainline execution finishes          | after 18 ms  |
-| Promise handler starts               | after 28 ms  |
-| Promise handler finishes             | after 32 ms  |
-| Promise resolved  (a tiny bit after) | after 18 ms  |
-| `timeoutHandler` starts              | after 32 ms  |
-| `timeoutHandler` finishes            | after 38 ms  |
-| Timer fires                          | after 10 ms  |
-| User clicks the button               | after 6 ms   |
+| What happens...                    | ...at what time? |
+|------------------------------------|------------------|
+| `clickHandler` finishes            | at 28 ms         |
+| `clickHandler` starts              | at 18 ms         |
+| interval fires for the first time  | at 10 ms         |
+| interval fires for the second time | at 20 ms         |
+| interval fires for the third time  | at 30 ms         |
+| interval fires for the fourth time | at 40 ms         |
+| `intervalHandler` starts           | at 38 ms         |
+| `intervalHandler` finishes         | at 46 ms         |
+| mainline execution starts          | at 0 ms          |
+| mainline execution finishes        | at 18 ms         |
+| promise handler starts             | at 28 ms         |
+| promise handler finishes           | at 32 ms         |
+| promise resolved a tiny bit after  | at 18 ms         |
+| `timeoutHandler` starts            | at 32 ms         |
+| `timeoutHandler` finishes          | at 38 ms         |
+| timer fires                        | at 10 ms         |
+| user clicks button                 | at 6 ms          |
 
 $$\begin{align}
 & \textbf{Macrotask queue: }
