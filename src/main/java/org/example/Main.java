@@ -1,5 +1,7 @@
 package org.example;
 
+import org.example.DiningPhilosophers.ConditionedPhilosopher;
+
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Main {

@@ -1,4 +1,4 @@
-package org.example;
+package org.example.DiningPhilosophers;
 
 public class Chopstick {
 

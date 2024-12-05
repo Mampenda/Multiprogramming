@@ -1,4 +1,4 @@
-package org.example;
+package org.example.DiningPhilosophers;
 
 import java.util.Random;
 import java.util.concurrent.TimeUnit;

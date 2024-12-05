@@ -1,4 +1,4 @@
-package org.example;
+package org.example.Threads;
 
 public class Uninterruptible {
     public static void main(String[] args) throws InterruptedException {
