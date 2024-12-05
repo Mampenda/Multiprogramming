@@ -6,4 +6,4 @@ This repository has directories with exercises and solutions for some of the cen
 course. It was created as practice for the exam. It might contain errors, so it is wise to do the exercises yourself and 
 check your own answers.
 
-This repository is unfinished. 
+This repository is incomplete. 
