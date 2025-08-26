@@ -1,11 +1,13 @@
+
+```java
 package org.example;
 
 import org.example.DiningPhilosophers.ConditionedPhilosopher;
 
 import java.util.concurrent.locks.ReentrantLock;
 
-public class Main {
-    public static void main(String[] args) throws InterruptedException {
+public class OldMain {
+public static void main(String[] args) throws InterruptedException {
 
         // Reentrant Lock
         ReentrantLock table = new ReentrantLock();
@@ -38,3 +40,4 @@ public class Main {
         }
     }
 }
+```

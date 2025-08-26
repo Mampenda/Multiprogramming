@@ -17,13 +17,13 @@ public class Interruptible {
         Thread t1 = new Thread() {
             public void run() {
                 try {
-                    // Interruptibly lock first lock
+                    // Interruptibly lock first lock, i.e. respond to interrupts
                     l1.lockInterruptibly();
 
                     // Put thread to sleep for 1 sec
                     Thread.sleep(1000);
 
-                    // Interruptibly lock second lock
+                    // Interruptibly lock second lock, i.e. respond to interrupts
                     l2.lockInterruptibly();
                 }
                 catch(InterruptedException e) {

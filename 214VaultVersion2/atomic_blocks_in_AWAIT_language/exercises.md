@@ -11,7 +11,7 @@ co
 	< y = x * y>
 oc
 ```
-- What are the possible final values for `x` and `y`? Explain how you got those values.
+- What are the possible final values for `x` and `y`? Explain your reasoning.
 
 ## Question 2: 
 Consider the following program: 
@@ -25,7 +25,7 @@ co
     < b = a - b >
 oc
 ```
-- What are the possible final values for `a` and `b`? Explain how you got those values. 
+- What are the possible final values for `a` and `b`?  Explain your reasoning.
 
 ## Question 3: 
 Consider the following program:
@@ -39,7 +39,7 @@ co
 oc
 ```
 Does the program meet the requirements of the At-Most-Once-Property? Explain
-your answer. What are the possible final values of `x` and `y`? Explain your answer.
+your answer. What are the possible final values of `x` and `y`?  Explain your reasoning.
 
 ## Question 4:
 Consider the following program:
@@ -67,7 +67,7 @@ co
     < c = a * c >
 oc
 ```
-Does the program satisfy the at-most-once property? Explain your reasoning.
+Does the program satisfy the `at-most-once property`? Explain your reasoning.
 What are the possible final values of `a`, `b`, and `c`?
 
 ## Question 6: 
