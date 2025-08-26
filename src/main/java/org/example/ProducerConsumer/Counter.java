@@ -1,3 +1,4 @@
+/*
 package org.example.ProducerConsumer;
 
 import java.util.Map;
@@ -41,3 +42,4 @@ public class Counter implements Runnable {
     }
 
 }
+*/

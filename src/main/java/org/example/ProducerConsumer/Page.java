@@ -1,3 +1,4 @@
+/*
 package org.example.ProducerConsumer;
 
 public class Page {
@@ -15,3 +16,4 @@ public class Page {
         return false;
     }
 }
+*/

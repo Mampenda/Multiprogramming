@@ -1,3 +1,4 @@
+/*
 package org.example.ProducerConsumer;
 
 import java.util.concurrent.BlockingDeque;
@@ -5,18 +6,20 @@ import java.util.concurrent.BlockingQueue;
 
 public class Parser implements Runnable{
 
-    // Declare queue of pages
+    // declare queue of pages
     private BlockingQueue<Page> queue;
 
-    // Constructor
+    // constructor
     public Parser(BlockingQueue<Page> queue) {
         this.queue = queue;
     }
 
-    /*
+    */
+/*
     * This method has the outer loop similar to the one we first implemented in AnalyseText(), but instead of counting
     * the words in every page, it puts each page into the queue.
-    * */
+    * *//*
+
     @Override
     public void run() {
         try {
@@ -31,3 +34,4 @@ public class Parser implements Runnable{
         }
     }
 }
+*/

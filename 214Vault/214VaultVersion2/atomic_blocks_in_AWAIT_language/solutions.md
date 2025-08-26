@@ -17,7 +17,7 @@ This program satisfies the at-most-once property as one atomic action, indicated
 `< x = x+y >` reads and updates `x` (critical reference = `x`), while the other atomic action `< y = x*y >` reads `x`.
 The same can be said the other way around about `y`, one atomic action, indicated by the angle brackets `<>`,  
 `< y = x*y >` reads and updates `y` (critical reference = `y`), while the other atomic action `< x = x+y >` reads `y`.
-The statements does not both read and update the same variable.
+The statements do not both read and update the same variable.
 
 Since these actions are atomic, they have to be executed (and finished) without any other commands being executed, so
 the possible values for this program are the following two:

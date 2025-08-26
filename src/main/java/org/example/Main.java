@@ -1,40 +1,29 @@
 package org.example;
 
-import org.example.DiningPhilosophers.ConditionedPhilosopher;
 
-import java.util.concurrent.locks.ReentrantLock;
+import org.example.Threads.Tuple;
+
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+
+import static org.example.Threads.Lab1Task2.run_both;
 
 public class Main {
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException, ExecutionException {
 
-        // Reentrant Lock
-        ReentrantLock table = new ReentrantLock();
+        // Run Lab 1 Task 2
 
-        // List of five philosophers
-        ConditionedPhilosopher[] philosophers = new ConditionedPhilosopher[5];
+        // Define the two tasks
+        Callable<Integer> f1 = () -> {
+            Thread.sleep(1000);
+            return 42;
+        };
 
-        // For each philosopher, we initialize them before starting the corresponding thread
-        for (int i = 0; i < 5; i++) {
-            philosophers[i] = new ConditionedPhilosopher(table);
-        }
+        Callable<String> f2 = () -> "Greetings INF214!";
 
-        // Seat them around the table
-        for (int i = 0; i < philosophers.length; i++) {
-            for (int j = 0; j < philosophers.length; j++) {
+        // Call run_both on the tasks
+        Tuple<Integer, String> results = run_both(f1, f2);
 
-                // Seat a philosopher on the left side
-                philosophers[i].setLeft(philosophers[j]);
-
-                //Seat a philosopher at the right
-                philosophers[i].setRight(philosophers[j-2]);
-            }
-
-        }
-
-        // Use the run()-method to execute all the philosophers
-        for (int i = 0; i < philosophers.length; i++) {
-            philosophers[i].run();
-            philosophers[i].join();
-        }
+        System.out.println("Result of run_both(): <" + results.getFirst() + ", " + results.getSecond() + ">");
     }
 }
