@@ -1762,7 +1762,7 @@ The implementation above is called a _combining tree barrier_. This is because e
 children, then passes them on to its parent. This barrier uses the same number of variables as the centralized 
 coordinator, but it is much more efficient for large N, because the height of the tree is proportional to log_2(n).
 
-![img.png](../214VaultVersion2/images/img1.png)
+![img.png](../214Vault/214VaultVersion2/images/img1.png)
 
 ### Symmetric Barriers 
 In the combining-tree barrier, processes play different roles: those at interior nodes execute more actions than those 
@@ -1801,7 +1801,7 @@ use some sort of binary interconnection, which will have a size proportional to 
 
 Let `Worker[1:n]` be the array of processes. If `n` is a power of 2, we could combine them as shown below. 
 
-![img.png](../214VaultVersion2/images/img2.png)
+![img.png](../214Vault/214VaultVersion2/images/img2.png)
 
 This kind of barrier is called a _butterfly barrier_ due to the shape of the interconnection pattern, which is similar 
 to the butterfly interconnection pattern for the Fourier transform. A butterfly barrier has `log_2(n)` stages. Each 
@@ -1818,7 +1818,7 @@ process barrier a process sets the arrival flag of a worker to its right (modulo
 own arrival flag. The techniques based on a technique for disseminating information to `n` processes in `log_2(n)` 
 rounds. 
 
-![img.png](../214VaultVersion2/images/img3.png)
+![img.png](../214Vault/214VaultVersion2/images/img3.png)
 
 Each worker disseminates notice of its arrival at the barrier. A critical aspect of correctly implementing an n process 
 barrier, independent of which interconnection pattern is used, is to avoid race conditions that can result from using 
