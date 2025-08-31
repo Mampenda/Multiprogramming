@@ -1,4 +1,4 @@
-package org.example.DiningPhilosophers;
+package org.DiningPhilosophers;
 
 import java.util.Random;
 import java.util.concurrent.locks.Condition;

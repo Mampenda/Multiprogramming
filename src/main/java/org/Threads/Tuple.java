@@ -1,4 +1,4 @@
-package org.example.Threads;
+package org.Threads;
 
 // Generic tuple class
 public class Tuple<T1, T2> {

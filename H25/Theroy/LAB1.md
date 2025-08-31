@@ -127,6 +127,8 @@ public class Main {
 ```java
 package org.example.Threads;
 
+import org.Threads.Tuple;
+
 import java.util.concurrent.*;
 
 /**
@@ -134,7 +136,8 @@ import java.util.concurrent.*;
  */
 public class Lab1Task2 {
 
-    private Lab1Task2() {} // constructor to prevent instantiation
+    private Lab1Task2() {
+    } // constructor to prevent instantiation
 
     /**
      * Runs two functions concurrently in separate threads and waits for both to complete.
@@ -173,12 +176,12 @@ public class Lab1Task2 {
 package org.example;
 
 
-import org.example.Threads.Tuple;
+import org.Threads.Tuple;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
-import static org.example.Threads.Lab1Task2.run_both;
+import static org.Threads.Lab1Task2.run_both;
 
 public class Main {
     public static void main(String[] args) throws InterruptedException, ExecutionException {
@@ -206,6 +209,8 @@ public class Main {
 
 ```java
 package org.example.Threads;
+
+import org.Threads.Tuple;
 
 import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantLock;

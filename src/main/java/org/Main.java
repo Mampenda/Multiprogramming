@@ -1,12 +1,12 @@
-package org.example;
+package org;
 
 
-import org.example.Threads.Tuple;
+import org.Threads.Tuple;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
-import static org.example.Threads.Lab1Task2.run_both;
+import static org.Threads.Lab1Task2.run_both;
 
 public class Main {
     public static void main(String[] args) throws InterruptedException, ExecutionException {
