@@ -1,4 +1,14 @@
-# Exercises
+# Exercises - Atomic Blocks in AWAIT Language
+An `atomic block` is a section of code that runs completely without interruption by other threads. This means that once 
+an atomic block starts executing, no other operations can interleave with it until it completes. 
+
+**Example in Java:** A method marked `synchronized` or code using `ReentrantLock`'s `lock()`/`unlock()`. 
+**Example in Python:** Using `threading.Lock()` to create a critical section.
+
+**Purpose:** Atomic blocks are used to prevent race conditions (the outcome of program when multiple threads access the 
+same data depends on the non-deterministic timing or order in which these threads execute.) and ensure data integrity 
+and consistency when multiple threads access shared resources. 
+
 ## Question 1:
 Consider the following program:
 
