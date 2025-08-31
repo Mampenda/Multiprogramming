@@ -40,14 +40,39 @@ Here is an exercise of sudo-code in _Await Language_ with semaphores for synchro
 "Simulate" this behaviour in the AWAIT language. Represent the players and the barista as processes. Use semaphores for
 synchronization. Make sure that your solution avoids deadlock.
 
-## Exercise 4: Producers and Consumers - Split Binary Semaphores
+## Exercise 4: Sandwich
+Three persons P1, P2, and P3 were invited by their friend F to make some sandwiches (made of bread, eggs, and tomato).
+To make a sandwich, three ingredients are needed: a slice of bread, a slice of tomato, and a slice of an egg.
+
+Each of these persons P1, P2, P3 has only one type of each of the ingredients:
+- person P1 has slices of bread.
+- person P2 has slices of tomato.
+- person P3 has slices of egg.
+-
+We assume that persons P1, P2, and P3 each has an unlimited supply of these ingredients (i.e., slices of bread, slices
+of tomato, slices of egg), respectively. Their friend F, who invited them, also has an unlimited supply of all the
+ingredients.
+
+Here is what happens:
+- the host F puts two random ingredients on the table.
+- Then the invited person who has the third ingredient picks up the two ingredients, makes the sandwich, then eats it.
+- The host of the party F waits for that person to finish.
+- This "cycle" of is then infinitely repeated.
+
+Write code in the AWAIT language that simulates this situation.
+Represent the persons P1, P2, P3, F as processes.
+
+You must use SPLIT BINARY SEMAPHORE for synchronization. Make sure that your solution avoids deadlock.
+EXPLAIN very briefly the advantages of using the split binary semaphore.
+
+## Exercise 6: Producers and Consumers - Split Binary Semaphores
 Make producers/consumers processes that synchronizes with split binary semaphores.
 The buffer has only room for one element of data.
 
-## Exercise 5: Producers and Consumers - Bounded Buffers: Resource Counting
+## Exercise 7: Producers and Consumers - Bounded Buffers: Resource Counting
 Make producers/consumers processes that synchronizes around a buffer.
 
-## Exercise 6: Readers/Writers as an exclusion problem
+## Exercise 8: Readers/Writers as an exclusion problem
 The `Readers-Writers Problem` is a classic synchronization problem that involves managing access to a shared resource in 
 such a way that multiple readers can read the resource concurrently, but writers must have exclusive access to it. The 
 goal is to ensure that the data integrity of the shared resource is maintained while allowing as many readers as 
@@ -64,7 +89,7 @@ Could you solve the Readers/Writers exclusion problem? The solution does not nee
 Remember that readers can read at the same time, but writers have to be alone in accessing the shared variable.
 The solution is supposed to be unfair. (**Hint**:You only need one counter and two semaphores.)
 
-## Exercise 7: Readers/Writers as an 
+## Exercise 9: Readers/Writers as an 
 Consider the following variant of the Readers/Writers problem:
 Reader processes query a database and writer processes examine and modify it. Readers may access the database
 concurrently, but writers require exclusive access. Although the database is shared, we cannot encapsulate it by a
@@ -86,7 +111,7 @@ both of them are initially 0. Each variable is incremented in the appropriate re
 appropriate release procedure. A software developer has started on the implementation of this monitor. Your task is to 
 fill in the missing parts. Your solution does not need to arbitrate between readers and writers.
 
-## Exercise 8: Multi-country
+## Exercise 10: Multi-country
 
 Consider Multi-country, which is a country, and Multi-city, which is its capital city.
 
@@ -113,7 +138,7 @@ Your task is to simulate the described situation in the AWAIT language.
 👉 Make sure that your solution avoids deadlock.
 💡 Your solution need NOT be fair.
 
-## Exercise 9: Dining Philosophers
+## Exercise 11: Dining Philosophers
 In short, the dining philosophers problem is about four philosophers that are seated around a table with five plates
 and five utensils available. For simplicity, we'll use chopsticks.
 
@@ -123,7 +148,7 @@ philosophers.
 
 Solve the Dining Philosophers Problem with the philosophers as processes and all the forks as semaphores.
 
-## Exercise 11: Traffic-light
+## Exercise 12: Traffic-light
 There exit an intersection where two main roads Road A and Road B, intersect. To manage traffic at this intersection,
 the city has installed a traffic light system. However, due to the complexity and the high volume of traffic, special
 rules have been established to ensure a smooth and fair flow of vehicles.
@@ -138,51 +163,3 @@ time, no vehicles from Road B are allowed to enter the intersection, and vice ve
 -To prevent any one road from monopolizing the intersection, after a set number of vehicles from Road A (5 vehicles),
 the light will automatically switch to allow vehicles from Road B, even if there are more vehicles waiting on Road A.
 Similarly, after a set number of vehicles from Road B pass, the light will switch to allow vehicles from Road A.
-
-```java
-sem driveAllowance = 1;
-sem roadACounterMutex = 1; 
-sem roadBCounterMutex = 1;
-
-int roadACounter = 0;
-int roadBCounter = 0;
-
-int MAX_CARS_AllOWANCE = 5;
-
-process RoadCarA([i = 1 to A]){
-    while(true){
-        P(roadACounterMutex);
-        roadACounter++;
-        if(roadACounter == 1){
-            P(driveAllowance); //green light
-        }
-        V(roadACounterMutex);
-        //cars drive
-
-        P(roadACounterMutex);
-        roadACounter--;
-        if(roadACounter == 0 || roadACounter >= MAX_CARS_AllOWANCE){
-            V(driveAllowance); //red light
-        }
-        V(roadACounterMutex);
-    }
-}
-
-process RoadCarB([i = 1 to B]){
-    while(true){
-        P(roadBCounterMutex);
-        roadBCounter++++;
-        if(roadBCounter == 1){
-            P(driveAllowance); // green light
-        }
-        V(roadBCounterMutex); 
-        //Cars drive
-        P(roadBCounterMutex);
-        roadBCounter--;
-        if(roadBCounter == 0 || roadBCounter >= MAX_CARS_AllOWANCE){
-            V(driveAllowance); //redLight
-        }
-        V(roadBCounterMutex);
-    }
-}
-```
