@@ -1,9 +1,10 @@
 #include "roadMaintenance.cpp"
 
 int main() {
+  // Seed the random function to get different outputs.
   srand(time(0));
 
-  const int N = 10;
+  constexpr int N = 10;
   processes ps;
 
   ps += [&]() -> void {

@@ -32,9 +32,7 @@ public class City {
     }
 
     // Synchronized functions for traffic light
-    public synchronized void reset() {
-      this.trafficLight.reset();
-    }
+    public synchronized void reset() {this.trafficLight.reset();}
     public synchronized boolean isAvailable() {
       return this.trafficLight != null;
     }
@@ -46,9 +44,7 @@ public class City {
       return tmp;
     }
 
-    public synchronized void setTrafficLight(TrafficLight trafficLight) {
-      this.trafficLight = trafficLight;
-    }
+    public synchronized void setTrafficLight(TrafficLight trafficLight) { this.trafficLight = trafficLight; }
   }
 
   // List of intersections (instead of lights)
@@ -62,8 +58,8 @@ public class City {
   private Lock lock = new ReentrantLock();
 
   // Atomic variables for thread-safe access in task A2
-  private AtomicInteger numWorkersInside = new AtomicInteger(0);
-  private AtomicBoolean specialAccess = new AtomicBoolean(false);
+  private AtomicInteger numWorkersInside = new AtomicInteger(0); // Number of ordinary vehicles inside the city
+  private AtomicBoolean specialAccess = new AtomicBoolean(false); // Is a special vehicle inside the city
 
   // City constructor
   public City(int size, int useLimit, int timeDelay) {
@@ -82,10 +78,9 @@ public class City {
     day++;
   }
 
-
   /** ==== Methods from Task A.1 ==== **/
 
-  // Getters and setter
+  // Getters and setter (unused because Intersection class is used instead of TrafficLight directly)
   public synchronized TrafficLight getTrafficLight(int i) {
     ThreadUtils.delay(timeDelay);
     return intersections.get(i).getTrafficLight();
@@ -111,11 +106,14 @@ public class City {
   // Ordinary vehicle request and release access
   public void requestAccess() {
     numWorkersInside.incrementAndGet();
+
     if (specialAccess.get()) {
       numWorkersInside.decrementAndGet();
 
+      // Wait until special vehicle leaves
       lock.lock();
       lock.unlock();
+
       numWorkersInside.incrementAndGet();
     }
   }

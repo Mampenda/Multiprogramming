@@ -14,7 +14,7 @@ monitor has four procedures:
 - `request_read`
 - `request_write`
 - `release_read`
-- `release_write`.
+- `release_write`
 
 These procedures are used in the obvious ways:
 
@@ -57,6 +57,7 @@ A beginner has implemented this code, but it misses a lot of details related to 
 monitor RW_Controller() {
   sem OK_to_read;
   sem OK_to_write;
+  
   int readers = 0;
   int writers = 0;
 }
@@ -89,6 +90,28 @@ procedure release_write() {
 **Critical sections:** Updates to readers or writers variables and any associated signaling.
 **Non-critical sections:** The while loops that just wait for conditions (`wait(…))` — the thread is blocked and not 
 touching shared data.)
+
+```java
+  // Ordinary vehicle request and release access
+  public void requestAccess() {
+    numWorkersInside.incrementAndGet();
+    if (specialAccess.get()) {
+      numWorkersInside.decrementAndGet();
+
+      // Wait until the special vehicle leaves
+      lock.lock();
+      lock.unlock();
+
+      numWorkersInside.incrementAndGet();
+    }
+  }
+```
+
+
+
+
+
+
 
 ## Question 1.B - Readers/Writers Problem (with fairness):
 ### Answer:
@@ -198,3 +221,6 @@ cond sufficient_funds; // Condition variable to wait when there are insufficient
     }
 }
 ```
+
+
+

@@ -37,8 +37,6 @@
 #include <cassert>
 #include <tuple>
 
-int semCount = 0;
-
 namespace alang {
 
 template <typename... Args> class channel_ {
@@ -229,7 +227,8 @@ private:
   int count;
 
 public:
-  semaphore(int n = 0) : count(n) { semCount++; }
+  semaphore(int n = 0) : count(n) {}
+  void operator=(int n) { count = n; }
   void V() {
     {
       std::unique_lock<std::mutex> lock(this->mutex);
@@ -684,27 +683,14 @@ void processCleaningSolution();
 void processPaint();
 void processSensor();
 
-std::vector<std::string> outputProd;
-std::vector<std::string> outputAss;
-
 void produce(std::string person, std::string item) {
-  outputProd.push_back(person + " put " + item + " into the box");
-  // std::cout << person << " put " << item << " into the box" << std::endl;
+  std::cout << person << " put " << item << " into the box" << std::endl;
 }
 
 void assemble(std::string person) {
-  outputAss.push_back(person + " assembled the box");
-  // std::cout << person << " assembled the box\n" << std::endl;
+  std::cout << person << " assembled the box\n" << std::endl;
 }
 
-std::vector<std::string> *getProduced() { return &outputProd; }
-std::vector<std::string> *getAssembled() { return &outputAss; }
-
-int randIndex = 0;
-std::vector<int> numbers;
-
-std::vector<int> *getNumberList() { return &numbers; }
-
-int getSemCount() { return semCount; }
-
-int randomProcess() { return numbers[randIndex++]; }
+int randomProcess() {
+  return (rand() % 3) + 1;
+}

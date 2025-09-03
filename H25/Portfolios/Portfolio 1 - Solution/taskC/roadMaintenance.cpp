@@ -1,11 +1,9 @@
 #include "alang.h"
 
-semaphore semCleaningSolution = 0, semPaint = 0, semSensor = 0,
-          semSupervisor = 1;
+semaphore semCleaningSolution = 0, semPaint = 0, semSensor = 0, semSupervisor = 0;
 
 void processSupervisor() {
   int randNum = randomProcess();
-  semSupervisor.P();
   if (randNum == 1) {
     produce("S", "paint");
     produce("S", "sensor");
@@ -21,6 +19,7 @@ void processSupervisor() {
   } else {
     throw std::invalid_argument("Invalid value.");
   }
+  semSupervisor.P();
 }
 
 void processCleaningSolution() {
@@ -43,45 +42,3 @@ void processSensor() {
   assemble("C");
   semSupervisor.V();
 }
-
-// TEST(HelloTest, BasicAssertions) {
-//   // Expect two strings not to be equal.
-//   EXPECT_STRNE("hello", "world");
-//   // Expect equality.
-//   EXPECT_EQ(7 * 6, 42);
-// }
-
-// TEST(ProcessTest, LiquidTest) {
-//   playerLiquid = 0, playerMug = 0, playerAlmonds = 0, barista = 0, table = 1;
-
-//   EXPECT_EQ(7 * 6, 42);
-//   // SECTION("CallingProcessPlayerLiquid") {
-//   //   REQUIRE(playerLiquid.checkCount() == 0);
-//   //   playerLiquid.V();
-//   //   processPlayerLiquid();
-
-//   //   REQUIRE(playerLiquid.checkCount() == 0);
-//   //   REQUIRE(table.checkCount() == 1);
-//   //   REQUIRE(barista.checkCount() == 1);
-// }
-// }
-//   SECTION("CallingProcessPlayerMug") {
-//     REQUIRE(playerMug.checkCount() == 0);
-//     playerMug.V();
-//     processPlayerMug();
-
-//     REQUIRE(playerMug.checkCount() == 0);
-//     REQUIRE(table.checkCount() == 1);
-//     REQUIRE(barista.checkCount() == 1);
-//   }
-
-//   SECTION("CallingProcessPlayerAlmonds") {
-//     REQUIRE(playerAlmonds.checkCount() == 0);
-//     playerAlmonds.V();
-//     processPlayerAlmonds();
-
-//     REQUIRE(playerAlmonds.checkCount() == 0);
-//     REQUIRE(table.checkCount() == 1);
-//     REQUIRE(barista.checkCount() == 1);
-//   }
-// }

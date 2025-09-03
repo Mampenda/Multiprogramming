@@ -117,7 +117,7 @@ Here is an exercise of sudo-code in _Await Language_ with semaphores for synchro
 - The barista waits for the player to finish.
 - This "cycle" then repeats.
 
-"Simulate" this behaviour in the AWAIT language. Represent the players and the barista as processes. Use semaphores for
+"Simulate" this behavior in the AWAIT language. Represent the barista and the players as processes. Use semaphores for
 synchronization. Make sure that your solution avoids deadlock.
 
 ### Answer:
