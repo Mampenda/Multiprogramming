@@ -1,11 +1,18 @@
-## Question 1.A - Readers/Writers (no fairness)
-Reader processes query a database and writer processes examine and modify it. Readers may access the database
-concurrently, but writers require exclusive access. Although the database is shared, we cannot encapsulate it by a
-monitor, because readers could not then access it concurrently since all code within a monitor executes with mutual
-exclusion.
+# Monitors: Exercises with Solutions
 
-Instead, we use a monitor merely to arbitrate access to the database. The database itself is global to the readers and
-writers.
+## Exercise 1 - Readers/Writers Problem (without fairness):
+
+The `Readers-Writers Problem` is a classic synchronization problem that involves managing access to a shared resource in
+such a way that multiple readers can read the resource concurrently, but writers must have exclusive access to it. The
+goal is to ensure that the data integrity of the shared resource is maintained while allowing as many readers as
+possible to read at the same time, as long as there are no writers.
+
+    Problem Definition
+
+    Readers:  Multiple readers can read the shared resource simultaneously because reading does not alter the state of 
+              the resource.
+    Writers:  Writers need exclusive access to the shared resource because writing involves modifying it, which could 
+              conflict with a read or write operation
 
 The arbitration monitor grants permission to access the database. To do so, it requires that processes to inform it when
 they want access and when they have finished. There are two kinds of processes and two actions per process, so the
@@ -14,7 +21,7 @@ monitor has four procedures:
 - `request_read`
 - `request_write`
 - `release_read`
-- `release_write`
+- `release_write`.
 
 These procedures are used in the obvious ways:
 
@@ -28,13 +35,16 @@ initially 0.
 Each variable is incremented in the appropriate request procedure and decremented in the appropriate
 release procedure. A software developer has started on the implementation of this monitor.
 
+A junior developer has implemented this code, but it misses a lot of details related to synchronization. Help fix this
+code.
+
 ```java
-monitor ReadersWriters_Controller(){
+monitor ReadersWriters_Controller() {
     int nr = 0;
-    int nw = 0; 
-    
-    // Signalled when nw == 0
-    cond OK_to_read; 
+    int nw = 0;
+
+    // Signaled when nw == 0
+    cond OK_to_read;
 }
 
 procedure request_read() {
@@ -42,91 +52,93 @@ procedure request_read() {
     nr = nr + 1;
 }
 
-procedure release_read() { nr = nr - 1; }
-procedure request_write() { nw = nw + 1; }
-procedure release_write() { nw = nw - 1; }
+procedure release_read() {
+    nr = nr - 1;
+}
+
+procedure request_write() {
+    nw = nw + 1;
+}
+
+procedure release_write() {
+    nw = nw - 1;
+}
 ```
 
-A beginner has implemented this code, but it misses a lot of details related to synchronization. Help fix this code.
+Solve the Readers/Writers problem using monitors. The solution does not need to be fair, only mutually exclusive.
+Remember that readers can read at the same time, but writers have to be alone in accessing the shared variable.
 
-**NOTE:** Your solution does not need to arbitrate between readers and writers, i.e., no need to handle fairness.
+**NOTE:** Your solution does not need to arbitrate between readers and writers (i.e., no need to handle fairness).
 
 ### Answer:
+
 ```java
 // Read-Write Controller
 monitor RW_Controller() {
-  sem OK_to_read;
-  sem OK_to_write;
-  
-  int readers = 0;
-  int writers = 0;
+
+    int nr = 0; // number of active readers
+    int nw = 0; // number of active writers
+
+    // Condition variables for readers and writers
+    cond OK_to_read;
+    cond OK_to_write;
 }
 
 // Reader's enter protocol
-procedure request_read(){
-  while(writers > 0){ wait(OK_to_read); } // non-critical section
-  readers = readers + 1;                  // critical section
+procedure request_read() {
+    while (nw > 0) {
+        wait(OK_to_read); // non-critical section
+    }
+    nr = nr + 1;
 }
 
 // Reader's exit protocol
 procedure release_read() {
-  readers = readers - 1;                      // critical section
-  if (readers == 0 ) { signal(OK_to_write); } // tricky (signaling threads involves modifying internal monitor state)
+    nr = nr - 1;
+    if (nr == 0) {
+        signal(OK_to_write); // tricky (signaling threads involves modifying internal monitor state)
+    }
 }
 
 // Writer's enter protocol
 procedure request_write() {
-  while( readers > 0 || writers > 0) { wait(OK_to_write); } // non-critical section
-  writers = writers + 1;                                    // critical section
+    while (nr > 0 || nw > 0) {
+        wait(OK_to_write); // non-critical section
+    }
+    nw = nw + 1;
 }
 
 // Writer's exit protocol
 procedure release_write() {
-  writers = writers - 1;  // critical section
-  signal_all(OK_to_read); // tricky (signaling threads involves modifying internal monitor state)
+    nw = nw - 1;            // critical section
+    signal_all(OK_to_read); // tricky (signaling threads involves modifying internal monitor state)
 }
 ```
 
-**Critical sections:** Updates to readers or writers variables and any associated signaling.
-**Non-critical sections:** The while loops that just wait for conditions (`wait(…))` — the thread is blocked and not 
-touching shared data.)
+**Critical sections:** Updates shared resource state (e.g., `nr`, `nw`, and signaling condition variables).
+**Non-critical sections:** The while loops that just `wait(…))` for conditions.
 
-```java
-  // Ordinary vehicle request and release access
-  public void requestAccess() {
-    numWorkersInside.incrementAndGet();
-    if (specialAccess.get()) {
-      numWorkersInside.decrementAndGet();
+## Exercise 2 - Readers/Writers Problem (with fairness):
 
-      // Wait until the special vehicle leaves
-      lock.lock();
-      lock.unlock();
+Without arbitrating between readers and writers, you risk starvation of writers, i.e., if there is a continuous stream
+of readers, a writer may never get access to the database.
 
-      numWorkersInside.incrementAndGet();
-    }
-  }
-```
+How would you modify your solution to Exercise 1 to **ensure fairness** so that the readers don't starve the writers?
 
-
-
-
-
-
-
-## Question 1.B - Readers/Writers Problem (with fairness):
 ### Answer:
+
 ```java
 monitor ReadersWriters_Controller() {
-    
+
     // Number of active readers and writers
     int nr = 0;
     int nw = 0;
-    
+
     // Number of writers waiting to write
     int waiting_writers = 0;
-    
+
     // Signaled when nw == 0 or nr == 0 (i.e., when there are no active writers or readers)
-    cond OK_to_read; 
+    cond OK_to_read;
     cond OK_to_write;
 }
 
@@ -137,86 +149,98 @@ procedure request_read() {
     if (nw > 0 || waiting_writers > 0) {
         wait(OK_to_read);
     }
-    
+
     nr = nr + 1; // critical section
-    
+
     // Exit Protocol: Signal to other readers that it's OK to read
-    signal(OK_to_read); 
+    signal(OK_to_read);
 }
 
 // Reader's exit protocol
 procedure release_read() {
-    
+
     nr = nr - 1; // critical section
-    
+
     // Exit Protocol: If there's no more readers, signal to other writers that it's OK to write
-    if (nr == 0){
+    if (nr == 0) {
         signal(OK_to_write);
     }
 }
 
 // Writer's enter protocol
-procedure request_write() { 
-    
-    waiting_writers = waiting_writers + 1; // critical section (increment count of waiting writers)
-    
+procedure request_write() {
+
+    waiting_writers = waiting_writers + 1; // critical section (update count of waiting writers)
+
     // Enter Protocol: Writers should wait if there's active readers or another writer's active
     if (nr > 0 || nw > 0) {
         wait(OK_to_write);
     }
-    
+
     // critical sections (update counts)
     waiting_writers = waiting_writers - 1;
     nw = nw + 1;
 }
 
 // Writer's exit protocol
-procedure release_write() { 
-    
+procedure release_write() {
+
     nw = nw - 1; // critical section
-    
+
     // Exit Protocol: If there's writers waiting, signal next writer, otherwise signal readers that it's OK to read
-    if (waiting_writers > 0) { 
-        signal(OK_to_write); 
+    if (waiting_writers > 0) {
+        signal(OK_to_write);
     } else {
         signal(OK_to_read);
     }
 }
 ```
 
+## Exercise 3 - Bank account:
 
-## Question 2 - Bank account:
-A savings account is shared by several people (processes). Each person may deposit or withdraw funds from the account.
+Several people share a saving account that each person may deposit to or withdraw from.
+
 The current balance in the account is the sum of all deposits to date minus the sum of all withdrawals to date. The
 balance must never become negative. A deposit never has to delay (except for mutual exclusion), but a withdrawal has to
-wait until there are sufficient funds. A junior software developer was asked to implement a monitor to solve this
-problem, using Signal-and-Continue discipline. Here is the code the junior developer has written so far:
+wait until there are enough funds.
+
+A junior software developer has implemented a solution to this problem using a monitor with Signal-and-Continue
+discipline.
+
 ```java
-monitor Account(){
+monitor Account() {
     int balance = 0;
     cond sufficient_funds;
-    
-    procedure deposit(int amount) { balance = balance + amount; }
-    procedure withdraw(int amount) { balance = balance - amount; }
+
+    procedure deposit ( int amount){
+        balance = balance + amount;
+    }
+    procedure withdraw ( int amount){
+        balance = balance - amount;
+    }
 }
 ```
-This solution is incorrect. Help the junior developer implement the monitor correctly.
+
+This solution is non-optimal. Help the junior developer implement the monitor correctly.
 
 ### Answer:
-```java
-monitor Account(){
-    
-int balance = 0;
-cond sufficient_funds; // Condition variable to wait when there are insufficient funds
 
-    procedure deposit(int amount) {
+```java
+monitor Account() {
+
+    int balance = 0;
+    cond sufficient_funds; // Condition variable to wait when there are insufficient funds
+
+    procedure deposit ( int amount){
         balance = balance + amount;  // Add amount to the balance
         signal(sufficient_funds);   // Wake up a waiting withdrawal (if any) since funds are available
     }
 
-    procedure withdraw(int amount) {
+    procedure withdraw ( int amount){
         // Wait until there are sufficient funds for the withdrawal
-        while (balance < amount) { wait(sufficient_funds); }
+        while (balance < amount) {
+            wait(sufficient_funds);
+        }
         balance = balance - amount;   // Perform the withdrawal when funds are sufficient
     }
 }
