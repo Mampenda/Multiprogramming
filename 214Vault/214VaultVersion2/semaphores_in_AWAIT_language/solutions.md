@@ -1,5 +1,7 @@
-# Exercises with Solutions
+# Semaphores in AWAIT Language: Exercises with Solutions
+
 ## Bear and Honey
+
 Here is an example of sudo-code with semaphores for synchronization to represent the following problem:
 
 - We have `N` honey bees and a hungry bear.
@@ -11,47 +13,48 @@ Here is an example of sudo-code with semaphores for synchronization to represent
 - The bee who fills the pot (i.e. puts in the H'th portion) awakens the bear.
 
 ### Answer:
+
 ```java
-sem nonempty = 1;
-sem empty = 0;
-sem pot;
+// Semaphores
+sem mutex = 1;      // protects access to portions
+sem full = 0;       // signals bear that pot is full
+sem empty = 1;      // signals bees that pot is not full
 
-int protions = 0;
+int portions = 0;   // current number of portions in the pot
+int H = capacity;   // pot capacity
 
-process Bees([i=1 to N]){
-  while(true){
-    gather_honey();             //non-critical section 
-    
-    // entry-protocol
-    P(empty);                   
-    P(pot);
-    portions = portions + 1;    // critical section
+process Bee([i=1to N]) {
+    while (true) {
+        gather_honey();        // non-critical section
 
-    // exit-protocol
-    if(portions == H) {
-        V(nonempty);
-        P(pot);
+        P(empty);              // wait until the pot is not full
+        P(mutex);              // enter the critical section
+        portions = portions + 1;
+        if (portions == H) {
+            V(full);           // wake up bear
+        } else {
+            V(empty);          // allow another bee to add honey
+        }
+        V(mutex);              // exit critical section
     }
-  }
 }
 
-process Bear(){
-  while(true){
-    sleep();                    //non-critical section
-    
-    // entry-protocol
-    P(nonempty);                
-    P(pot);
-    portions = portions - 1;    // critical section
-
-    // exit-protocol
-    if (portions == 0){ V(empty); }
-    P(pot);
-  }
+process Bear() {
+    while (true) {
+        P(full);               // wait until the pot is full
+        P(mutex);              // enter the critical section
+        eat_honey();           // eats all portions
+        portions = 0;
+        V(empty);              // allow bees to fill pot again
+        V(mutex);              // exit critical section
+    }
 }
+
+
 ```
 
 ## Hungry Chicks
+
 Here is an exercise of sudo-code in _Await Language_ with semaphores for synchronization:
 
 - We have `N` baby birds and one parent bird.
@@ -66,46 +69,46 @@ Here is an exercise of sudo-code in _Await Language_ with semaphores for synchro
 - This pattern repeats forever.
 
 ### Answer:
+
 ```java
-sem empty = 0;
-sem full = F;
-sem dishMutex;
+// Semaphores
+sem dishMutex = 1;      // protects access to dish
+sem empty = 0;          // signals parent to refill
+sem full = F;           // counts available portions
 
 int portions = F;
+int F = ...;            // dish capacity
 
-process BabyBirds([i=1 to N]){
-    while(true){
-      sleep(); // non-critical section
-      
-      // entry-protocol
-      P(full);
-      P(dishMutex);
-      
-      portions = portions - 1; // critical section
-      
-      // exit-protocol
-      if (portions == 0){ V(empty); }
-      V(dishMutex);
+process BabyBirds([i=1to N]) {
+    while (true) {
+        sleep();             // non-critical section
+
+        P(full);             // wait for a portion to be available
+        P(dishMutex);        // enter the critical section
+        portions = portions - 1;
+        if (portions == 0) {
+            V(empty);        // signal parent to refill
+        }
+        V(dishMutex);        // exit critical section
+        eat();               // non-critical section
     }
 }
 
-process MamaBird(){
-    while(true){
-        wait();         // non-critical section
-      // entry-protocol 
-      P(empty);
-      P(dishMutex); 
-      
-      portions = F;   // critical section
-    
-      // exit-protocol 
-      V(nonempty);
-      V(dishMutex);
+process MamaBird() {
+    while (true) {
+        P(empty);            // wait until the dish is empty
+        P(dishMutex);        // enter the critical section
+        portions = F;        // refill dish
+        for (i = 1 to F){
+            V(full);         // allow babies to eat
+        }
+        V(dishMutex);        // exit critical section
     }
 }
 ```
 
 ## Gløgg
+
 Here is an exercise of sudo-code in _Await Language_ with semaphores for synchronization:
 
 - Three persons, who like gløgg very much, have gathered to play the following game in a bar. To drink a portion, each
@@ -117,81 +120,81 @@ Here is an exercise of sudo-code in _Await Language_ with semaphores for synchro
 - The barista waits for the player to finish.
 - This "cycle" then repeats.
 
-"Simulate" this behavior in the AWAIT language. Represent the barista and the players as processes. Use semaphores for
+"Simulate" this behavior in the AWAIT language. Represent barista and the players as processes. Use semaphores for
 synchronization. Make sure that your solution avoids deadlock.
 
 ### Answer:
+
 ```java
-sem barista;
-sem gløgg;
-sem mug;
-sem almonds;
+// Semaphores
+sem mutex = 1;       // protects table
+sem tableReady = 0;  // signals that ingredients are on the table
 
-process Barista(){
-  while(true){
-    wait();     // non-critical section
-    P(barista); // entry-protocol
-    int missing_ingredient = randomInt(0..2); // critical section (0=gløgg, 1=mug, 2=almonds)
+// semaphores for each pair of ingredients
+sem gløgg_mug = 0;
+sem almonds_gløgg = 0;
+sem mug_almonds = 0;
 
-    // exit-protocol 
-    if (missing_ingredient == 0){ V(gløgg); }
-    if (missing_ingredient == 1){ V(mug); }
-    if (missing_ingredient == 2){ V(almonds); }
-  }
+process Barista() {
+    while (true) {
+        prepare_table();       // non-critical section
+        P(mutex);              // enter the critical section
+
+        int missing = randomInt(0, 2); // 0 = gløgg, 1 = mug, 2 = almonds
+        if (missing == 0) V(mug_almonds);
+        if (missing == 1) V(almonds_gløgg);
+        if (missing == 2) V(gløgg_mug);
+
+        V(mutex);
+        P(tableReady);         // wait until player finishes
+    }
 }
 
-process P1(){
-  while(true){
-    wait();   // non-critical section
-    P(gløgg); // entry-protocol
-
-    // critical section
-    make_gløgg();
-    drink_gløgg();
-
-    V(barista); // exit-protocol
-  }
+process P1_Gløgg() {
+    while (true) {
+        P(gløgg_mug);           // wait for mug+gløgg on table
+        make_gløgg();
+        drink_gløgg();
+        V(tableReady);          // signal barista that table is free
+    }
 }
-process P2(){
-  while(true){
-    wait(); // non-critical section
-    P(mug); // entry-protocol
 
-    // critical section
-    make_gløgg();
-    drink_gløgg();
-
-    V(barista); // exit-protocol
-  }
+process P2_Mug() {
+    while (true) {
+        P(almonds_gløgg);       // wait for gløgg+almonds
+        make_gløgg();
+        drink_gløgg();
+        V(tableReady);
+    }
 }
-process P3(){
-  while(true){
-    wait();     // non-critical section
-    P(almonds); // entry-protocol
 
-    // critical section
-    make_gløgg();
-    drink_gløgg();
-
-    V(barista); // exit-protocol
-  }
+process P3_Almonds() {
+    while (true) {
+        P(mug_almonds);         // wait for mug+almonds
+        make_gløgg();
+        drink_gløgg();
+        V(tableReady);
+    }
 }
 ```
 
 ## Sandwich:
+
 Three persons P1, P2, and P3 were invited by their friend F to make some sandwiches (made of bread, eggs, and tomato).
 To make a sandwich, three ingredients are needed: a slice of bread, a slice of tomato, and a slice of an egg.
 
 Each of these persons P1, P2, P3 has only one type of each of the ingredients:
+
 - person P1 has slices of bread.
 - person P2 has slices of tomato.
 - person P3 has slices of egg.
--
+
 We assume that persons P1, P2, and P3 each has an unlimited supply of these ingredients (i.e., slices of bread, slices
 of tomato, slices of egg), respectively. Their friend F, who invited them, also has an unlimited supply of all the
 ingredients.
 
 Here is what happens:
+
 - the host F puts two random ingredients on the table.
 - Then the invited person who has the third ingredient picks up the two ingredients, makes the sandwich, then eats it.
 - The host of the party F waits for that person to finish.
@@ -204,155 +207,169 @@ You must use SPLIT BINARY SEMAPHORE for synchronization. Make sure that your sol
 EXPLAIN very briefly the advantages of using the split binary semaphore.
 
 ### Answer:
+
 ```java
 sem tableMutex;
 sem F;
 sem bread;
 sem tomato;
-sem egg; 
+sem egg;
 
-process HostF(){
+process HostF() {
     wait(); // non-critical section
-   
+
     // entry-protocol (P = acquire)
     P(F);
     P(tableMutex);
-    
+
     // critical section (0 = bread, 1 = tomato, 2 = egg)
-    int missing_ingredient = randomInt(0..2); 
-    
+    int missing_ingredient = randomInt(0. .2);
+
     // exit-protocol (V = release)
-    if (missing_ingredient == 0){ V(bread); }
-    if (missing_ingredient == 1){ V(tomato); }
-    if (missing_ingredient == 2){ V(egg); }
+    if (missing_ingredient == 0) {
+        V(bread);
+    }
+    if (missing_ingredient == 1) {
+        V(tomato);
+    }
+    if (missing_ingredient == 2) {
+        V(egg);
+    }
     V(tableMutex);
 }
 
-process personA(){
-   wait(); // non-critical section
-   
-   // entry-protocol (P = acquire)
-   P(bread);
-   P(tableMutex);
-   
-   // critical section
-   make_sandwich();
-   eat_sandwich();
-   
-   // exit-protocol (V = release)
-   V(tableMutex);
-   V(F);
+process personA() {
+    wait(); // non-critical section
+
+    // entry-protocol (P = acquire)
+    P(bread);
+    P(tableMutex);
+
+    // critical section
+    make_sandwich();
+    eat_sandwich();
+
+    // exit-protocol (V = release)
+    V(tableMutex);
+    V(F);
 }
 
-process personB(){
-   wait(); // non-critical section
+process personB() {
+    wait(); // non-critical section
 
-   // entry-protocol (P = acquire)
-   P(tomato);
-   P(tableMutex);
+    // entry-protocol (P = acquire)
+    P(tomato);
+    P(tableMutex);
 
-   // critical section
-   make_sandwich();
-   eat_sandwich();
+    // critical section
+    make_sandwich();
+    eat_sandwich();
 
-   // exit-protocol (V = release)
-   V(tableMutex);
-   V(F);
+    // exit-protocol (V = release)
+    V(tableMutex);
+    V(F);
 }
 
-process personC(){
-   wait(); // non-critical section
+process personC() {
+    wait(); // non-critical section
 
-   // entry-protocol (P = acquire)
-   P(egg);
-   P(tableMutex);
+    // entry-protocol (P = acquire)
+    P(egg);
+    P(tableMutex);
 
-   // critical section
-   make_sandwich();
-   eat_sandwich();
+    // critical section
+    make_sandwich();
+    eat_sandwich();
 
-   // exit-protocol (V = release)
-   V(tableMutex);
-   V(F);
+    // exit-protocol (V = release)
+    V(tableMutex);
+    V(F);
 }
 ```
 
 This solution uses binary split semaphores where each process waits for their own semaphore in addition to the common
-mutex for the table. The advantages of this is that each process waits for its own semaphore before accessing the
+mutex for the table. The advantage of this is that each process waits for its own semaphore before accessing the
 critical section, minimizing the chance of two processes/threads accessing the critical section at the same time.
 
 ## Producers and Consumers - Split Binary Semaphores
+
 Make producers/consumers processes that synchronizes with split binary semaphores.
 The buffer has only room for one element of data.
+
 ### Answer:
+
 ```java
 type buffer;
 sem empty = 0;
-sem full = 1; 
+sem full = 1;
 
-process Producer([i=1 to M]){
-    while(true){
+process Producer([i=1to M]) {
+    while (true) {
         P(empty);       // entry-protocol 
         buffer = data;  // critical section
         V(full);        // exit-protocol
     }
 }
 
-process Consumer([j=1 to N]){
-  while(true){
-    P(full);       // entry-protocol 
-    data = buffer; // critical section
-    V(empty);      // exit-protocol
-  }
+process Consumer([j=1to N]) {
+    while (true) {
+        P(full);       // entry-protocol 
+        data = buffer; // critical section
+        V(empty);      // exit-protocol
+    }
 }
 ```
 
 ## Producers and Consumers - Bounded Buffers: Resource Counting
+
 Make producers/consumers processes that synchronizes around a buffer.
+
 ### Answer:
+
 ```java
-type buffer[n]; // buffer of size n is initially empty 
+type buffer[
+n]; // buffer of size n is initially empty 
 
 // front and rear has index 0 since buffer is initially empty
-int front = 0; 
+int front = 0;
 int rear = 0;
 
 // semaphore for producer and consumer for mutual exclusion and signalling
-sem mutexP; 
-sem mutexC; 
+sem mutexP;
+sem mutexC;
 sem full = 0;  // zero full slots
 sem empty = n; // n empty slots
 
-process Producer([i=1 to M]){
-  while(true){
-    // entry-protocol
-    P(empty);
-    P(mutexP);
+process Producer([i=1to M]) {
+    while (true) {
+        // entry-protocol
+        P(empty);
+        P(mutexP);
 
-    // critical section
-    buffer[rear] = data;
-    rear = (rear + 1) mod n; // wrap-around
-    
-    // exit-protocol
-    V(mutexC);
-    V(full);
-  }
+        // critical section
+        buffer[rear] = data;
+        rear = (rear + 1) mod n; // wrap-around
+
+        // exit-protocol
+        V(mutexC);
+        V(full);
+    }
 }
 
-process Consumer([j=1 to N]){
-  while(true){
-    // entry-protocol
-    P(full);
-    P(mutexC);
+process Consumer([j=1to N]) {
+    while (true) {
+        // entry-protocol
+        P(full);
+        P(mutexC);
 
-    // critical section 
-    data = buffer[front];
-    front = (front + 1) mod n; // wrap-around
+        // critical section 
+        data = buffer[front];
+        front = (front + 1) mod n; // wrap-around
 
-    // exit-protocol
-    V(mutexP);
-    V(empty);
-  }
+        // exit-protocol
+        V(mutexP);
+        V(empty);
+    }
 }
 ```
 
@@ -375,36 +392,41 @@ Remember that readers can read at the same time, but writers have to be alone in
 The solution is supposed to be unfair. (**Hint**: You only need one counter and two semaphores.)
 
 ### Answer:
+
 ```java
 sem readers;
 sem writers;
 int active_readers;
 
-process Writers([i=1 to M]){
-  while(true){
-    P(writers); // entry-protocol (P = acquire)
-    write();    // critical section
-    V(writers); // exit protocol (V = release)
-  }
+process Writers([i=1to M]) {
+    while (true) {
+        P(writers); // entry-protocol (P = acquire)
+        write();    // critical section
+        V(writers); // exit protocol (V = release)
+    }
 }
 
-process Readers([j=1 to N]){
-  while(true){
-    P(readers); // entry-protocol (for updating active_readers)
-    active_readers = active_readers + 1; // critical section 
+process Readers([j=1to N]) {
+    while (true) {
+        P(readers); // entry-protocol (for updating active_readers)
+        active_readers = active_readers + 1; // critical section 
 
-    // if this is the first reader, block writers and allow other readers
-    if (active_readers == 1) { P(writers); }
-    V(readers);
-    read(); // critical section 
+        // if this is the first reader, block writers and allow other readers
+        if (active_readers == 1) {
+            P(writers);
+        }
+        V(readers);
+        read(); // critical section 
 
-    P(readers); // entry-protocol (for updating active_readers)
-    active_readers = active_readers - 1; // critical section
+        P(readers); // entry-protocol (for updating active_readers)
+        active_readers = active_readers - 1; // critical section
 
-    // exit protocol    
-    if (active_readers == 0){ V(writers); }
-    V(readers);
-  }
+        // exit protocol    
+        if (active_readers == 0) {
+            V(writers);
+        }
+        V(readers);
+    }
 }
 ```
 
@@ -436,6 +458,7 @@ Your task is to simulate the described situation in the AWAIT language.
 💡 Your solution need NOT be fair.
 
 ### Answer:
+
 ```java
 sem MutexV; // Mutex for vaccinated counter
 sem MutexU; // Mutex for un-vaccinated counter
@@ -444,50 +467,59 @@ sem checkZone; // Mutex for check zone
 int vaxCount = 0;
 int unvaxCount = 0;
 
-process Vaccinated([i=1 to N]){
-  while(true){
-    walk_to_check_zone(); // non-critical section
+process Vaccinated([i=1to N]) {
+    while (true) {
+        walk_to_check_zone(); // non-critical section
 
-    // entry-protocol (for counter)
-    P(MutexV);
-    vaxCount = vaxCount + 1;
+        // entry-protocol (for counter)
+        P(MutexV);
+        vaxCount = vaxCount + 1;
 
-    // entry-protocol (for check zone)
-    if (vaxCount = 1) { P(checkZone); }
-    V(MutexV);
-    check(); // critical section
+        // entry-protocol (for check zone)
+        if (vaxCount = 1) {
+            P(checkZone);
+        }
+        V(MutexV);
+        check(); // critical section
 
-    // exit-protocol
-    P(MutexV);
-    vaxCount = vaxCount - 1;
-    if (vaxCount == 0) { V(checkZone); }
-    V(MutexV);
-  }
+        // exit-protocol
+        P(MutexV);
+        vaxCount = vaxCount - 1;
+        if (vaxCount == 0) {
+            V(checkZone);
+        }
+        V(MutexV);
+    }
 }
 
-process UnVaccinated([j=1 to M]){
-  while(true){
-    walk_to_check_zone(); // non-critical section
+process UnVaccinated([j=1to M]) {
+    while (true) {
+        walk_to_check_zone(); // non-critical section
 
-    // entry-protocol (for counter)
-    P(MutexU);
-    unvaxCount = unvaxCount + 1;
+        // entry-protocol (for counter)
+        P(MutexU);
+        unvaxCount = unvaxCount + 1;
 
-    // entry-protocol (for check zone)
-    if (unvaxCount = 1) { P(checkZone); }
-    V(MutexU);
-    check(); // critical section
+        // entry-protocol (for check zone)
+        if (unvaxCount = 1) {
+            P(checkZone);
+        }
+        V(MutexU);
+        check(); // critical section
 
-    // exit-protocol
-    P(MutexU);
-    unvaxCount = unvaxCount - 1;
-    if (unvaxCount == 0) { V(checkZone); }
-    V(MutexU);
-  }
+        // exit-protocol
+        P(MutexU);
+        unvaxCount = unvaxCount - 1;
+        if (unvaxCount == 0) {
+            V(checkZone);
+        }
+        V(MutexU);
+    }
 }
 ```
 
 ## Dining Philosophers
+
 In short, the dining philosophers problem is about four philosophers that are seated around a table with five plates
 and five utensils available. For simplicity, we'll use chopsticks.
 
@@ -498,57 +530,58 @@ philosophers.
 Solve the Dining Philosophers Problem with the philosophers as processes and all the forks as semaphores.
 
 ### Answer:
+
 ```java
-sem fork[5] = {1,1,1,1,1}   // list of five semaphores
+sem fork[5]={1,1,1,1,1}   // list of five semaphores
 sem table = 1;              // global mutex for table
 int timeout = 1000;         // timeout for 1000 ms
 
-process Philosopher([i=0 to 4]){
-  while(true) {
-    think();  // Non-critical section
+process Philosopher([i=0to 4]) {
+    while (true) {
+        think();  // Non-critical section
 
-    P(table);               // Acquire global mutex
-    try_acquire_forks(i);   // Try to acquire forks with timeout
-    V(table);               // Release global mutex
+        P(table);               // Acquire global mutex
+        try_acquire_forks(i);   // Try to acquire forks with timeout
+        V(table);               // Release global mutex
 
-    if (success) {
-        eat(); 
-      
-        // Release forks (right first, then left)
-        V(fork[(i+1)%5]);
-        V(fork[i]);
-    } else {
-        wait();  // Wait before trying again
+        if (success) {
+            eat();
+
+            // Release forks (right first, then left)
+            V(fork[(i + 1) % 5]);
+            V(fork[i]);
+        } else {
+            wait();  // Wait before trying again
+        }
     }
-  }
 }
 
 function try_acquire_forks(i) {
-  P(fork[i]);  // Pick up left fork
-  timeout = now() + timeout_ms;
-  
-  while(true) {
-    P(fork[(i+1)%5]);  // Pick up right fork
-    
-    // Release left fork if timeout finished and try again later
-    if(now() > timeout) { 
-        V(fork[i]); 
-        return false;
-    }
-    
-    // Eat if required right fork
-    eat();
+    P(fork[i]);  // Pick up left fork
+    timeout = now() + timeout_ms;
 
-    // Release forks (right first, then left)
-    V(fork[(i+1)%5]);
-    V(fork[i]);
-    return true;
-  }
+    while (true) {
+        P(fork[(i + 1) % 5]);  // Pick up right fork
+
+        // Release left fork if timeout finished and try again later
+        if (now() > timeout) {
+            V(fork[i]);
+            return false;
+        }
+
+        // Eat if required right fork
+        eat();
+
+        // Release forks (right first, then left)
+        V(fork[(i + 1) % 5]);
+        V(fork[i]);
+        return true;
+    }
 }
 ```
 
+## Exercise 12: Traffic-Light
 
-## Exercise 12: Traffic-Light 
 There exit an intersection where two main roads Road A and Road B, intersect. To manage traffic at this intersection,
 the city has installed a traffic light system. However, due to the complexity and the high volume of traffic, special
 rules have been established to ensure a smooth and fair flow of vehicles.
@@ -583,25 +616,25 @@ int MAX_CARS_ALLOWANCE = 5;
 char currentGreenRoad = 'A';  // Initially Road A has green light
 
 // Process for cars on Road A
-process RoadCarA([i = 1 to A]){
-    while(true){
+process RoadCarA([i =1to A]) {
+    while (true) {
         // Car arrives: increment Road A counter safely
         P(roadACounterMutex);
         roadACounter++;
-        
+
         // First car checks if it can acquire the intersection (only acquire if Road A has green light)
-        if(roadACounter == 1 && currentGreenRoad == 'A'){
+        if (roadACounter == 1 && currentGreenRoad == 'A') {
             P(driveAllowance); // acquire intersection (green light)
         }
         V(roadACounterMutex); // release mutex
-      
-        
+
+
         // After passing: acquire counter and decrement safely
         P(roadACounterMutex);
         roadACounter--;
-        
+
         // Check if we need to switch the light
-        if(roadACounter == 0 || roadACounter >= MAX_CARS_ALLOWANCE){
+        if (roadACounter == 0 || roadACounter >= MAX_CARS_ALLOWANCE) {
             // Switch green light to Road B
             currentGreenRoad = 'B';
             V(driveAllowance); // release intersection for Road B
@@ -611,14 +644,14 @@ process RoadCarA([i = 1 to A]){
 }
 
 // Process for cars on Road B
-process RoadCarB([i = 1 to B]){
-    while(true){
+process RoadCarB([i =1to B]) {
+    while (true) {
         // Car arrives: acquire counter mutex and increment Road B safely
         P(roadBCounterMutex);
         roadBCounter++;
-        
+
         // First car checks if it can acquire the intersection (only acquire if Road B has green light)
-        if(roadBCounter == 1 && currentGreenRoad == 'B'){
+        if (roadBCounter == 1 && currentGreenRoad == 'B') {
             P(driveAllowance); // acquire intersection (green light)
         }
         V(roadBCounterMutex); // release counter mutex
@@ -627,9 +660,9 @@ process RoadCarB([i = 1 to B]){
         // After passing: acquire counter and decrement safely
         P(roadBCounterMutex);
         roadBCounter--;
-        
+
         // Check if we need to switch the light
-        if(roadBCounter == 0 || roadBCounter >= MAX_CARS_ALLOWANCE){
+        if (roadBCounter == 0 || roadBCounter >= MAX_CARS_ALLOWANCE) {
             // Switch green light to Road A
             currentGreenRoad = 'A';
             V(driveAllowance); // release intersection for Road A

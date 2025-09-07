@@ -21,10 +21,10 @@ Here is an exercise of sudo-code in _Await Language_ with semaphores for synchro
 - Each baby repeatedly
     - eats one portion of food at a time,
     - sleeps for a while, and then
-    - comes back to eat.
+    - come back to eat.
 - When the dish becomes empty, the baby bird who empties the dish awakens the parent bird.
     - The parent refills the dish with `F` portions, then
-    - waits for the dish to become empty again.
+    - wait for the dish to become empty again.
 - This pattern repeats forever.
 
 ## Exercise 3: Gløgg
@@ -124,13 +124,7 @@ fill in the missing parts. Your solution should support fairness between readers
 
 ## Exercise 10: Multi-country
 
-Consider Multi-country,
-which is
-a country, and
-Multi-city,
-which is
-its capital
-city .
+Consider Multi-country, which is a country, and Multi-city, which is its capital city.
 
 The airport
 of Multi-
@@ -524,10 +518,9 @@ of paintings
 specified by
 the user.
 
-        ```c
+## Exercise 11: Artists Problem (in C)
 
-#
-
+```c
 define _DEFAULT_SOURCE
 
 #include<semaphore.h>  // sem_t, sem_wait(), sem_post(), sem_init()
