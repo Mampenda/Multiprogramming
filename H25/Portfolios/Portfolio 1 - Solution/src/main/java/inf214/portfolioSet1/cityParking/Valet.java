@@ -65,12 +65,14 @@ public class Valet extends Thread {
     }
   }
 
+
+  /** ==== Methods from Task B.2 ==== **/
+
+
   private void parkCar(Car car) {
 
     // Wait until we can reserve a parking spot
-    while (!parkingLot.reserveParking()) {
-      Thread.onSpinWait();
-    }
+    while (!parkingLot.reserveParking()) { Thread.onSpinWait(); }
 
     // Accuire monitoring resources
     Camera camera = cps.grabCamera(this);

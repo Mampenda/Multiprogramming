@@ -214,14 +214,14 @@ sem egg;
 process HostF(){
     wait(); // non-critical section
    
-    // entry-protocol    
+    // entry-protocol (P = acquire)
     P(F);
     P(tableMutex);
     
     // critical section (0 = bread, 1 = tomato, 2 = egg)
     int missing_ingredient = randomInt(0..2); 
     
-    // exit-protocol
+    // exit-protocol (V = release)
     if (missing_ingredient == 0){ V(bread); }
     if (missing_ingredient == 1){ V(tomato); }
     if (missing_ingredient == 2){ V(egg); }
@@ -231,7 +231,7 @@ process HostF(){
 process personA(){
    wait(); // non-critical section
    
-   // entry-protocol
+   // entry-protocol (P = acquire)
    P(bread);
    P(tableMutex);
    
@@ -239,7 +239,7 @@ process personA(){
    make_sandwich();
    eat_sandwich();
    
-   // exit-protocol 
+   // exit-protocol (V = release)
    V(tableMutex);
    V(F);
 }
@@ -247,7 +247,7 @@ process personA(){
 process personB(){
    wait(); // non-critical section
 
-   // entry-protocol
+   // entry-protocol (P = acquire)
    P(tomato);
    P(tableMutex);
 
@@ -255,7 +255,7 @@ process personB(){
    make_sandwich();
    eat_sandwich();
 
-   // exit-protocol 
+   // exit-protocol (V = release)
    V(tableMutex);
    V(F);
 }
@@ -263,7 +263,7 @@ process personB(){
 process personC(){
    wait(); // non-critical section
 
-   // entry-protocol
+   // entry-protocol (P = acquire)
    P(egg);
    P(tableMutex);
 
@@ -271,7 +271,7 @@ process personC(){
    make_sandwich();
    eat_sandwich();
 
-   // exit-protocol 
+   // exit-protocol (V = release)
    V(tableMutex);
    V(F);
 }

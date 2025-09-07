@@ -23,7 +23,7 @@ public class CityParking {
   private List<Valet> valets;
   private ParkingLot parkingLot;
 
-  private ConcurrentMap<String, Integer> registrationChars;
+  private ConcurrentMap<String, Integer> registrationChars; // Simulated database of car plates
   private Map<String, String> parkLog = new HashMap<>();
 
   public CityParking(int numValets, int numSupervisors, int numCameras, int numParkingSpots) {
@@ -33,7 +33,7 @@ public class CityParking {
     this.supervisors = new LinkedBlockingQueue<>();
     this.valets = new ArrayList<>();
 
-    this.registrationChars = new ConcurrentHashMap<>();
+    this.registrationChars = new ConcurrentHashMap<>(); // Initialize the simulated database
 
     createValets(numValets);
     createSupervisors(numSupervisors);

@@ -7,21 +7,33 @@ import java.util.function.IntUnaryOperator;
 
 public class ParkingLot {
 
-  // Number of parking spots in the parking lot
-  private final int numParkingSpots;
-
-  // Number of currently parked cars
-  private AtomicInteger numParkedCars = new AtomicInteger(0);
-
-  // Map of parked cars, key is the registration number
-  private ConcurrentMap<String, Car> parkingLot = new ConcurrentHashMap<String, Car>();
+  // Fields of the class
+  private final int numParkingSpots;   // Nr. of parking spots (aka. the capacity)
+  private AtomicInteger numParkedCars = new AtomicInteger(0);   // Thead-safe counter of the nr of parked cars
+  private ConcurrentMap<String, Car> parkingLot = new ConcurrentHashMap<String, Car>();  // Concirrent map of parked cars
 
   // Constructor
   public ParkingLot(int numParkingSpots) {
     this.numParkingSpots = numParkingSpots;
   }
 
-  // We can also solve this by synchronizing the function instead of using an AtomicInteger.
+
+  /** ==== Methods from Task B.1 ==== **/
+
+  /** Reserving spot before parking a car
+   * Attempts to reserve a parking spot. Returns true if there was space and the spot is reserved,
+   * false if the parking lot was full.
+   *
+   * Operator op ensures: if not full → increment; if full → leave unchanged.
+   *
+   * getAndUpdate(op) atomically:
+   *     Reads the current value of numParkedCars.
+   *     Applies the operator op.
+   *     Stores the result back.
+   *     Returns the old value.
+   *
+   * @return true/false whether we successfully reserved a parking spot.
+   */
   public boolean reserveParking() {
 
     // Increment the number of parked cars if there is space (i.e., only if it's not at max capacity)
@@ -40,7 +52,7 @@ public class ParkingLot {
 
   /**
    * Attempts to park the car in the parking lot. Returns true if there was space
-   * and the car is parked, false if the parking lot was full
+   * and the car is parked, false if the parking lot was full.
    *
    * @param car the car to park.
    * @return true/false wheter the car got parked.
@@ -71,25 +83,3 @@ public class ParkingLot {
     return car;
   }
 }
-
-/*
- * Original version, we might give the students this one and they will have to
- * change it into the new one.
- *
- *
- * public boolean parkCar(Car car) {
- *
- *   IntUnaryOperator op = (x) -> {
- *     if (x < numParkingSpots) { return x + 1; }
- *     else { return x; }
- *   };
- *
- *   if (numParkedCars.getAndUpdate(op) < numParkingSpots) {
- *     parkingLot.put(car.getRegNr(), car);
- *     car.parkCar();
- *     return true;
- *   }
- *
- *   return false;
- * }
- */
