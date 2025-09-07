@@ -1,81 +1,192 @@
-# INF214 H25 Portfolio Set 1 - Concurrency in Java (and a little bit C++)
+# INF214 H25 Portfolio Set 1 - Concurrency in Java (and a bit of C++)
 
-## Task A - Classic monitors/await language
-This task is about writing concurrency control “by hand”. It is to learn about the conceptual foundation: how to 
-structure synchronization using monitors, entry/exit protocols, conditions, and await statements.
+## Task A — Classic Monitors and Await Language
 
-- A shared monitor object (`City()`) that manages access to a shared resource (the intersection).
+Task A focuses on **writing concurrency control “by hand”**. The goal is to understand the conceptual foundations: how
+to structure synchronization using **monitors, entry/exit protocols, conditions, and await statements**.
 
+- **Shared monitor object:**  
+  `City()` acts as a monitor that manages access to a shared resource (the intersections).
 
-- Multiple threads (vehicles) that call methods on the monitor to gain/release access.
+- **Threads:**  
+  Each vehicle is represented by a thread that interacts with the monitor to request and release access.
 
+- **Entry/Exit Protocols:**
+    - `requestAccess()` / `releaseAccess()` → for regular vehicles
+    - `requestSpecialAccess()` / `releaseSpecialAccess()` → for special vehicles (e.g., emergency vehicles)
 
-- Entry/Exit protocols:
-    - `requestAccess()` / `releaseAccess()` for regular vehicles.
-    - `requestSpecialAccess()` / `releaseSpecialAccess()` for special vehicles.
-
-
-- Critical sections (all `synchronized` methods):
-    - **Outer critical sections (guarded by the `City()` monitor / synchronized methods):**
+- **Critical Sections:**
+    - **Outer critical sections** (guarded by the `City()` monitor / synchronized methods):
         - `startDay()`
         - `getTrafficLight(int)`
-        - `setTrafficLight(int, TraficLight)`
-        - `isAvaliable(int)`
+        - `setTrafficLight(int, TrafficLight)`
+        - `isAvailable(int)`
         - `getCitySize()`
 
-    - **Inner critical sections (guarded by each `Intersection()`’s monitor / synchronized methods):**
+    - **Inner critical sections** (guarded by each `Intersection()`’s monitor / synchronized methods):
         - `reset()`
-        - `isAvaliable()`
+        - `isAvailable()`
         - `getTrafficLight()`
         - `setTrafficLight()`
 
-    - **Explicit lock (`ReentrantLock()`) for special vehicle access:**
-    - `requestAccess()` (partly)
-    - `requestSpecialAccess()`
-    - `releaseSpecialAccess()`
+    - **Explicit lock for special vehicle access:**
+        - `ReentrantLock` is used to ensure mutual exclusion between regular and special vehicles, applied in:
+            - `requestAccess()` (partly)
+            - `requestSpecialAccess()`
+            - `releaseSpecialAccess()`
 
+- **Atomic counters in `City()`:**
+    - `AtomicInteger numWorkersInside` → counts regular vehicles in the intersection
+    - `AtomicInteger specialAccess` → counts special vehicles in the intersection
 
-- Atomic read/writes in `City()`:
-    - `AtomicInteger numWorkersInside` that counts the number of regular vehicles inside the intersection.
-    - `AtomicInteger specialAccess` that counts the number of special vehicles inside
+- **Synchronization approach:**
+    - No explicit condition variables; instead, relies on:
+        - `synchronized` methods → monitor-like mutual exclusion
+        - `AtomicInteger` → safe counters for concurrent access
+        - `ReentrantLock` → mutual exclusion for special vehicle access
 
-- **No conditions**, instead it relies on
-    - `synchronized` methods for monitor-like behavior
-    - `atomic` variables for safe counters/flags
-    - `ReentrantLock()` for mutual exclusion between special and regular vehicles
+**Conceptual takeaway:** This task shows how to implement **manual monitors and entry/exit protocols** without library
+abstractions, using atomic counters and locks to enforce safe concurrent access.
 
-## Task B — Java's built-in concurrency tools
-This task is about using Java’s built-in concurrency tools (atomic operations, concurrent collections), which give the
-same effect without explicit monitors. Conceptually, it’s still synchronization — but here the Java library provides the
-atomic blocks instead of hardcoded await language.
+---
 
-**It’s about atomic operations and lock-free concurrency.**
+### Short and simple summary of Task A - Manual Monitors and Locks:
 
-Still about synchronization between threads (valets), but instead of explicit monitors/conditions, it uses:
+**Goal:** Learn how to control concurrency “by hand” using monitors and locks.
+
+- **Shared resource:** `City()` manages access to intersections.
+- **Threads:** Each vehicle is a thread requesting/releasing access.
+- **Entry/Exit:**
+    - Regular vehicles → `requestAccess()` / `releaseAccess()`
+    - Special vehicles → `requestSpecialAccess()` / `releaseSpecialAccess()`
+- **Critical sections:**
+    - Outer (City-level) → e.g., `getTrafficLight()`, `setTrafficLight()`
+    - Inner (Intersection-level) → e.g., `isAvailable()`, `reset()`
+    - Special access uses `ReentrantLock` for exclusive access
+- **Atomic counters:**
+    - `numWorkersInside` → regular vehicles
+    - `specialAccess` → special vehicles
+- **Concept:** Use synchronized methods and atomic counters to safely control threads **without library-level
+  concurrency tools**.
+
+---
+
+## Task B — Java’s Built-in Concurrency Tools
+
+Task B demonstrates the **same problem but using Java’s built-in concurrency tools**, such as atomic variables and
+concurrent collections. The goal is to implement **lock-free or library-assisted synchronization**, achieving thread
+safety without writing explicit monitors.
 
 - **Shared resource management:**
-    - The `ParkingLot()` is a shared resource, managed with:
-        - `ConcurrentMap<String,Car>` holds currently parked cars.
-        - `AtomicInteger numParkedCars` tracks occupancy.
-        - Multiple `Valet` threads operate on the same lot simultaneously.
-
+    - `ParkingLot()`, `Camera()`, and `Supervisor()` are shared resources.
+    - Managed via:
+        - `ConcurrentMap<String, Car>` → thread-safe storage for parked cars
+        - `AtomicInteger numParkedCars` → occupancy counter
+        - Multiple `Valet` threads operate concurrently on the same parking lot
 
 - **Thread synchronization without explicit locks/await:**
-    - Instead of `await`/`signal` in a monitor, threads use:
-        - `reserveParking()` → atomic increment, only succeeds if a spot is free.
-        - `Thread.onSpinWait()` → busy-wait loop until condition is met.
-        - This is effectively an *entry protocol* for car parking/pickup, but implemented with **lock-free primitives**
-          instead of monitors.
+    - Instead of `await`/`signal` in a monitor:
+        - `reserveParking()` → atomic increment that only succeeds if a spot is available
+        - `Thread.onSpinWait()` → busy-wait until condition is met
+    - This acts as an **entry protocol** for parking/pickup using **lock-free primitives** rather than explicit monitors
 
+- **Bounded resource allocation:**
+    - `grabCamera()` and `grabSupervisor()` internally synchronize access to limited resources
+    - They function as **monitors or semaphores**, blocking valets until a camera or supervisor is available, and
+      releasing them afterward
 
-- **Bounded resource allocation**
-    - `grabCamera()` and `grabSupervisor()`, internally synchronize valets access to `Cameras` and `Supervisors`
+**Conceptual takeaway:** Task B highlights **modern concurrency primitives** in Java: atomic operations, concurrent
+collections, and built-in blocking queues replace explicit monitor/await logic, simplifying synchronization while
+maintaining correctness.
+---
 
+### Short and simple summary of Task B — Built-in Java Concurrency:
 
-## Task C
+**Goal:** Achieve the same thread safety using Java’s library features.
 
+- **Shared resources:** `ParkingLot()`, `Camera()`, `Supervisor()`
+- **Thread-safe structures:**
+    - `ConcurrentMap<String, Car>` → parked cars
+    - `AtomicInteger numParkedCars` → tracks occupancy
+- **Synchronization:**
+    - Lock-free entry using `reserveParking()` with atomic increment
+    - Busy-wait with `Thread.onSpinWait()` until a spot is free
+- **Resource limits:** `grabCamera()` / `grabSupervisor()` block threads until resource is available
+- **Concept:** Use atomic operations and concurrent collections instead of manual monitors and conditions.
 
-Alternative: 
+---
+
+**Summary of differences:**
+
+| Feature         | Task A                                               | Task B                                                  |
+|-----------------|------------------------------------------------------|---------------------------------------------------------|
+| Synchronization | Manual monitors, synchronized methods, ReentrantLock | Atomic variables, ConcurrentMap, BlockingQueue          |
+| Resource access | Explicit entry/exit protocols                        | Lock-free entry via atomic operations & blocking queues |
+| Waiting         | Condition variables / await                          | Busy-wait (`onSpinWait`) or library blocking methods    |
+| Complexity      | Higher, requires careful manual design               | Lower, uses tested concurrency library constructs       |
+
+--- 
+
+## Task C — Road Maintenance: Concurrency Explanation
+
+**Goal:** Simulate the assembly of maintenance kits by multiple specialists and a supervisor, using semaphores for
+synchronization.
+
+### Key Concepts Applied
+
+1. **Processes / Threads**
+    - The supervisor (_S_) and the three specialists (_A_, _B_, _C_) are modeled as concurrent processes.
+    - Each process runs independently but must synchronize access to the shared “box” resource.
+
+2. **Shared Resource**
+    - The “box” that holds two items from the supervisor is a shared resource.
+    - Only the correct specialist with the missing third item can add their item and complete the kit.
+
+3. **Synchronization Using Semaphores**
+    - A **split binary semaphore** is used to coordinate actions between the supervisor and the specialists.
+    - Semaphores:
+        - `semCleaningSolution` → signals specialist A
+        - `semPaint` → signals specialist B
+        - `semSensor` → signals specialist C
+        - `semSupervisor` → ensures the supervisor waits until the kit is assembled
+    - Workflow:
+        1. Supervisor puts two items in the box.
+        2. Supervisor signals the semaphore corresponding to the missing item.
+        3. The specialist process for that item runs, adds the item, and assembles the box.
+        4. Specialist signals `semSupervisor` so the supervisor can proceed to the next iteration.
+
+4. **Mutual Exclusion**
+    - The semaphore mechanism ensures **mutual exclusion**: only the correct specialist can act on the box at a time.
+    - No two specialists can assemble the same box simultaneously, preventing race conditions.
+
+5. **Deadlock Avoidance**
+    - Using **binary semaphores** in a structured “signal → wait → signal” pattern avoids deadlock.
+    - The supervisor only proceeds after a kit is completed (`semSupervisor.P()`), ensuring correct sequencing.
+
+6. **Coordination Pattern**
+    - This is an example of the **producer-consumer pattern**, where:
+        - Supervisor = producer of partially filled boxes
+        - Specialist = consumer that completes the box
+
+7. **Randomized Selection**
+    - The supervisor’s choice of which two items to place is randomized, ensuring that different specialists are
+      signaled across iterations.
+    - The random function maps to processes in a deterministic way (1 → A, 2 → B, 3 → C) to ensure the correct
+      specialist responds.
+
+---
+
+### Summary of How It Works
+
+1. Supervisor produces two items → signals the missing-item specialist.
+2. Specialist waits on their semaphore, adds the missing item, and assembles the kit.
+3. Specialist signals supervisor → supervisor continues to next iteration.
+4. This ensures **safe, synchronized, deadlock-free assembly of N kits**.
+
+--- 
+
+## Solution:
+
 ```cpp
 #include "alang.h"
 #include <cstdlib>
