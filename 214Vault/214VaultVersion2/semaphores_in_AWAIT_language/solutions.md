@@ -382,9 +382,9 @@ int active_readers;
 
 process Writers([i=1 to M]){
   while(true){
-    P(writers); // entry-protocol
+    P(writers); // entry-protocol (P = acquire)
     write();    // critical section
-    V(readers); // exit protocol
+    V(writers); // exit protocol (V = release)
   }
 }
 
