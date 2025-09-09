@@ -78,7 +78,7 @@ public class Valet extends Thread {
             Thread.onSpinWait();
         }
 
-        // Accuire monitoring resources
+        // Acquire monitoring resources
         Camera camera = cps.grabCamera(this);
         Supervisor sup = cps.grabSupervisor(this);
 
@@ -97,6 +97,7 @@ public class Valet extends Thread {
         registrationChars.putIfAbsent(chars, 0);
         registrationChars.computeIfPresent(chars, (k, v) -> v + 1);
     }
+
 
     private void pickupCar(String regNr) {
 

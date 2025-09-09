@@ -47,6 +47,64 @@ to structure synchronization using **monitors, entry/exit protocols, conditions,
 
 **Conceptual takeaway:** This task shows how to implement **manual monitors and entry/exit protocols** without library
 abstractions, using atomic counters and locks to enforce safe concurrent access.
+---
+
+### Note about Task A:
+
+In the following code:
+
+```java
+    /**
+ * ==== Methods from Task A.2 ====
+ **/
+
+// Ordinary vehicle request and release access
+public void requestAccess() {
+    numWorkersInside.incrementAndGet();
+
+    if (specialAccess.get()) {
+        numWorkersInside.decrementAndGet();
+
+        // Wait until a special vehicle leaves
+        lock.lock();
+        lock.unlock();
+
+        numWorkersInside.incrementAndGet();
+    }
+}
+```
+
+The `lock.lock()` and `lock.unlock()` calls are used here to create a blocking point for ordinary vehicles when a
+special vehicle is present. This ensures that ordinary vehicles wait until the special vehicle has exited before
+proceeding.
+
+Usually, one should have something like this:
+
+```java
+lock.lock();
+try{
+
+do_something() // critical section
+}finally{
+        lock.
+
+unlock();
+}
+```
+
+In summary:
+
+The two lines
+
+```java
+
+```
+
+They don’t protect a local critical section, but instead they:
+
+- Enforce mutual exclusion ordering between groups of threads (regular vs. special vehicles).
+- Ensure memory visibility between threads, so that counters and flags are consistently observed.
+- Act as a kind of synchronization barrier.
 
 ---
 

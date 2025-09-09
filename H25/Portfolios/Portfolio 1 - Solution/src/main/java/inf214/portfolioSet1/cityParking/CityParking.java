@@ -162,7 +162,7 @@ public class CityParking {
         return registrationChars.getOrDefault(regChars, 0);
     }
 
-    // ========================================================================================================================//
+    // ============================================================================================================== //
 
     public void addRequestsToQueue(Request order) {
         orderQueue.addRequest(order);

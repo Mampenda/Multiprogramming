@@ -16,9 +16,9 @@ Here is an example of sudo-code with semaphores for synchronization to represent
 
 ```java
 // Semaphores
-sem mutex = 1;      // protects access to portions
+sem mutexPot = 1;   // protects access to pot (for updating portions)
 sem full = 0;       // signals bear that pot is full
-sem empty = 1;      // signals bees that pot is not full
+sem not_full = 1;   // signals bees that pot is not full
 
 int portions = 0;   // current number of portions in the pot
 int H = capacity;   // pot capacity
@@ -27,30 +27,86 @@ process Bee([i=1to N]) {
     while (true) {
         gather_honey();        // non-critical section
 
-        P(empty);              // wait until the pot is not full
-        P(mutex);              // enter the critical section
+        P(not_full);           // wait until the pot is not full
+        P(mutexPot);           // enter the critical section
         portions = portions + 1;
         if (portions == H) {
             V(full);           // wake up bear
         } else {
-            V(empty);          // allow another bee to add honey
+            V(not_full);       // allow another bee to add honey
         }
-        V(mutex);              // exit critical section
+        V(mutexPot);           // exit critical section
     }
 }
 
 process Bear() {
     while (true) {
         P(full);               // wait until the pot is full
-        P(mutex);              // enter the critical section
-        eat_honey();           // eats all portions
+        P(mutexPot);           // enter the critical section
+        eat_honey();
         portions = 0;
-        V(empty);              // allow bees to fill pot again
-        V(mutex);              // exit critical section
+        V(not_full);           // allow bees to fill the pot again
+        V(mutexPot);           // exit critical section
     }
 }
+```
 
+```cpp
+#include "alang.h"
 
+void bear();
+void bee(int name);
+void eatHoney();
+void collectHoney(int i);
+
+const int H = 20;
+int jar = 0;
+
+// Semaphores
+semaphore jarFull = 1, jarNotFull = 0;
+
+int main() {
+  constexpr int N = 10;
+  processes ps;
+
+  ps += [&]() -> void { bear(); };
+
+  for (int i = 0; i < N; i++) {
+    ps += [&]() -> void { bee(i); };
+  }
+}
+
+void bear() {
+  while (true) {
+    jarFull.P(); // Vent til jarFull = 1, sett deretter jarFull = 0
+    eatHoney();
+    jar = 0;
+    jarNotFull.V(); // Sett jarNotFull = 1
+  }
+}
+
+void bee(int name) {
+  while (true) {
+    jarNotFull.P(); // Vent til jarNotFull = 1, sett deretter jarNotFull = 0
+    collectHoney(name);
+    jar++;
+    if (jar == H) { // Er glasset fult?
+      std::cout << "The jar is full of honey" << std::endl;
+      jarFull.V(); // Sett jarFull = 1
+    } else {
+      jarNotFull.V(); // Sett jarNotFull = 1
+    }
+    sleep(1s);
+  }
+}
+
+void eatHoney() {
+  std::cout << "Winnie woke up and emptied the jar" << std::endl;
+}
+
+void collectHoney(int i) {
+  std::cout << "bee " << i << ": made some honey" << std::endl;
+}
 ```
 
 ## Hungry Chicks
@@ -180,8 +236,11 @@ process P3_Almonds() {
 
 ## Sandwich:
 
-Three persons P1, P2, and P3 were invited by their friend F to make some sandwiches (made of bread, eggs, and tomato).
-To make a sandwich, three ingredients are needed: a slice of bread, a slice of tomato, and a slice of an egg.
+Three persons P1, P2, and P3 were invited by their friend F to make some sandwiches
+(made of bread, eggs, and tomato).
+
+To make a sandwich, three ingredients are needed: a slice of bread, a slice of tomato,
+and a slice of an egg.
 
 Each of these persons P1, P2, P3 has only one type of each of the ingredients:
 
@@ -189,21 +248,25 @@ Each of these persons P1, P2, P3 has only one type of each of the ingredients:
 - person P2 has slices of tomato.
 - person P3 has slices of egg.
 
-We assume that persons P1, P2, and P3 each has an unlimited supply of these ingredients (i.e., slices of bread, slices
-of tomato, slices of egg), respectively. Their friend F, who invited them, also has an unlimited supply of all the
-ingredients.
+We assume that persons P1, P2, and P3 each has an unlimited supply of these ingredients
+(i.e., slices of bread, slices of tomato, slices of egg), respectively.
+
+Their friend F, who invited them, also has an unlimited supply of all the ingredients.
 
 Here is what happens:
 
 - the host F puts two random ingredients on the table.
-- Then the invited person who has the third ingredient picks up the two ingredients, makes the sandwich, then eats it.
+- Then the invited person who has the third ingredient picks up the two ingredients,
+  makes the sandwich, then eats it.
 - The host of the party F waits for that person to finish.
 - This "cycle" of is then infinitely repeated.
 
 Write code in the AWAIT language that simulates this situation.
 Represent the persons P1, P2, P3, F as processes.
 
-You must use SPLIT BINARY SEMAPHORE for synchronization. Make sure that your solution avoids deadlock.
+You must use SPLIT BINARY SEMAPHORE for synchronization. Make sure that your solution avoids
+deadlock.
+
 EXPLAIN very briefly the advantages of using the split binary semaphore.
 
 ### Answer:
