@@ -424,12 +424,15 @@ void processPaint() {
 #### Why is there a race condition? 
 
 The race comes from the fact that the specialists `A,B,C` are running infinite loops: 
+
 ```cpp
 #include "roadMaintenance.cpp"
 
 int main() {
   // ... Other logic 
 
+
+  // Each specialist spins forever in a while(true) loop, they dont shut down, but wait for their semaphore/signal. 
   ps += [&]() -> void {
     while (true)
       processCleaningSolution();
@@ -444,4 +447,53 @@ int main() {
   };
 }
 ```
+Because these processes are truly concurrent, the supervisor can “get ahead” of the specialists if synchronization isn’t tight enough.
+For example:
+> 1 - Supervisor signals semPaint.V().
+> 2 - Specialist B wakes up and starts producing paint.
+> 3 - Before B calls assemble("B"), the supervisor may already pick the next random pair and start producing new items.
 
+That’s how we sometimes can get log outputs like this (a race):
+
+```
+S put cleaning solution into the box
+S put paint into the box
+S put sensor into the box    <-- Supervisor already starting next round
+B put paint into the box     <-- Previous round specialist still finishing
+```
+
+#### How will fixing this "bug" avert from using split binary semaphores? 
+To fix this race condition, we would implement a `mutex` on the box, making each process finish before the supervisor starts a new round. 
+
+```cpp 
+semaphore boxLock = 1;
+
+void processSupervisor() {
+  boxLock.P(); // Acquire lock on box (actual lock/mutex)
+
+  box.putTwoItems(); // Supervisor puts 2 items
+
+  semThird.V();      // Release lock on third item (split binary semaphore)
+  semSupervisor.P(); // Acquire lock on Supervisor (rendevouz point instead of lock/mutex)
+  boxLock.V();       // Release lock on box (actual lock/mutex)
+}
+
+void processThird() {
+  semThird.P();          // Acquire lock on third item (split binary semaphore)
+  
+  // Add item and assemble
+  produce("T", "item3");
+  assemble("T");
+
+  semSupervisor.V();     // Release lock on Supervisor (rendevouz point instead of lock/mutex)
+}
+```
+
+Now the supervisor locks the box until the entire cycle (produce + assemble) is done.
+That solves the race, but now: 
+- The semaphore for the third item is stil a split binary semaphore since one process signals (`V()`), while the other waits (`P()`).
+- The supervisor now “owns” the lock around the box, which makes it no longer split between supervisor and specialists becasue the supervisor both `P()`s and `V()`s.
+- The semaphore `semSupervisor` is being used as a rendezvous point: 
+
+  > Supervisor calls `semSupervisor.P()` --> “I’ll wait here until the specialist tells me they’re done.”
+  > Specialist calls `semSupervisor.V()` --> “I’m done.”
