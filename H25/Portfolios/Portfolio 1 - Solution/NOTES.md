@@ -92,12 +92,11 @@ unlock();
 }
 ```
 
-In summary:
-
-The two lines
+But in fact, the two lines below work as a barrier, making every thread wait for eachother at this point. 
 
 ```java
-
+lock.lock()
+lock.unlock()
 ```
 
 They don’t protect a local critical section, but instead they:
@@ -373,3 +372,76 @@ int main() {
   ps += [&]() -> void { processSensor(); };
 }
 ```
+
+### Explaining the Race Condition
+
+#### How does the solution use split binary semaphore? 
+
+**Regular Binary Semaphore** 
+
+In a regular binary semaphore, one process does both `P()` (waits) and later `V()`s (signals).
+
+Imagine specialist `B` (paint) owns a private lock to control when he himself produces paint.
+- He locks (`P()`/ `lock.lock()`) before starting.
+- He unlocks (`V()` / `lock.unlock()`) when finished.
+
+```cpp
+semaphore semPaint = 1;  // B controls his own access
+
+void processPaint() {
+  while (true) {
+    semPaint.P();  // B waits until he can produce paint
+    produce("B", "paint");
+    assemble("B");
+    semPaint.V();  // B signals he's done, so he can do it again
+  }
+}
+```
+**Split Binary Semaphore**
+
+A `split binary semaphore` is just a binary semaphore (value ∈ `{0,1}`), but the `P()` and `V()` operations are distributed across different processes: the producer does the `V()` and the consumer does the `P()`.
+
+This splits responsibility across processes enforces rendezvous/barriers.
+
+In Task C the Supervisor `S` signals (`V()`) when paint is needed, and specialists `A,B,C` waits (`P()`) until that signal arrives.
+
+```cpp
+// ... other semaphores
+semaphore semPaint = 0;
+
+void processSupervisor() {
+  // ... S puts cleaning solution + sensor in the box
+  semPaint.V();  // S signals B that paint is needed
+}
+
+void processPaint() {
+  semPaint.P();  // B waits until S asks for paint
+  produce("B", "paint");
+  assemble("B");
+  semSupervisor.V(); // let S continue
+}
+```
+#### Why is there a race condition? 
+
+The race comes from the fact that the specialists `A,B,C` are running infinite loops: 
+```cpp
+#include "roadMaintenance.cpp"
+
+int main() {
+  // ... Other logic 
+
+  ps += [&]() -> void {
+    while (true)
+      processCleaningSolution();
+  };
+  ps += [&]() -> void {
+    while (true)
+      processPaint();
+  };
+  ps += [&]() -> void {
+    while (true)
+      processSensor();
+  };
+}
+```
+
