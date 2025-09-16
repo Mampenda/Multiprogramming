@@ -1,6 +1,9 @@
 #include "alang.h"
-
-semaphore semCleaningSolution = 0, semPaint = 0, semSensor = 0, semSupervisor = 0;
+x
+semaphore semCleaningSolution = 0; 
+semaphore semPaint = 0; 
+semaphore semSensor = 0; 
+semaphore semSupervisor = 0;
 
 void processSupervisor() {
   int randNum = randomProcess();

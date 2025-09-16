@@ -1,6 +1,56 @@
 # Monitors: Exercises with Solutions
 
-## Exercise 1 - Readers/Writers Problem (without fairness):
+## Exercise 1 - Bank account:
+
+Several people share a saving account that each person may deposit to or withdraw from.
+
+The current balance in the account is the sum of all deposits to date minus the sum of all withdrawals to date. The
+balance must never become negative. A deposit never has to delay (except for mutual exclusion), but a withdrawal has to
+wait until there are enough funds.
+
+A junior software developer has implemented a solution to this problem using a monitor with Signal-and-Continue
+discipline.
+
+```java
+monitor Account() {
+    int balance = 0;
+    cond sufficient_funds;
+
+    procedure deposit ( int amount){
+        balance = balance + amount;
+    }
+    procedure withdraw ( int amount){
+        balance = balance - amount;
+    }
+}
+```
+
+This solution is non-optimal. Help the junior developer implement the monitor correctly.
+
+### Answer:
+
+```java
+monitor Account() {
+
+    int balance = 0;
+    cond sufficient_funds; // Condition variable to wait when there are insufficient funds
+
+    procedure deposit ( int amount){
+        balance = balance + amount;  // Add amount to the balance
+        signal(sufficient_funds);   // Wake up a waiting withdrawal (if any) since funds are available
+    }
+
+    procedure withdraw ( int amount){
+        // Wait until there are sufficient funds for the withdrawal
+        while (balance < amount) {
+            wait(sufficient_funds);
+        }
+        balance = balance - amount;   // Perform the withdrawal when funds are sufficient
+    }
+}
+```
+
+## Exercise 2 - Readers/Writers Problem (without fairness):
 
 The `Readers-Writers Problem` is a classic synchronization problem that involves managing access to a shared resource in
 such a way that multiple readers can read the resource concurrently, but writers must have exclusive access to it. The
@@ -118,7 +168,7 @@ procedure release_write() {
 **Critical sections:** Updates shared resource state (e.g., `nr`, `nw`, and signaling condition variables).
 **Non-critical sections:** The while loops that just `wait(…))` for conditions.
 
-## Exercise 2 - Readers/Writers Problem (with fairness):
+## Exercise 3 - Readers/Writers Problem (with fairness):
 
 Without arbitrating between readers and writers, you risk starvation of writers, i.e., if there is a continuous stream
 of readers, a writer may never get access to the database.
@@ -192,56 +242,6 @@ procedure release_write() {
         signal(OK_to_write);
     } else {
         signal(OK_to_read);
-    }
-}
-```
-
-## Exercise 3 - Bank account:
-
-Several people share a saving account that each person may deposit to or withdraw from.
-
-The current balance in the account is the sum of all deposits to date minus the sum of all withdrawals to date. The
-balance must never become negative. A deposit never has to delay (except for mutual exclusion), but a withdrawal has to
-wait until there are enough funds.
-
-A junior software developer has implemented a solution to this problem using a monitor with Signal-and-Continue
-discipline.
-
-```java
-monitor Account() {
-    int balance = 0;
-    cond sufficient_funds;
-
-    procedure deposit ( int amount){
-        balance = balance + amount;
-    }
-    procedure withdraw ( int amount){
-        balance = balance - amount;
-    }
-}
-```
-
-This solution is non-optimal. Help the junior developer implement the monitor correctly.
-
-### Answer:
-
-```java
-monitor Account() {
-
-    int balance = 0;
-    cond sufficient_funds; // Condition variable to wait when there are insufficient funds
-
-    procedure deposit ( int amount){
-        balance = balance + amount;  // Add amount to the balance
-        signal(sufficient_funds);   // Wake up a waiting withdrawal (if any) since funds are available
-    }
-
-    procedure withdraw ( int amount){
-        // Wait until there are sufficient funds for the withdrawal
-        while (balance < amount) {
-            wait(sufficient_funds);
-        }
-        balance = balance - amount;   // Perform the withdrawal when funds are sufficient
     }
 }
 ```

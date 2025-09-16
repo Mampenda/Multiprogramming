@@ -72,16 +72,16 @@ Represent the persons P1, P2, P3, F as processes.
 You must use SPLIT BINARY SEMAPHORE for synchronization. Make sure that your solution avoids deadlock.
 EXPLAIN very briefly the advantages of using the split binary semaphore.
 
-## Exercise 6: Producers and Consumers - Split Binary Semaphores
+## Exercise 5: Producers and Consumers - Split Binary Semaphores
 
 Make producers/consumers processes that synchronizes with split binary semaphores.
 The buffer has only room for one element of data.
 
-## Exercise 7: Producers and Consumers - Bounded Buffers: Resource Counting
+## Exercise 6: Producers and Consumers - Bounded Buffers: Resource Counting
 
 Make producers/consumers processes that synchronizes around a buffer.
 
-## Exercise 8: Readers/Writers (without fairness)
+## Exercise 7: Readers/Writers Problem (without fairness)
 
 The `Readers-Writers Problem` is a classic synchronization problem that involves managing access to a shared resource in
 such a way that multiple readers can read the resource concurrently, but writers must have exclusive access to it. The
@@ -99,7 +99,7 @@ Could you solve the Readers/Writers exclusion problem? The solution does not nee
 Remember that readers can read at the same time, but writers have to be alone in accessing the shared variable.
 The solution is supposed to be unfair. (**Hint**:You only need one counter and two semaphores.)
 
-## Exercise 9: Readers/Writers (with fairness)
+## Exercise 8: Readers/Writers Problem (with fairness)
 
 Consider the following variant of the Readers/Writers problem:
 Reader processes query a database and writer processes examine and modify it. Readers may access the database
@@ -122,7 +122,7 @@ both of them are initially 0. Each variable is incremented in the appropriate re
 appropriate release procedure. A software developer has started on the implementation of this monitor. Your task is to
 fill in the missing parts. Your solution should support fairness between readers and writers.
 
-## Exercise 10: Multi-country
+## Exercise 9: Multi-country
 
 Consider Multi-country, which is a country, and Multi-city, which is its capital city.
 
@@ -518,7 +518,7 @@ of paintings
 specified by
 the user.
 
-## Exercise 11: Artists Problem (in C)
+## Exercise 10: Artists Problem (in C)
 
 ```c
 define _DEFAULT_SOURCE

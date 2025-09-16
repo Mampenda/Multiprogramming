@@ -1,6 +1,6 @@
 # Semaphores in AWAIT Language: Exercises with Solutions
 
-## Bear and Honey
+## Exercise 1: Bear and Honey
 
 Here is an example of sudo-code with semaphores for synchronization to represent the following problem:
 
@@ -109,7 +109,7 @@ void collectHoney(int i) {
 }
 ```
 
-## Hungry Chicks
+## Exercise 2: Hungry Chicks
 
 Here is an exercise of sudo-code in _Await Language_ with semaphores for synchronization:
 
@@ -163,7 +163,7 @@ process MamaBird() {
 }
 ```
 
-## Gløgg
+## Exercise 3: Gløgg
 
 Here is an exercise of sudo-code in _Await Language_ with semaphores for synchronization:
 
@@ -234,7 +234,7 @@ process P3_Almonds() {
 }
 ```
 
-## Sandwich:
+## Exercise 4: Sandwich:
 
 Three persons P1, P2, and P3 were invited by their friend F to make some sandwiches
 (made of bread, eggs, and tomato).
@@ -354,7 +354,7 @@ This solution uses binary split semaphores where each process waits for their ow
 mutex for the table. The advantage of this is that each process waits for its own semaphore before accessing the
 critical section, minimizing the chance of two processes/threads accessing the critical section at the same time.
 
-## Producers and Consumers - Split Binary Semaphores
+## Exercise 5: Producers and Consumers - Split Binary Semaphores
 
 Make producers/consumers processes that synchronizes with split binary semaphores.
 The buffer has only room for one element of data.
@@ -363,8 +363,8 @@ The buffer has only room for one element of data.
 
 ```java
 type buffer;
-sem empty = 0;
-sem full = 1;
+sem empty = 1; // Buffer starts off empty
+sem full = 0;
 
 process Producer([i=1to M]) {
     while (true) {
@@ -383,7 +383,7 @@ process Consumer([j=1to N]) {
 }
 ```
 
-## Producers and Consumers - Bounded Buffers: Resource Counting
+## Exercise 6: Producers and Consumers - Bounded Buffers: Resource Counting
 
 Make producers/consumers processes that synchronizes around a buffer.
 
@@ -436,7 +436,7 @@ process Consumer([j=1to N]) {
 }
 ```
 
-## Readers/Writers as an exclusion problem
+## Exercise 7: Readers/Writers problem (unfair solution)
 
 The `Readers-Writers Problem` is a classic synchronization problem that involves managing access to a shared resource in
 such a way that multiple readers can read the resource concurrently, but writers must have exclusive access to it. The
@@ -457,21 +457,21 @@ The solution is supposed to be unfair. (**Hint**: You only need one counter and 
 ### Answer:
 
 ```java
-sem readers;
-sem writers;
-int active_readers;
+sem readers = 1;        //mutex for updating counter active_readers
+sem writers = 1;        // mutex for writers access
+int active_readers = 0; // counter for active readers
 
 process Writers([i=1to M]) {
     while (true) {
-        P(writers); // entry-protocol (P = acquire)
+        P(writers); // entry-protocol (P = acquire lock/wait for signal)
         write();    // critical section
-        V(writers); // exit protocol (V = release)
+        V(writers); // exit protocol (V = release/send signal)
     }
 }
 
 process Readers([j=1to N]) {
     while (true) {
-        P(readers); // entry-protocol (for updating active_readers)
+        P(readers);                          // entry-protocol 
         active_readers = active_readers + 1; // critical section 
 
         // if this is the first reader, block writers and allow other readers
@@ -479,18 +479,82 @@ process Readers([j=1to N]) {
             P(writers);
         }
         V(readers);
-        read(); // critical section 
 
-        P(readers); // entry-protocol (for updating active_readers)
+        read();
+
+        P(readers);                          // entry-protocol
         active_readers = active_readers - 1; // critical section
 
-        // exit protocol    
+        // exit protocol (if this is the last reader, allow writers)
         if (active_readers == 0) {
             V(writers);
         }
         V(readers);
     }
 }
+```
+
+## Exercise 8: Readers/Writers Problem (with fairness)
+
+Consider the following variant of the Readers/Writers problem:
+Reader processes query a database and writer processes examine and modify it. Readers may access the database
+concurrently, but writers require exclusive access. Although the database is shared, we cannot encapsulate it by a
+monitor, because readers could not then access it concurrently since all code within a monitor executes with mutual
+exclusion.
+
+Instead, we use a monitor merely to arbitrate access to the database. The database itself is global to the readers and
+writers. The arbitration monitor grants permission to access the database. To do so, it requires that processes inform
+it when they want access and when they have finished. There are two kinds of processes and two actions per process, so
+the monitor has four procedures: `request_read`, `request_write`, `release_read`, `release_write`. These procedures are
+used in the obvious ways.
+
+For example, a reader calls `request_read` before reading the database and calls `release_read` after reading the
+database. To synchronize access to the database, we need to record how many processes are reading and how many processes
+are writing.
+
+In the implementation below, `readers` is the number of readers, and `writers` is the number of writers;
+both of them are initially 0. Each variable is incremented in the appropriate request procedure and decremented in the
+appropriate release procedure. A software developer has started on the implementation of this monitor. Your task is to
+fill in the missing parts. Your solution should support fairness between readers and writers.
+
+```java
+sem readers = 1;
+sem writers = 1;
+sem turnstile = 1;  // ensures fairness (queue)
+int active_readers = 0;
+
+process Writer([i=1to M]) {
+    while (true) {
+        P(turnstile);   // enter queue
+        P(writers);     // get exclusive access
+        write();
+        V(writers);
+        V(turnstile);   // let others queue
+    }
+}
+
+process Reader([j=1to N]) {
+    while (true) {
+        P(turnstile);     // enter queue
+        P(readers);
+        active_readers = active_readers + 1;
+        if (active_readers == 1) {
+            P(writers);   // first reader blocks writers
+        }
+        V(readers);
+        V(turnstile);     // release turnstile so writers can queue
+
+        read();
+
+        P(readers);
+        active_readers = active_readers - 1;
+        if (active_readers == 0) {
+            V(writers);   // last reader unblocks writers
+        }
+        V(readers);
+    }
+}
+
 ```
 
 ## Exercise 9: Multi-country
@@ -581,7 +645,7 @@ process UnVaccinated([j=1to M]) {
 }
 ```
 
-## Dining Philosophers
+## Exercise 10: Dining Philosophers
 
 In short, the dining philosophers problem is about four philosophers that are seated around a table with five plates
 and five utensils available. For simplicity, we'll use chopsticks.
@@ -643,7 +707,7 @@ function try_acquire_forks(i) {
 }
 ```
 
-## Exercise 12: Traffic-Light
+## Exercise 11: Traffic-Light
 
 There exit an intersection where two main roads Road A and Road B, intersect. To manage traffic at this intersection,
 the city has installed a traffic light system. However, due to the complexity and the high volume of traffic, special
