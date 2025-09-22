@@ -457,7 +457,7 @@ The solution is supposed to be unfair. (**Hint**: You only need one counter and 
 ### Answer:
 
 ```java
-sem readers = 1;        //mutex for updating counter active_readers
+sem readers = 1;        // mutex for updating counter active_readers
 sem writers = 1;        // mutex for writers access
 int active_readers = 0; // counter for active readers
 
@@ -496,65 +496,78 @@ process Readers([j=1to N]) {
 
 ## Exercise 8: Readers/Writers Problem (with fairness)
 
-Consider the following variant of the Readers/Writers problem:
-Reader processes query a database and writer processes examine and modify it. Readers may access the database
-concurrently, but writers require exclusive access. Although the database is shared, we cannot encapsulate it by a
-monitor, because readers could not then access it concurrently since all code within a monitor executes with mutual
-exclusion.
+How would you modify your solution to Exercise 7 to **ensure fairness** so that the readers don't starve the writers?
 
-Instead, we use a monitor merely to arbitrate access to the database. The database itself is global to the readers and
-writers. The arbitration monitor grants permission to access the database. To do so, it requires that processes inform
-it when they want access and when they have finished. There are two kinds of processes and two actions per process, so
-the monitor has four procedures: `request_read`, `request_write`, `release_read`, `release_write`. These procedures are
-used in the obvious ways.
-
-For example, a reader calls `request_read` before reading the database and calls `release_read` after reading the
-database. To synchronize access to the database, we need to record how many processes are reading and how many processes
-are writing.
-
-In the implementation below, `readers` is the number of readers, and `writers` is the number of writers;
-both of them are initially 0. Each variable is incremented in the appropriate request procedure and decremented in the
-appropriate release procedure. A software developer has started on the implementation of this monitor. Your task is to
-fill in the missing parts. Your solution should support fairness between readers and writers.
+### Answer:
 
 ```java
-sem readers = 1;
-sem writers = 1;
-sem turnstile = 1;  // ensures fairness (queue)
-int active_readers = 0;
+  // Counters for active readers, writers and waiting writers (shared variables)
+int nr = 0;
+int nw = 0;
+int waiting_writers = 0;
 
-process Writer([i=1to M]) {
-    while (true) {
-        P(turnstile);   // enter queue
-        P(writers);     // get exclusive access
-        write();
-        V(writers);
-        V(turnstile);   // let others queue
+// Semaphores for mutual exclusion and signaling
+sem counterMutex;
+sem OK_to_read;
+sem OK_to_write;
+
+// Reader's entry protocol
+procedure request_read() {
+    P(counterMutex);
+
+    // If there's an active writer or waiting writers, release counter-locks and wait until it's OK to read
+    if (nw > 0 || waiting_writers > 0) {
+        V(counterMutex);
+        P(OK_to_read);
+    } else { // Otherwise, increment the number of active readers and release counter-lock
+        nr = nr + 1;
+        V(counterMutex);
+        V(OK_to_read);
     }
 }
 
-process Reader([j=1to N]) {
-    while (true) {
-        P(turnstile);     // enter queue
-        P(readers);
-        active_readers = active_readers + 1;
-        if (active_readers == 1) {
-            P(writers);   // first reader blocks writers
-        }
-        V(readers);
-        V(turnstile);     // release turnstile so writers can queue
+// Reader's exit protocol
+procedure release_read() {
+    // Acquire counter-locks and decrement the number of active readers
+    P(counterMutex);
+    nr = nr - 1;
 
-        read();
-
-        P(readers);
-        active_readers = active_readers - 1;
-        if (active_readers == 0) {
-            V(writers);   // last reader unblocks writers
-        }
-        V(readers);
+    // If there are no more readers, signal to other writers that it's OK to write
+    if (nr == 0) {
+        signal(OK_to_write);
     }
 }
 
+// Writer's entry protocol
+procedure request_write() {
+    // Acquire counter-locks and increment the number of waiting writers
+    P(counterMutex);
+    waiting_writers = waiting_writers + 1;
+
+    // Wait if there are active readers or writer's
+    if (nr > 0 || nw > 0) {
+        V(counterMutex);
+        P(OK_to_write);
+    } else {
+        waiting_writers = waiting_writers - 1;
+        nw = nw + 1;
+        V(counterMutex);
+    }
+}
+
+// Writer's exit protocol
+procedure release_write() {
+    P(counterMutex);
+    nw = nw - 1; // critical section
+
+    if (waiting_writers > 0) {
+        waiting_writers = waiting_writers - 1;
+        nw = nw + 1;
+        V(OK_to_write);
+    } else {
+        V(OK_to_read);
+    }
+}
 ```
 
 ## Exercise 9: Multi-country

@@ -9,7 +9,34 @@ certain conditions to be met and get `signalled` when they can proceed.
 **Key Idea:** The monitor doesn't store shared data, but controls access to it. Threads call monitor procedures to
 request/release access safely.
 
-## Exercise 1 - Readers/Writers Problem (without fairness):
+## Exercise 1 - Bank account:
+
+Several people share a saving account that each person may deposit to or withdraw from.
+
+The current balance in the account is the sum of all deposits to date minus the sum of all withdrawals to date. The
+balance must never become negative. A deposit never has to delay (except for mutual exclusion), but a withdrawal has to
+wait until there are enough funds.
+
+A junior software developer has implemented a solution to this problem using a monitor with Signal-and-Continue
+discipline.
+
+```java
+monitor Account() {
+    int balance = 0;
+    cond sufficient_funds;
+
+    procedure deposit ( int amount){
+        balance = balance + amount;
+    }
+    procedure withdraw ( int amount){
+        balance = balance - amount;
+    }
+}
+```
+
+This solution is non-optimal. Help the junior developer implement the monitor correctly.
+
+## Exercise 2 - Readers/Writers Problem (without fairness):
 
 The `Readers-Writers Problem` is a classic synchronization problem that involves managing access to a shared resource in
 such a way that multiple readers can read the resource concurrently, but writers must have exclusive access to it. The
@@ -79,36 +106,9 @@ Remember that readers can read at the same time, but writers have to be alone in
 
 **NOTE:** Your solution does not need to arbitrate between readers and writers (i.e., no need to handle fairness).
 
-## Exercise 2 - Readers/Writers Problem (with fairness):
+## Exercise 3 - Readers/Writers Problem (with fairness):
 
 Without arbitrating between readers and writers, you risk starvation of writers, i.e., if there is a continuous stream
 of readers, a writer may never get access to the database.
 
 How would you modify your solution to Exercise 1 to **ensure fairness** so that the readers don't starve the writers?
-
-## Exercise 3 - Bank account:
-
-Several people share a saving account that each person may deposit to or withdraw from.
-
-The current balance in the account is the sum of all deposits to date minus the sum of all withdrawals to date. The
-balance must never become negative. A deposit never has to delay (except for mutual exclusion), but a withdrawal has to
-wait until there are enough funds.
-
-A junior software developer has implemented a solution to this problem using a monitor with Signal-and-Continue
-discipline.
-
-```java
-monitor Account() {
-    int balance = 0;
-    cond sufficient_funds;
-
-    procedure deposit ( int amount){
-        balance = balance + amount;
-    }
-    procedure withdraw ( int amount){
-        balance = balance - amount;
-    }
-}
-```
-
-This solution is non-optimal. Help the junior developer implement the monitor correctly.

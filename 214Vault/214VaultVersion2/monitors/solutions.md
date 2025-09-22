@@ -11,7 +11,7 @@ wait until there are enough funds.
 A junior software developer has implemented a solution to this problem using a monitor with Signal-and-Continue
 discipline.
 
-```java
+```
 monitor Account() {
     int balance = 0;
     cond sufficient_funds;
@@ -41,7 +41,7 @@ monitor Account() {
     }
 
     procedure withdraw ( int amount){
-        // Wait until there are sufficient funds for the withdrawal
+        // Wait until there are sufficient funds for the withdrawal (use while, not if, to avoid spurious wake-ups)
         while (balance < amount) {
             wait(sufficient_funds);
         }
@@ -115,8 +115,8 @@ procedure release_write() {
 }
 ```
 
-Solve the Readers/Writers problem using monitors. The solution does not need to be fair, only mutually exclusive.
-Remember that readers can read at the same time, but writers have to be alone in accessing the shared variable.
+Solve the Readers/Writers problem using monitors. Remember that readers can read at the same time, but writers have to
+be alone in accessing the shared variable.
 
 **NOTE:** Your solution does not need to arbitrate between readers and writers (i.e., no need to handle fairness).
 
@@ -139,7 +139,7 @@ procedure request_read() {
     while (nw > 0) {
         wait(OK_to_read); // non-critical section
     }
-    nr = nr + 1;
+    nr = nr + 1;          // critical section
 }
 
 // Reader's exit protocol
@@ -155,7 +155,7 @@ procedure request_write() {
     while (nr > 0 || nw > 0) {
         wait(OK_to_write); // non-critical section
     }
-    nw = nw + 1;
+    nw = nw + 1;           // critical section
 }
 
 // Writer's exit protocol
@@ -164,9 +164,6 @@ procedure release_write() {
     signal_all(OK_to_read); // tricky (signaling threads involves modifying internal monitor state)
 }
 ```
-
-**Critical sections:** Updates shared resource state (e.g., `nr`, `nw`, and signaling condition variables).
-**Non-critical sections:** The while loops that just `wait(…))` for conditions.
 
 ## Exercise 3 - Readers/Writers Problem (with fairness):
 
@@ -180,19 +177,16 @@ How would you modify your solution to Exercise 1 to **ensure fairness** so that 
 ```java
 monitor ReadersWriters_Controller() {
 
-    // Number of active readers and writers
+    // Number of active readers, writers, and waiting writers
     int nr = 0;
     int nw = 0;
-
-    // Number of writers waiting to write
     int waiting_writers = 0;
 
-    // Signaled when nw == 0 or nr == 0 (i.e., when there are no active writers or readers)
+    // Signaled when there are no active writers or readers
     cond OK_to_read;
     cond OK_to_write;
 }
 
-// Reader's enter protocol
 procedure request_read() {
 
     // Enter Protocol: Readers should wait if there's an active writer or if there are writers waiting
@@ -245,6 +239,3 @@ procedure release_write() {
     }
 }
 ```
-
-
-
