@@ -1,5 +1,18 @@
 # Communicating Sequential Processes (CSP)
 
+## Communicating Sequential Processes (CSP)
+
+- **Goal:** Model concurrent systems using processes that communicate *only* through message passing.
+- **Main ideas:**
+    - **Processes:** Independent sequential components.
+    - **Channels:** Processes synchronize by *sending* (`!`) and *receiving* (`?`) messages.
+    - **Synchronization:** Communication is synchronous — both sender and receiver must be ready.
+    - **Guards & Nondeterminism:** Control which actions are possible; if multiple are possible, one is chosen
+      nondeterministically.
+    - **Composability:** Complex systems are built from simple communicating processes.
+
+---
+
 ## Basic Communication
 
 In CSP, an exclamation mark, `!`, is for sending data to a process, and a question mark `?`, is for receiving data from
@@ -140,13 +153,25 @@ int value1, value2 = 1;
 if P1!value2 -> P1?value1;
 [] P1?value1 -> P1!value2;
 }
+```
 
-Using JavaScript, give an example of how `yield` can receive data
-when a coroutine is resumed.
-Hint 1:
-Start by declaring a generator.
-Hint 2:
-Think how many calls of `next` you need.
+The following code finds the greatest common denominator.
+
+```
+process GCD {
+  int id, x, y;
+  do true ->
+       Client[*]?args(id, x, y);
+       do x > y -> x = x - y;
+       [] x < y -> y = y - x;
+       od
+       Client[id]!result(x);
+  od
+}
+```
+
+```
+
 ```
 
 ## Exercises
@@ -174,6 +199,14 @@ Process Copy {
     do Bergen?c -> Vestland!c od
 }
 ```
+
+### Exercise
+
+Using JavaScript, give an example of how `yield` can receive data
+when a coroutine is resumed.
+Hint: Start by declaring a generator, then think of how many calls of `next` you need.
+
+#### Answer
 
 ### Exercise
 
