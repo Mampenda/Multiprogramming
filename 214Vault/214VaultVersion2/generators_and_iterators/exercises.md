@@ -2,31 +2,19 @@
 
 ## Exercise 1
 
-Implement a generator `itmp` that behaves like `Array.map`, but produces results lazily.
-
-### Answer:
+Write a generator that produces only odd numbers.
 
 ## Exercise 2
 
-Write a generator fibonacci (infinite).
-
-### Answer:
+Implement a generator `itmp` that behaves like the eager `Array.map`, but produces results lazily, i.e., it doesn't go
+through the entire array and apply the function to every element like eager functions does.
 
 ## Exercise 3
 
-Write a generator cycle for looping indefinitely over an iterable object.
+For the following exercises, explain what happens in each `console.log()` in the JavaScript code and what will be logged
+when its executed.
 
-### Answer:
-
-## Exercise 4
-
-Implement a generator `itmp` that behaves like `Array.map`, but produces results lazily.
-
-### Answer:
-
-## Exercise 5
-
-What will be printed when the following JavaScript code is executed? Explain your answer.
+### Exercise 3.1
 
 ```js
 function* foo(x) {
@@ -36,59 +24,96 @@ function* foo(x) {
 
 var it = foo(100);
 var res = it.next(2);
-console.log(res.value); // what will be printed here? Answer: false
+console.log(res.value);
 res = it.next(3);
-console.log(res.value); // what will be printed here? Answer: 300
+console.log(res.value);
 ```
 
-## 4. Practical Generators
-
-### a) Infinite Even Numbers
+### Exercise 3.2
 
 ```js
-function* evens() {
-    let num = 2;
-    while (true) {
-        yield num;
-        num += 2;
-    }
+function* g(x) {
+    let r = x * (yield -1) + (yield "blabla") + (yield false);
+    console.log(r);
 }
+
+let p = g(3);
+
+console.log(p.next(32));
+console.log(p.next(4));
+console.log(p.next(5));
+console.log(p.next(6));
 ```
 
-### b) Fibonacci Sequence
+### Exercise 3.3
 
 ```js
-function* fibonacci() {
-    let a = 0, b = 1;
-    while (true) {
-        yield a;
-        [a, b] = [b, a + b];
-    }
+function* foo() {
+    console.log("start");
+    const a = yield 1;
+    console.log("a =", a);
+    const b = yield a + 1;
+    console.log("b =", b);
+    return b * 2;
 }
+
+const it = foo();
+
+console.log(it.next());
+console.log(it.next(10));
+console.log(it.next(20));
+
 ```
 
-### c) Cycling Through an Iterable
+### Exercise 3.4
 
 ```js
-function* cycle(iterable) {
-    while (true) {
-        for (const item of iterable) {
-            yield item;
-        }
+function* counter() {
+    let i = 0;
+    while (i < 3) {
+        yield i++;
     }
+    return "done";
 }
+
+const it = counter();
+
+console.log(it.next());
+console.log(it.next());
+console.log(it.next());
+console.log(it.next());
 ```
 
-### d) Unique Elements
+### Exercise 3.5
 
 ```js
-function* unique(iterable) {
-    const seen = new Set();
-    for (const item of iterable) {
-        if (!seen.has(item)) {
-            yield item;
-            seen.add(item);
-        }
-    }
+function* echoTwice() {
+    const x = yield "first";
+    yield x;
+    yield x * 2;
 }
+
+const it = echoTwice();
+
+console.log(it.next());
+console.log(it.next(5));
+console.log(it.next());
+console.log(it.next());
+
+```
+
+### Exercise 5.6
+
+```js
+function* trickySum(x) {
+    let a = yield x;
+    let b = yield a + x;
+    return a + b + x;
+}
+
+const it = trickySum(2);
+
+console.log(it.next());
+console.log(it.next(3));
+console.log(it.next(4));
 ```

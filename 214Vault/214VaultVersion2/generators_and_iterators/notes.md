@@ -5,7 +5,7 @@
 - **Iterable**: An object that can be looped over (e.g., `arrays`, `strings`).
 - **Iterator**: An object with a `.next()` method that returns `{ value, done }`.
 
-###                                           
+###                                            
 
 ```js
 const arr = [10, 20];               // Array of iterable objects
@@ -171,6 +171,5 @@ console.log(p.next(32)); // { value: -1, done: false }       -> 32 is ignored (n
 console.log(p.next(4));  // { value: "blabla", done: false } -> "yield -1" becomes 4
 console.log(p.next(5));  // { value: false, done: false }    -> "yield 'blabla'" becomes 5
 console.log(p.next(6));  // prints 23 becasuse 3 * 4 + 5 + 6 = 23
-
 ```
 
