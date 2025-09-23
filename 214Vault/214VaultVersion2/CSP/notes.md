@@ -42,19 +42,19 @@ process C {
 The **general form** for of communication is:
 
 ```
-Destination!port(e1, ..., en) // Sending n expressions
-Source?port(x1, ..., xn)      // Receiving into n variables
+Destination!channel(e1, ..., en) // Sending n expressions
+Source?channel(x1, ..., xn)      // Receiving into n variables
 ```
 
 - **Destination / Source** → the process we’re communicating with. (like `B` or `D` above).
 - **(e1, …, en)** or **(x1, …, xn)** → multiple values can be sent/received at once.
-- **port** → the “channel” or “name of communication slot” between processes. Both sending and receiving refer to the
+- **channel** → the “channel” or “name of communication slot” between processes. Both sending and receiving refer to the
   same communication channel.
 
-So in the simple example, the “port” is implicit — we just wrote `B!o` instead of `B!someChannel(o)`.
+So in the simple example, the “channel” is implicit — we just wrote `B!o` instead of `B!someChannel(o)`.
 
-If we write `Source[*]?port(x1, ..., xn)`, it means "receive from any process in an array of processes in the channel
-port."
+If we write `Source[*]?channel(x1, ..., xn)`, it means "receive from any process in an array of processes in the
+channel."
 
 ## Guarded Commands
 
@@ -118,7 +118,7 @@ do
 od                  // Repeat until no guard succeeds
 ```
 
-### Simple Examples
+## Simple Examples
 
 ```
 // Copy process
@@ -130,22 +130,31 @@ process Copy {
 
 - Guard: `West?c` (waits for input value from `West`).
 - Statement: `East!c` (sends that value as output to `East` )
-- Loop: Keep copying values (characters) from West to East until West stops sending (guard fails).
+- Loop: Keep copying values (characters) from `West` to `East` until `West` stops sending (guard fails).
+
+### Copy process with two inputs
 
 ```
-// Copy process with two inputs 
 process Copy {
   char c1, c2;
-  West?c1;
-  do West?c2 -> East!c1; 
-  c1 = c2;
-  [] East!c1 -> West?c1;
+  West?c1;                          // First, receive one character into c1
+  do 
+     West?c2 -> East!c1; c1 = c2;   // Option 1: input new char c2, send old c1, shift c2 into c1
+  [] East!c1 -> West?c1;            // Option 2: send c1 immediately, then wait for a new char
   od
 }
-```
 
 ```
-// Bounded buffer
+
+- Starts by reading a single input into `c1`.
+- Inside the loop, two alternatives:
+    - Option 1: Receive a new char `c2`, send the old `c1`, then replace `c1` with `c2`.
+    - Option 2: Send the current `c1` and then wait for a new one.
+- The nondeterministic choice (`[]`) allows either branch when both are possible.
+
+### Bounded Buffer
+
+```
 process Buffer {
     char buffer[10];
     int front = 0, rear = 0, count = 0;
@@ -157,63 +166,86 @@ process Buffer {
 }
 ```
 
-```
-// Resource allocator
-process Allocator {
-    int avail = MAXUNITS;
-    set units = {initial values};
-    int index, unitID;
+- Implements a circular queue of size 10.
+- Guard 1: `count < 10` → buffer not full → input from `West` is allowed.
+- Store the new value in `buffer[rear]`, increment `rear modulo 10`, increase `count`.
+- Guard 2: `count > 0` → buffer is not empty → output to `East` is allowed.
+- Send value from `buffer[front]`, increment `front modulo 10`, decrease `count`.
+- The process nondeterministically accepts input or produces output depending on buffer state.
 
-    do 
-        avail > 0; Client[*]?acquire(index) -> 
-        avail--; remove(units, unitID);
-        
-        Client[index]!reply(unitID);
-        
-     [] Client[*]?release(index, unitID) -> 
-        avail++; insert(units, unitID);
-    od
-}
-
-```
-
-### Practice Tasks
-
-#### Symmetric Exchange
-
-The following code has two processes exchanging values nondeterministically.
+### Symmetric Exchange
 
 ```
 process P1 {
-int value1 = 1, value2;
+  int value1 = 1, value2;
 
-if P2!value1 -> P2?value2;
-[] P2?value2 -> P2!value1;
+  if P2!value1 -> P2?value2;      // Option 1: send first, then receive
+  [] P2?value2 -> P2!value1;      // Option 2: receive first, then send
 }
 
 process P2 {
-int value1, value2 = 1;
+  int value1, value2 = 1;
 
-if P1!value2 -> P1?value1;
-[] P1?value1 -> P1!value2;
+  if P1!value2 -> P1?value1;      // Option 1: send first, then receive
+  [] P1?value1 -> P1!value2;      // Option 2: receive first, then send
 }
 ```
 
-The following code finds the greatest common denominator.
+- Both processes try to exchange values.
+- Each has two choices: either send first then receive, or receive first then send.
+- Nondeterminism ensures both processes eventually synchronize in one of the two patterns.
+- This models handshaking between processes with no fixed order.
+
+### Greatest Common Denominator
 
 ```
 process GCD {
   int id, x, y;
-  do true ->
-       Client[*]?args(id, x, y);
-       do x > y -> x = x - y;
-       [] x < y -> y = y - x;
+  do true ->                            // Loop forever
+       Client[*]?args(id, x, y);        // Receive arguments from any client
+       do x > y -> x = x - y;           // Subtract smaller from larger (Euclidean algorithm)
+       [] x < y -> y = y - x;           // Repeat until x == y
        od
-       Client[id]!result(x);
+       Client[id]!result(x);            // Send back the gcd to the requesting client
   od
 }
 ```
 
-```
+- Acts like a server process.
+- Waits for clients to send a pair `(x, y)`.
+- Use the subtraction-based Euclidean algorithm to compute gcd.
+- Send the result back to the requesting client.
+- Loop repeats, allowing it to handle multiple requests.
+
+## Modern CSP Notation
+
+So far we’ve seen CSP in guarded command style with explicit loops and conditionals.
+In _modern CSP_, processes are often specified more algebraically, focusing on **sequences of events**.
+
+- **Prefix operator (`->`):** `a -> P` means “first do event `a`, then behave like process `P`.”
+- **Recursion:** A process can be defined in terms of itself, creating infinite behavior.
+- **Choice (`[]`):** `a -> P [] b -> Q` means “either perform `a` then continue as `P`, or perform `b` then continue as
+  `Q`.”
+
+### Examples
+
+#### Vending Machine
 
 ```
+Machine = coin -> chocolate -> Machine
+```
+
+1. The machine first waits for the `coin` event.
+2. Then it does the `chocolate` event (i.e., dispenses chocolate).
+3. Then it behaves like `Machine` again (ready for the next customer).
+
+This is an **infinite loop** modeled using recursion.
+
+#### Drink Choices
+
+```
+Drink = coffee -> Drink [] tea -> Drink
+```
+
+1. The process **nondeterministically** chooses `coffee` or `tea`.
+2. After each choice, it loops back to `Drink`. 
