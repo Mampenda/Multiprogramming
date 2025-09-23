@@ -20,23 +20,11 @@ Write a generator cycle for looping indefinitely over an iterable object.
 
 ## Exercise 4
 
-Write a generator unique that only yields unique elements.
+Implement a generator `itmp` that behaves like `Array.map`, but produces results lazily.
 
 ### Answer:
 
 ## Exercise 5
-
-Trace the execution of the generator `g(x)` step by step.
-
-### Answer:
-
-## Exercise 6
-
-Experiment with `.next(value)` to understand how data flows back into `yield`.
-
-### Answer:
-
-## Exercise 7
 
 What will be printed when the following JavaScript code is executed? Explain your answer.
 
